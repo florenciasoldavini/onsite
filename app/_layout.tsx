@@ -1,6 +1,7 @@
 // app/_layout.tsx
 import { GluestackUIProvider } from "@/shared/ui/primitives/gluestack-ui-provider";
 import { AnimatedSplash } from "@/shared/splash/animated-splash";
+import { useAppFonts } from "@/shared/hooks/use-app-fonts";
 import { AuthProvider } from "@/features/auth/providers/auth-provider";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { queryClient } from "@/infrastructure/query/client";
@@ -10,7 +11,6 @@ import {
 } from "@/infrastructure/monitoring/sentry";
 import "@/global.css";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { useFonts } from "expo-font";
 import { Stack, useNavigationContainerRef } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useCallback, useEffect, useState } from "react";
@@ -21,19 +21,7 @@ if (process.env.EXPO_OS !== "web") {
 }
 
 function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    Geist: require("@/assets/fonts/Geist-Regular.ttf"),
-    "Geist-Regular": require("@/assets/fonts/Geist-Regular.ttf"),
-    "Geist-Medium": require("@/assets/fonts/Geist-Medium.ttf"),
-    "Geist-SemiBold": require("@/assets/fonts/Geist-SemiBold.ttf"),
-    "Geist-Bold": require("@/assets/fonts/Geist-Bold.ttf"),
-    "Geist-Black": require("@/assets/fonts/Geist-Black.ttf"),
-    "JetBrains Mono": require("@/assets/fonts/JetBrainsMono-Regular.ttf"),
-    "JetBrainsMono-Regular": require("@/assets/fonts/JetBrainsMono-Regular.ttf"),
-    "JetBrainsMono-Medium": require("@/assets/fonts/JetBrainsMono-Medium.ttf"),
-    "JetBrainsMono-SemiBold": require("@/assets/fonts/JetBrainsMono-SemiBold.ttf"),
-    "JetBrainsMono-Bold": require("@/assets/fonts/JetBrainsMono-Bold.ttf")
-  });
+  const [fontsLoaded, fontError] = useAppFonts();
 
   useEffect(() => {
     if (fontError) {

@@ -57,17 +57,17 @@ import { formatDateOnly } from "@/shared/utils/date-only";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
+import {
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ImagePlusIcon,
+  MapPinIcon,
+  RefreshIcon,
+  SaveIcon
+} from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
-import {
-  CalendarDays,
-  ChevronLeft,
-  ChevronRight,
-  ImagePlus,
-  MapPinned,
-  RefreshCw,
-  Save
-} from "lucide-react-native";
 import { useEffect, useRef, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
@@ -261,7 +261,7 @@ export function ProjectFormScreen({
             </AppText>
             <View style={{ gap: atomSpacing[3] }}>
               <AppButton
-                icon={RefreshCw}
+                icon={RefreshIcon}
                 onPress={() => {
                   void projectQuery.refetch();
                 }}
@@ -652,7 +652,7 @@ export function ProjectFormScreen({
               </View>
               <View style={projectFormStyles.formAction}>
                 <AppButton
-                  icon={Save}
+                  icon={SaveIcon}
                   isDisabled={
                     !areRequiredFieldsComplete ||
                     !isValid ||
@@ -759,7 +759,7 @@ function AddressField({
       <TextField
         errorText={errorText}
         label="Project Address"
-        leftIcon={MapPinned}
+        leftIcon={MapPinIcon}
         onBlur={() => {
           closeSuggestionsTimeout.current = setTimeout(closeSuggestions, 150);
         }}
@@ -932,7 +932,7 @@ function CalendarDateField({
           Platform.OS === "web" ? projectFormStyles.webCursor : null
         ])}
       >
-        <CalendarDays
+        <CalendarIcon
           color={value ? atomPalette.text : atomPalette.textMuted}
           size={18}
         />
@@ -952,7 +952,7 @@ function CalendarDateField({
             <View style={projectFormStyles.calendarHeader}>
               <CalendarIconButton
                 accessibilityLabel="Previous month"
-                icon={ChevronLeft}
+                icon={ChevronLeftIcon}
                 onPress={() =>
                   setVisibleMonth(
                     (current) =>
@@ -965,7 +965,7 @@ function CalendarDateField({
               </AppHeading>
               <CalendarIconButton
                 accessibilityLabel="Next month"
-                icon={ChevronRight}
+                icon={ChevronRightIcon}
                 onPress={() =>
                   setVisibleMonth(
                     (current) =>
@@ -1059,7 +1059,7 @@ function CalendarIconButton({
   onPress
 }: {
   accessibilityLabel: string;
-  icon: typeof ChevronLeft;
+  icon: typeof ChevronLeftIcon;
   onPress: (event: GestureResponderEvent) => void;
 }) {
   return (
@@ -1153,7 +1153,7 @@ function CoverPicker({
           />
         ) : (
           <View style={{ alignItems: "center", gap: atomSpacing[2] }}>
-            <ImagePlus color={atomPalette.textMuted} size={24} />
+            <ImagePlusIcon color={atomPalette.textMuted} size={24} />
             <AppText tone="muted">Choose a cover image</AppText>
           </View>
         )}

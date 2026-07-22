@@ -97,6 +97,21 @@ module.exports = defineConfig([
           ]
         }
       ],
+      "no-restricted-syntax": [
+        "error",
+        {
+          selector:
+            "ImportDeclaration[source.value='lucide-react-native']",
+          message:
+            "Import app icons and icon types from @/shared/ui/icons. Only the central registry may depend on Lucide."
+        },
+        {
+          selector:
+            "ImportDeclaration[source.value^='lucide-react-native/']",
+          message:
+            "Import app icons and icon types from @/shared/ui/icons. Only the central registry may depend on Lucide."
+        }
+      ],
       "react/no-unescaped-entities": "off",
       "@typescript-eslint/no-unused-vars": [
         "error",
@@ -160,6 +175,12 @@ module.exports = defineConfig([
           ]
         }
       ]
+    }
+  },
+  {
+    files: ["shared/ui/icons/**/*.{ts,tsx}"],
+    rules: {
+      "no-restricted-syntax": "off"
     }
   },
   {

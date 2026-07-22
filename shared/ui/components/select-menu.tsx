@@ -6,7 +6,11 @@ import {
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import { Check, ChevronDown, type LucideIcon } from "lucide-react-native";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  type AppIconComponent
+} from "@/shared/ui/icons";
 import { useRef, useState } from "react";
 import {
   Modal,
@@ -35,7 +39,7 @@ export function SelectMenu<TValue extends string>({
   value
 }: {
   accessibilityLabel?: string;
-  icon?: LucideIcon;
+  icon?: AppIconComponent;
   labelPrefix?: string;
   minWidth?: number;
   onChange: (value: TValue) => void;
@@ -123,7 +127,7 @@ export function SelectMenu<TValue extends string>({
                   ? `${labelPrefix}: ${selectedOption?.label ?? ""}`
                   : selectedOption?.label}
               </AppText>
-              <ChevronDown
+              <ChevronDownIcon
                 color={atomPalette.text}
                 size={16}
                 strokeWidth={1.9}
@@ -192,7 +196,7 @@ export function SelectMenu<TValue extends string>({
                     {option.label}
                   </AppText>
                   {isSelected ? (
-                    <Check color={atomPalette.accent} size={16} />
+                    <CheckIcon color={atomPalette.accent} size={16} />
                   ) : null}
                 </Pressable>
               );

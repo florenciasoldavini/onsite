@@ -39,15 +39,15 @@ import type {
   ProjectSummary,
   ProjectType
 } from "@/features/projects/types/project.types";
+import {
+  FilterIcon,
+  FolderPlusIcon,
+  RefreshIcon,
+  SearchIcon,
+  SortIcon
+} from "@/shared/ui/icons";
 import { useRouter } from "expo-router";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import {
-  ArrowUpDown,
-  FolderPlus,
-  RefreshCw,
-  Search,
-  SlidersHorizontal
-} from "lucide-react-native";
 import { Suspense, lazy, memo, useCallback, useMemo, useState } from "react";
 import {
   FlatList,
@@ -194,7 +194,7 @@ export default function ProjectsScreen() {
           !isCompact ? (
             <AppButton
               fullWidth={false}
-              icon={FolderPlus}
+              icon={FolderPlusIcon}
               iconAfter={false}
               onPress={() => router.push("/projects/new" as never)}
               size="sm"
@@ -209,7 +209,7 @@ export default function ProjectsScreen() {
       <View style={[styles.toolbar, isExpanded ? styles.toolbarExpanded : null]}>
         <View style={isExpanded ? styles.searchExpanded : styles.searchFluid}>
           <TextField
-            leftIcon={Search}
+            leftIcon={SearchIcon}
             onChangeText={setQuery}
             placeholder="Search projects"
             value={query}
@@ -219,7 +219,7 @@ export default function ProjectsScreen() {
         <View style={styles.controlsRow}>
           <SelectMenu
             accessibilityLabel="Sort projects"
-            icon={ArrowUpDown}
+            icon={SortIcon}
             labelPrefix="Sort"
             onChange={setSort}
             options={projectSortOptions}
@@ -229,7 +229,7 @@ export default function ProjectsScreen() {
             <AppButton
               color="neutral"
               fullWidth={false}
-              icon={SlidersHorizontal}
+              icon={FilterIcon}
               size="sm"
               variant="bordered"
               onPress={() => setFiltersVisible(true)}
@@ -264,7 +264,7 @@ export default function ProjectsScreen() {
   ) : projectsQuery.isError ? (
     <EmptyState
       action={{
-        icon: RefreshCw,
+        icon: RefreshIcon,
         label: "Retry",
         onPress: () => {
           void projectsQuery.refetch();
@@ -281,12 +281,12 @@ export default function ProjectsScreen() {
       action={
         hasSearchOrFilters
           ? {
-              icon: RefreshCw,
+              icon: RefreshIcon,
               label: "Reset view",
               onPress: resetProjectView
             }
           : {
-              icon: FolderPlus,
+              icon: FolderPlusIcon,
               label: "New Project",
               onPress: () => router.push("/projects/new" as never)
             }
@@ -296,7 +296,7 @@ export default function ProjectsScreen() {
           ? "Adjust the search, sort, or filters to widen the project list."
           : "Create your first project to start organizing job-site work."
       }
-      icon={hasSearchOrFilters ? SlidersHorizontal : FolderPlus}
+      icon={hasSearchOrFilters ? FilterIcon : FolderPlusIcon}
       title={hasSearchOrFilters ? "No matching projects" : "No projects yet"}
     />
   );
@@ -325,7 +325,7 @@ export default function ProjectsScreen() {
         hasProjects && !isMapMode && isCompact ? (
           <AppButton
             accessibilityLabel="New project"
-            icon={FolderPlus}
+            icon={FolderPlusIcon}
             layout="icon"
             onPress={() => router.push("/projects/new" as never)}
             shape="pill"

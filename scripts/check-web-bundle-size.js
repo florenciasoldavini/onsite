@@ -5,8 +5,8 @@ const { resolve } = require("path");
 const { gzipSync } = require("zlib");
 
 const budgets = {
-  initialJavaScriptGzip: 1_250_000,
-  initialJavaScriptRaw: 6_000_000,
+  initialJavaScriptGzip: 1_100_000,
+  initialJavaScriptRaw: 4_500_000,
   stylesheetRaw: 100_000
 };
 const distDirectory = resolve(process.cwd(), "dist");
@@ -19,6 +19,10 @@ if (!existsSync(entryHtmlPath)) {
 const html = readFileSync(entryHtmlPath, "utf8");
 const scriptPaths = getAssetPaths(html, /src="([^"]+\.js)"/g);
 const stylesheetPaths = getAssetPaths(html, /href="([^"]+\.css)"/g);
+const localFontPreloadPaths = getAssetPaths(
+  html,
+  /<link(?=[^>]*rel="preload")(?=[^>]*as="font")[^>]*href="([^"]+)"[^>]*>/g
+);
 const initialJavaScriptRaw = getRawSize(scriptPaths);
 const initialJavaScriptGzip = getGzipSize(scriptPaths);
 const stylesheetRaw = getRawSize(stylesheetPaths);
@@ -36,6 +40,8 @@ for (const [label, actual, budget] of results) {
   console.log(`${label}: ${formatBytes(actual)} / ${formatBytes(budget)}`);
 }
 
+console.log(`Local font preloads: ${localFontPreloadPaths.length} / 0`);
+
 const exceeded = results.filter(([, actual, budget]) => actual > budget);
 
 if (exceeded.length > 0) {
@@ -44,6 +50,10 @@ if (exceeded.length > 0) {
       .map(([label]) => label)
       .join(", ")}.`
   );
+}
+
+if (localFontPreloadPaths.length > 0) {
+  fail("Web export must not preload native local font assets.");
 }
 
 function getAssetPaths(source, pattern) {

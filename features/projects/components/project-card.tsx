@@ -1,3 +1,12 @@
+import {
+  PROJECT_PHASE_LABELS,
+  PROJECT_STATUS_LABELS,
+  PROJECT_TYPE_LABELS
+} from "@/features/projects/constants/project.constants";
+import type {
+  ProjectStatus,
+  ProjectSummary
+} from "@/features/projects/types/project.types";
 import { AppCard, AppHeading, AppText } from "@/shared/ui/components";
 import { atomMotion } from "@/shared/ui/components/motion";
 import {
@@ -6,15 +15,9 @@ import {
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_TYPE_LABELS
-} from "@/features/projects/constants/project.constants";
-import type { ProjectStatus, ProjectSummary } from "@/features/projects/types/project.types";
+import { ImageOffIcon, MapPinIcon } from "@/shared/ui/icons";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { Image } from "expo-image";
-import { ImageOff, MapPinned } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
 import Animated, {
@@ -112,7 +115,7 @@ export function ProjectCard({
                     justifyContent: "center"
                   }}
                 >
-                  <ImageOff color={atomPalette.textSubtle} size={28} />
+                  <ImageOffIcon color={atomPalette.textSubtle} size={28} />
                 </View>
               )}
               <ProjectStatusCornerLabel
@@ -147,7 +150,7 @@ export function ProjectCard({
                     gap: atomSpacing[2]
                   }}
                 >
-                  <MapPinned color={atomPalette.textMuted} size={16} />
+                  <MapPinIcon color={atomPalette.textMuted} size={16} />
                   <AppText
                     numberOfLines={1}
                     style={{ flex: 1 }}

@@ -3,7 +3,7 @@
 Purpose: practical performance rules for the upcoming MVP feature layer
 Source of truth for: performance expectations around app startup, navigation, lists, data fetching, uploads, and release review
 Update when: routing strategy, data-fetching patterns, list architecture, image/upload workflow, or rendering approach changes
-Last reviewed: 2026-07-18
+Last reviewed: 2026-07-22
 
 ## Scope
 
@@ -157,9 +157,16 @@ Baseline rules:
 
 Current enforced export budgets:
 
-- initial JavaScript: at most 6,000,000 raw bytes and 1,250,000 gzip bytes
+- initial JavaScript: at most 4,500,000 raw bytes and 1,100,000 gzip bytes
 - initial CSS: at most 100,000 raw bytes
 - authenticated feature screens and heavy optional integrations should use route or interaction-level code splitting when it reduces the initial graph
+
+Current production-export baseline after icon and font delivery optimization:
+
+- initial JavaScript: 3,937,249 raw bytes, 961,331 gzip bytes, and 754,219 Brotli bytes
+- web uses Google-hosted Geist and JetBrains Mono from `global.css`; iOS and Android load the tracked local TTF files through the platform-specific app-font hook
+- web must not register or preload the native TTF assets
+- screens and components import named app icons and icon types only from `@/shared/ui/icons`; the central registry alone imports Lucide's individual ESM icon modules so Metro does not bundle the complete catalog
 
 Run `npm run build` followed by `npm run bundle:check` after changing shared dependencies, route imports, NativeWind content paths, or font loading.
 
