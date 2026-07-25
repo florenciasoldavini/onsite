@@ -52,7 +52,16 @@ export function AnimatedSplash({ appReady, onFinish }: AnimatedSplashProps) {
   const reducedMotion = useReducedMotion();
   const nativeSplashHiddenRef = useRef(false);
   const sequenceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [canRenderViewportGrid, setCanRenderViewportGrid] = useState(
+    process.env.EXPO_OS !== "web"
+  );
   const [sequenceComplete, setSequenceComplete] = useState(false);
+
+  useEffect(() => {
+    if (process.env.EXPO_OS === "web") {
+      setCanRenderViewportGrid(true);
+    }
+  }, []);
 
   const handleTaglineComplete = useCallback(() => {
     sequenceTimerRef.current = setTimeout(
@@ -269,8 +278,12 @@ export function AnimatedSplash({ appReady, onFinish }: AnimatedSplashProps) {
     letter6Style
   ];
 
-  const verticalLineCount = Math.ceil(width / GRID_SIZE);
-  const horizontalLineCount = Math.ceil(height / GRID_SIZE);
+  const verticalLineCount = canRenderViewportGrid
+    ? Math.ceil(width / GRID_SIZE)
+    : 0;
+  const horizontalLineCount = canRenderViewportGrid
+    ? Math.ceil(height / GRID_SIZE)
+    : 0;
 
   return (
     <Animated.View

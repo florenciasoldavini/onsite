@@ -7,16 +7,22 @@ import {
   authFormStackGap,
   authSocialButtonSize
 } from "@/features/auth/components/auth-shell";
+import { AppButton } from "@/shared/ui/components/button";
+import { FieldMessage } from "@/shared/ui/components/field-message";
 import {
-  AppButton,
-  FieldMessage,
   PasswordVisibilityToggle,
   TextField
-} from "@/shared/ui/components";
+} from "@/shared/ui/components/input";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useEmailSignUp, useOAuthSignIn } from "@/features/auth/hooks/use-auth-mutations";
-import { emailSignupSchema, type EmailSignupInput } from "@/features/auth/schemas/auth.schemas";
+import {
+  useEmailSignUp,
+  useOAuthSignIn
+} from "@/features/auth/hooks/use-auth-mutations";
+import {
+  emailSignupSchema,
+  type EmailSignupInput
+} from "@/features/auth/schemas/auth.schemas";
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";

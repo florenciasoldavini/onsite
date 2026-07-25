@@ -174,6 +174,7 @@ Last reviewed: 2026-07-21
   - `npm run build`
   - `npm test`
   - `npm run functions:verify`
+  - `supabase db start` followed by `supabase test db`
   - pull requests targeting `development` or `main` are reviewed for newly introduced high- or critical-severity dependency vulnerabilities
 - Dependabot checks the root app dependencies monthly, groups compatible minor/patch updates, limits open update PRs, and targets routine version updates to `development`
 - Dependabot security alerts and security-update PRs follow GitHub's default-branch behavior and therefore target `main`

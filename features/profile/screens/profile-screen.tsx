@@ -1,14 +1,14 @@
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { FieldMessage } from "@/shared/ui/components/field-message";
 import {
-  AppButton,
-  AppCard,
-  AppText,
-  FieldMessage,
-  NavScreenHeader,
   PasswordVisibilityToggle,
-  Screen,
-  SegmentedTabs,
   TextField
-} from "@/shared/ui/components";
+} from "@/shared/ui/components/input";
+import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { Screen } from "@/shared/ui/components/screen";
+import { SegmentedTabs } from "@/shared/ui/components/tabs";
+import { AppText } from "@/shared/ui/components/text";
 import { atomPalette, atomRadii, atomSpacing } from "@/shared/ui/components/theme";
 import { authCardMaxWidth } from "@/features/auth/components/auth-shell";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
@@ -103,7 +103,6 @@ function getProfileInfoDefaults(
     phoneNumber: profile?.phone_number ?? ""
   };
 }
-
 export default function ProfileScreen() {
   const { logOut, session, updateUserProfile, user } = useAuth();
   const { isExpanded } = useLayoutMode();

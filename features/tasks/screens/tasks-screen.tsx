@@ -1,10 +1,8 @@
-import {
-  AppCard,
-  AppHeading,
-  AppText,
-  NavScreenHeader,
-  Screen
-} from "@/shared/ui/components";
+import { AppCard } from "@/shared/ui/components/card";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { Screen } from "@/shared/ui/components/screen";
+import { AppText } from "@/shared/ui/components/text";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { View } from "react-native";

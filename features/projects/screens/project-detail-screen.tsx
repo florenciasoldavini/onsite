@@ -1,14 +1,12 @@
-import {
-  AppButton,
-  AppCard,
-  AppHeading,
-  AppText,
-  Breadcrumb,
-  EmptyState,
-  Screen,
-  SkeletonBlock,
-  useAppToast
-} from "@/shared/ui/components";
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { Screen } from "@/shared/ui/components/screen";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
+import { AppText } from "@/shared/ui/components/text";
+import { useAppToast } from "@/shared/ui/components/toast";
 import {
   atomPalette,
   atomRadii,
@@ -25,19 +23,19 @@ import {
   useSoftDeleteProject
 } from "@/features/projects/hooks/use-projects";
 import type { Project } from "@/features/projects/types/project.types";
+import {
+  AlertIcon,
+  CameraIcon,
+  CirclePlusIcon,
+  ListChecksIcon,
+  MoreVerticalIcon,
+  PencilIcon,
+  RefreshIcon,
+  TrashIcon
+} from "@/shared/ui/icons";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  Camera,
-  CircleAlert,
-  CirclePlus,
-  EllipsisVertical,
-  ListChecks,
-  Pencil,
-  RefreshCw,
-  Trash2
-} from "lucide-react-native";
 import { useRef, useState } from "react";
 import {
   Modal,
@@ -52,25 +50,25 @@ import {
 const projectActions = [
   {
     accent: false,
-    icon: Camera,
+    icon: CameraIcon,
     index: "01",
     label: "DOCUMENTATION"
   },
   {
     accent: false,
-    icon: CircleAlert,
+    icon: AlertIcon,
     index: "02",
     label: "INCIDENT_LOG"
   },
   {
     accent: false,
-    icon: ListChecks,
+    icon: ListChecksIcon,
     index: "03",
     label: "TO_DO_LIST"
   },
   {
     accent: true,
-    icon: CirclePlus,
+    icon: CirclePlusIcon,
     index: "04",
     label: "DAILY_REPORT"
   }
@@ -90,7 +88,7 @@ export default function ProjectDetailScreen() {
       <Screen centered>
         <EmptyState
           action={{
-            icon: RefreshCw,
+            icon: RefreshIcon,
             label: "Retry",
             onPress: () => {
               void projectQuery.refetch();
@@ -100,7 +98,7 @@ export default function ProjectDetailScreen() {
             projectQuery.error,
             "We couldn't load this project. Check your connection and try again."
           )}
-          icon={CircleAlert}
+          icon={AlertIcon}
           title="Project unavailable"
         />
       </Screen>
@@ -116,7 +114,7 @@ export default function ProjectDetailScreen() {
             onPress: () => router.replace("/projects" as never)
           }}
           description="This project may have been removed or you may not have access."
-          icon={CircleAlert}
+          icon={AlertIcon}
           title="Project not found"
         />
       </Screen>
@@ -287,7 +285,7 @@ function ProjectActionsMenu({
           accessibilityLabel="Project actions"
           color="neutral"
           fullWidth={false}
-          icon={EllipsisVertical}
+          icon={MoreVerticalIcon}
           layout="icon"
           onPress={openMenu}
           shape="pill"
@@ -315,7 +313,7 @@ function ProjectActionsMenu({
             ]}
           >
             <ActionMenuItem
-              icon={Pencil}
+              icon={PencilIcon}
               label="Edit"
               onPress={() => {
                 setIsMenuOpen(false);
@@ -324,7 +322,7 @@ function ProjectActionsMenu({
             />
             <ActionMenuItem
               danger
-              icon={Trash2}
+              icon={TrashIcon}
               label="Delete"
               onPress={() => {
                 setIsMenuOpen(false);
@@ -410,7 +408,7 @@ function ActionMenuItem({
   onPress
 }: {
   danger?: boolean;
-  icon: typeof Pencil;
+  icon: typeof PencilIcon;
   label: string;
   onPress: () => void;
 }) {

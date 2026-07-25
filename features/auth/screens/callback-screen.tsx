@@ -1,4 +1,6 @@
-import { AppButton, AppHeading, AppText } from "@/shared/ui/components";
+import { AppButton } from "@/shared/ui/components/button";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import {
   AuthShell,
