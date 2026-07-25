@@ -116,6 +116,7 @@ Last reviewed: 2026-07-21
 - [20260510090001_create_users_bootstrap.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260510090001_create_users_bootstrap.sql:1)
 - [20260510090002_enable_users_rls.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260510090002_enable_users_rls.sql:1)
 - [20260706191340_add_welcome_email_sent_at_to_users.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260706191340_add_welcome_email_sent_at_to_users.sql:1)
+- [20260725191048_create_trade_categories_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260725191048_create_trade_categories_catalog.sql:1)
 
 ### RLS Baseline
 
@@ -127,12 +128,23 @@ Last reviewed: 2026-07-21
 - Policies are anchored to `auth.uid()` plus trusted database role checks, not client-only role checks
 - Insert policies must prevent clients from assigning privileged ownership, membership, or role values
 - Update policies must preserve ownership/role invariants and use both `USING` and `WITH CHECK` where ownership could change
+- System reference catalogs are an explicit exception to owner-scoped feature data: authenticated clients may read active catalog rows, but catalog writes remain unavailable to client roles
 
 ### Migration Gotcha
 
 - Supabase migration filenames must use unique full timestamps
 - Do not create multiple migration files that collapse to the same parsed version prefix
 - The earlier `20260509_...` naming caused a remote `schema_migrations` collision
+
+### Trade Categories Catalog
+
+- `public.trade_categories` is the only trade-related catalog for now; there is no `public.trades` table or trade entity
+- the catalog contains the ten fixed construction expertise categories
+- add or retire catalog entries through tracked database migrations
+- authenticated users may read non-deleted trade categories but cannot create, edit, or delete catalog rows
+- catalog records store only a stable language-neutral code; localized names, descriptions, and display order belong in the presentation/i18n layer
+- obsolete entries should be soft-deleted so future worker history can retain valid references
+- worker expertise will link workers directly to trade categories when the workers feature defines its persisted ownership model; do not create that junction without a foreign key to the canonical workers table
 
 ## User Model Decisions
 
