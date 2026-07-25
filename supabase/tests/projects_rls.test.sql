@@ -4,6 +4,10 @@ create extension if not exists pgtap with schema extensions;
 
 select plan(23);
 
+-- Supabase Storage sets this transaction-local flag before issuing delete
+-- queries. It permits the SQL statement without bypassing storage.objects RLS.
+select set_config('storage.allow_delete_query', 'true', true);
+
 select is(
   (select public from storage.buckets where id = 'user-avatars'),
   false,
