@@ -3,7 +3,7 @@
 Purpose: tracked Supabase schema, migration, RLS, Edge Function, and auth URL guidance
 Source of truth for: current Supabase bootstrap scope, migration expectations, Edge Function verification, and direct client-access policy
 Update when: migrations, RLS policy, Edge Function runtime or security boundaries, auth redirect configuration, or client data-access rules change
-Last reviewed: 2026-07-22
+Last reviewed: 2026-07-25
 
 This folder is the starting point for tracked Supabase database changes.
 
@@ -17,6 +17,8 @@ This folder is the starting point for tracked Supabase database changes.
   Creates the first projects feature schema, owner/admin RLS, and private project cover storage policies.
 - `20260706191340_add_welcome_email_sent_at_to_users.sql`
   Adds `public.users.welcome_email_sent_at` as the once-per-user marker for the product welcome email.
+- `20260725191048_create_trade_categories_catalog.sql`
+  Creates and seeds ten stable language-neutral construction expertise codes and adds authenticated read-only RLS.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.
 
@@ -27,18 +29,25 @@ The current frontend talks directly to:
 - Supabase Auth
 - `public.users`
 - `public.projects`
+- `public.trade_categories`
 - private Supabase Storage for project cover images
 
 Current policy rules:
 
 - `users` policies are anchored directly to `auth.uid() = users.id`
 - feature tables default to owner access for normal users and admin-wide access for `users.role = 'admin'`
+- active system catalog rows are readable by authenticated users, while catalog inserts, updates, and deletes remain unavailable to client roles
 - feature RLS policies enforce owner/admin authorization independently from lifecycle state
 - every get/list repository query must exclude soft-deleted rows with `deleted_at is null`
 - clients may add owner filters for normal users for performance, but RLS remains the real authorization boundary
 - product emails can use `users.welcome_email_sent_at` as a non-sensitive idempotency marker, but Edge Functions should own marker writes so client sessions cannot repeatedly trigger the same email
 
 Everything else should be added later with its own schema migration plus its own RLS pass when the app starts reading or writing that table from the client.
+
+The trade-categories catalog is intentionally independent from worker persistence. Add the
+worker-to-trade-category junction in the workers feature migration only after the
+canonical workers table and its ownership rules exist, so the relationship has
+a real foreign key and enforceable RLS boundary.
 
 ## Next policy wave
 
