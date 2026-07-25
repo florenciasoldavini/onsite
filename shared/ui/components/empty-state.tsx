@@ -3,7 +3,7 @@ import { AppCard } from "@/shared/ui/components/card";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
-import type { LucideIcon } from "lucide-react-native";
+import type { AppIconComponent } from "@/shared/ui/icons";
 import type { ReactNode } from "react";
 import { View } from "react-native";
 
@@ -14,12 +14,12 @@ export function EmptyState({
   title
 }: {
   action?: {
-    icon?: LucideIcon;
+    icon?: AppIconComponent;
     label: string;
     onPress: () => void;
   };
   description: ReactNode;
-  icon?: LucideIcon;
+  icon?: AppIconComponent;
   title: ReactNode;
 }) {
   const Icon = icon;
@@ -27,7 +27,9 @@ export function EmptyState({
   return (
     <AppCard padding="lg" tone="muted">
       <View style={{ alignItems: "center", gap: atomSpacing[4] }}>
-        {Icon ? <Icon size={24} strokeWidth={1.8} /> : null}
+        {Icon ? (
+          <Icon color="currentColor" size={24} strokeWidth={1.8} />
+        ) : null}
         <View style={{ alignItems: "center", gap: atomSpacing[2] }}>
           <AppHeading style={{ textAlign: "center" }} variant="card">
             {title}

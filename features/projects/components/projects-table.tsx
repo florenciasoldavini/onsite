@@ -1,4 +1,6 @@
-import { AppBadge, AppText, SkeletonBlock } from "@/shared/ui/components";
+import { AppBadge } from "@/shared/ui/components/badge";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
+import { AppText } from "@/shared/ui/components/text";
 import {
   atomPalette,
   atomRadii,

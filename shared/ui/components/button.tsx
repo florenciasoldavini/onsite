@@ -5,15 +5,21 @@ import {
   atomRadii,
   atomTypeScale
 } from "@/shared/ui/components/theme";
-import { atomMotion } from "@/shared/ui/components/motion";
+import {
+  MotionButton,
+  useButtonPressMotion
+} from "@/shared/ui/components/button-motion";
 import {
   appIconSizes,
   type AppIconComponent,
   type AppIconSize
 } from "@/shared/ui/icons";
-import { Button, ButtonSpinner, ButtonText } from "@/shared/ui/primitives/button";
+import {
+  Button,
+  ButtonSpinner,
+  ButtonText
+} from "@/shared/ui/primitives/button";
 import { getSansFontStyle } from "@/shared/theme/fonts";
-import { useEffect } from "react";
 import type { ReactNode } from "react";
 import {
   Image,
@@ -23,11 +29,6 @@ import {
   type StyleProp,
   type ViewStyle
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
-} from "react-native-reanimated";
 
 type ButtonBaseColor = "accent" | "danger" | "neutral";
 export type ButtonColor = ButtonBaseColor | "success" | "warning";
@@ -171,8 +172,6 @@ const disabledVisualStyle = {
   textColor: atomPalette.textMuted
 } as const;
 
-const AnimatedButton = Animated.createAnimatedComponent(Button);
-
 export function AppButton({
   children,
   color = "accent",
@@ -208,13 +207,14 @@ export function AppButton({
   style?: StyleProp<ViewStyle>;
   variant?: ButtonVariant;
 }) {
-  const pressScale = useSharedValue(1);
   const sizeConfig = sizeMap[size];
   const config = getButtonVisualConfig(color, variant);
   const isVisuallyDisabled = Boolean(isDisabled || loading);
   const isInteractionDisabled = Boolean(
     loading || (isDisabled && !onDisabledPress)
   );
+  const { animatedPressStyle, handleMotionPressIn, handleMotionPressOut } =
+    useButtonPressMotion(isInteractionDisabled);
   const buttonWidth =
     layout === "icon" ? sizeConfig.height : fullWidth ? "100%" : undefined;
   const resolvedTextColor = isVisuallyDisabled
@@ -239,21 +239,8 @@ export function AppButton({
           cursor: isVisuallyDisabled ? "not-allowed" : "pointer"
         } as ViewStyle)
       : null;
-  const animatedPressStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }]
-  }));
-
-  useEffect(() => {
-    if (isInteractionDisabled) {
-      pressScale.value = withTiming(1, {
-        duration: atomMotion.duration.pressOut,
-        easing: atomMotion.easing.measured
-      });
-    }
-  }, [isInteractionDisabled, pressScale]);
-
   return (
-    <AnimatedButton
+    <MotionButton
       action={config.action}
       className={config.className}
       isDisabled={isInteractionDisabled}
@@ -274,10 +261,7 @@ export function AppButton({
         isInteractionDisabled
           ? undefined
           : (event) => {
-              pressScale.value = withTiming(atomMotion.scale.buttonPressed, {
-                duration: atomMotion.duration.pressIn,
-                easing: atomMotion.easing.measured
-              });
+              handleMotionPressIn();
               onPressIn?.(event);
             }
       }
@@ -285,10 +269,7 @@ export function AppButton({
         isInteractionDisabled
           ? undefined
           : (event) => {
-              pressScale.value = withTiming(1, {
-                duration: atomMotion.duration.pressOut,
-                easing: atomMotion.easing.measured
-              });
+              handleMotionPressOut();
               onPressOut?.(event);
             }
       }
@@ -336,7 +317,7 @@ export function AppButton({
       {Icon && iconAfter && !imageSource && !loading ? (
         <Icon color={resolvedIconColor} size={iconPixelSize} />
       ) : null}
-    </AnimatedButton>
+    </MotionButton>
   );
 }
 

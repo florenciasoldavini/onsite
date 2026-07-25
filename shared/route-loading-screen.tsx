@@ -1,4 +1,5 @@
-import { AppText, Screen } from "@/shared/ui/components";
+import { Screen } from "@/shared/ui/components/screen";
+import { AppText } from "@/shared/ui/components/text";
 import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { ActivityIndicator, View } from "react-native";
 

@@ -1,12 +1,17 @@
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { FieldMessage } from "@/shared/ui/components/field-message";
+import { AppLink } from "@/shared/ui/components/link";
+import { AppText } from "@/shared/ui/components/text";
 import {
-  AppButton,
-  AppCard,
-  AppLink,
-  AppText,
-  FieldMessage
-} from "@/shared/ui/components";
-import { atomPalette, atomRadii, atomSpacing } from "@/shared/ui/components/theme";
-import { AuthShell, authFormControlSize } from "@/features/auth/components/auth-shell";
+  atomPalette,
+  atomRadii,
+  atomSpacing
+} from "@/shared/ui/components/theme";
+import {
+  AuthShell,
+  authFormControlSize
+} from "@/features/auth/components/auth-shell";
 import { useEmailVerificationResend } from "@/features/auth/hooks/use-auth-mutations";
 import { emailSchema } from "@/features/auth/schemas/field.schemas";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";

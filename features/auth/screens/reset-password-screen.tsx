@@ -3,12 +3,12 @@ import {
   AuthShell,
   authFieldSize
 } from "@/features/auth/components/auth-shell";
+import { AppButton } from "@/shared/ui/components/button";
+import { FieldMessage } from "@/shared/ui/components/field-message";
 import {
-  AppButton,
-  FieldMessage,
   PasswordVisibilityToggle,
   TextField
-} from "@/shared/ui/components";
+} from "@/shared/ui/components/input";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import {
   usePasswordRecoveryPreparation,

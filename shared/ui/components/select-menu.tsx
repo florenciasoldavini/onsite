@@ -1,12 +1,16 @@
 import { AppText } from "@/shared/ui/components/text";
-import { atomMotion } from "@/shared/ui/components/motion";
+import { TransitionView } from "@/shared/ui/components/transition-view";
 import {
   atomControlHeights,
   atomPalette,
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import { Check, ChevronDown, type LucideIcon } from "lucide-react-native";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  type AppIconComponent
+} from "@/shared/ui/icons";
 import { useRef, useState } from "react";
 import {
   Modal,
@@ -18,7 +22,6 @@ import {
   type LayoutRectangle,
   type ViewStyle
 } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export interface SelectMenuOption<TValue extends string> {
   label: string;
@@ -35,7 +38,7 @@ export function SelectMenu<TValue extends string>({
   value
 }: {
   accessibilityLabel?: string;
-  icon?: LucideIcon;
+  icon?: AppIconComponent;
   labelPrefix?: string;
   minWidth?: number;
   onChange: (value: TValue) => void;
@@ -123,7 +126,7 @@ export function SelectMenu<TValue extends string>({
                   ? `${labelPrefix}: ${selectedOption?.label ?? ""}`
                   : selectedOption?.label}
               </AppText>
-              <ChevronDown
+              <ChevronDownIcon
                 color={atomPalette.text}
                 size={16}
                 strokeWidth={1.9}
@@ -145,9 +148,9 @@ export function SelectMenu<TValue extends string>({
             onPress={() => setIsOpen(false)}
             style={StyleSheet.absoluteFill}
           />
-          <Animated.View
-            entering={FadeIn.duration(atomMotion.duration.enter)}
-            exiting={FadeOut.duration(atomMotion.duration.exit)}
+          <TransitionView
+            animateEnter
+            animateExit
             style={[
               styles.menu,
               {
@@ -192,12 +195,12 @@ export function SelectMenu<TValue extends string>({
                     {option.label}
                   </AppText>
                   {isSelected ? (
-                    <Check color={atomPalette.accent} size={16} />
+                    <CheckIcon color={atomPalette.accent} size={16} />
                   ) : null}
                 </Pressable>
               );
             })}
-          </Animated.View>
+          </TransitionView>
         </View>
       </Modal>
     </>
