@@ -41,7 +41,10 @@ function RootLayout() {
     }
   }, [fontError]);
 
-  if (!fontsLoaded && !fontError) {
+  const canRenderWithFonts =
+    process.env.EXPO_OS === "web" || fontsLoaded || Boolean(fontError);
+
+  if (!canRenderWithFonts) {
     return null;
   }
 
