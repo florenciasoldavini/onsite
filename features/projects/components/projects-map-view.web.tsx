@@ -1,4 +1,7 @@
-import { AppButton, AppCard, AppHeading, AppText } from "@/shared/ui/components";
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { AppText } from "@/shared/ui/components/text";
 import {
   atomCardRadius,
   atomPalette,
@@ -602,7 +605,11 @@ function SelectedProjectCard({
           onPress={onClose}
           style={styles.closeButton}
         >
-          <CloseIcon color={atomPalette.textMuted} size={18} strokeWidth={2.2} />
+          <CloseIcon
+            color={atomPalette.textMuted}
+            size={18}
+            strokeWidth={2.2}
+          />
         </Pressable>
         <AppButton
           fullWidth={false}

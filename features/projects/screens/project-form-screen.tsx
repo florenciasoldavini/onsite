@@ -1,19 +1,16 @@
-import {
-  AppButton,
-  AppCard,
-  Breadcrumb,
-  FieldMessage,
-  FieldLabel,
-  AppHeading,
-  AppText,
-  NumericField,
-  Screen,
-  SelectField,
-  SkeletonBlock,
-  TextAreaField,
-  TextField,
-  useAppToast
-} from "@/shared/ui/components";
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
+import { FieldMessage } from "@/shared/ui/components/field-message";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { NumericField, TextField } from "@/shared/ui/components/input";
+import { FieldLabel } from "@/shared/ui/components/label";
+import { Screen } from "@/shared/ui/components/screen";
+import { SelectField } from "@/shared/ui/components/select-field";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
+import { AppText } from "@/shared/ui/components/text";
+import { TextAreaField } from "@/shared/ui/components/textarea";
+import { useAppToast } from "@/shared/ui/components/toast";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { FormField } from "@/shared/ui/forms";

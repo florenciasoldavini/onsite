@@ -7,8 +7,15 @@ import type {
   ProjectStatus,
   ProjectSummary
 } from "@/features/projects/types/project.types";
-import { AppCard, AppHeading, AppText } from "@/shared/ui/components";
-import { atomMotion } from "@/shared/ui/components/motion";
+import {
+  ProjectCardMotionView,
+  ProjectProgressFill,
+  ProjectStatusPulse,
+  useProjectCardPressMotion
+} from "@/features/projects/components/project-card-motion";
+import { AppCard } from "@/shared/ui/components/card";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { AppText } from "@/shared/ui/components/text";
 import {
   atomCardRadius,
   atomPalette,
@@ -18,16 +25,8 @@ import {
 import { ImageOffIcon, MapPinIcon } from "@/shared/ui/icons";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { Image } from "expo-image";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
-import Animated, {
-  cancelAnimation,
-  useAnimatedStyle,
-  useSharedValue,
-  withRepeat,
-  withSequence,
-  withTiming
-} from "react-native-reanimated";
 
 export function ProjectCard({
   isDeleting = false,
@@ -39,17 +38,15 @@ export function ProjectCard({
   project: ProjectSummary;
 }) {
   const [isHovered, setIsHovered] = useState(false);
-  const pressScale = useSharedValue(1);
-  const pressStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: pressScale.value }]
-  }));
+  const { pressStyle, handleMotionPressIn, handleMotionPressOut } =
+    useProjectCardPressMotion();
   const cardBorderColor =
     Platform.OS === "web" && isHovered
       ? atomPalette.border
       : atomPalette.borderSubtle;
 
   return (
-    <Animated.View style={pressStyle}>
+    <ProjectCardMotionView style={pressStyle}>
       <Pressable
         accessibilityRole="button"
         disabled={isDeleting}
@@ -66,17 +63,11 @@ export function ProjectCard({
         onPress={onPress}
         onPressIn={() => {
           if (!isDeleting) {
-            pressScale.value = withTiming(atomMotion.scale.cardPressed, {
-              duration: atomMotion.duration.pressIn,
-              easing: atomMotion.easing.measured
-            });
+            handleMotionPressIn();
           }
         }}
         onPressOut={() => {
-          pressScale.value = withTiming(1, {
-            duration: atomMotion.duration.pressOut,
-            easing: atomMotion.easing.measured
-          });
+          handleMotionPressOut();
         }}
         style={({ pressed }) =>
           [
@@ -184,7 +175,7 @@ export function ProjectCard({
           <ProjectProgressIndicator progress={project.progress_percentage} />
         </AppCard>
       </Pressable>
-    </Animated.View>
+    </ProjectCardMotionView>
   );
 }
 function ProjectMetaLabel({ value }: { value: string }) {
@@ -235,21 +226,6 @@ export function ProjectProgressIndicator({ progress }: { progress: number }) {
 
 function ProjectProgressBar({ progress }: { progress: number }) {
   const [trackWidth, setTrackWidth] = useState(0);
-  const animatedProgress = useSharedValue(0);
-  const fillStyle = useAnimatedStyle(() => ({
-    width:
-      animatedProgress.value > 0 && trackWidth > 0
-        ? Math.max(4, trackWidth * (animatedProgress.value / 100))
-        : 0
-  }));
-
-  useEffect(() => {
-    animatedProgress.value = withTiming(progress, {
-      duration: atomMotion.duration.progress,
-      easing: atomMotion.easing.measured
-    });
-  }, [animatedProgress, progress]);
-
   return (
     <View
       accessibilityLabel={`Project progress ${progress}%`}
@@ -264,15 +240,14 @@ function ProjectProgressBar({ progress }: { progress: number }) {
         position: "relative"
       }}
     >
-      <Animated.View
-        style={[
-          {
-            backgroundColor: atomPalette.accent,
-            borderRadius: atomRadii.full,
-            height: "100%"
-          },
-          fillStyle
-        ]}
+      <ProjectProgressFill
+        progress={progress}
+        trackWidth={trackWidth}
+        style={{
+          backgroundColor: atomPalette.accent,
+          borderRadius: atomRadii.full,
+          height: "100%"
+        }}
       />
     </View>
   );
@@ -291,41 +266,7 @@ function ProjectStatusCornerLabel({
   label: string;
   status: ProjectStatus;
 }) {
-  const pulse = useSharedValue(0);
   const shouldPulse = status === "in_progress";
-
-  useEffect(() => {
-    if (!shouldPulse) {
-      cancelAnimation(pulse);
-      pulse.value = 0;
-      return;
-    }
-
-    pulse.value = withRepeat(
-      withSequence(
-        withTiming(1, {
-          duration: atomMotion.duration.scan,
-          easing: atomMotion.easing.status
-        }),
-        withTiming(0, {
-          duration: atomMotion.duration.scan,
-          easing: atomMotion.easing.status
-        })
-      ),
-      -1
-    );
-
-    return () => {
-      cancelAnimation(pulse);
-    };
-  }, [pulse, shouldPulse]);
-
-  const pulseHaloStyle = useAnimatedStyle(() => ({
-    opacity: shouldPulse ? 0.1 + pulse.value * 0.16 : 0
-  }));
-  const pulseDotStyle = useAnimatedStyle(() => ({
-    opacity: shouldPulse ? 0.72 + pulse.value * 0.28 : 1
-  }));
 
   return (
     <View
@@ -358,28 +299,21 @@ function ProjectStatusCornerLabel({
           width: 16
         }}
       >
-        <Animated.View
-          style={[
-            {
-              backgroundColor: atomPalette.accent,
-              borderRadius: atomRadii.full,
-              height: 12,
-              position: "absolute",
-              width: 12
-            },
-            pulseHaloStyle
-          ]}
-        />
-        <Animated.View
-          style={[
-            {
-              backgroundColor: atomPalette.accent,
-              borderRadius: atomRadii.full,
-              height: 8,
-              width: 8
-            },
-            pulseDotStyle
-          ]}
+        <ProjectStatusPulse
+          shouldPulse={shouldPulse}
+          haloStyle={{
+            backgroundColor: atomPalette.accent,
+            borderRadius: atomRadii.full,
+            height: 12,
+            position: "absolute",
+            width: 12
+          }}
+          dotStyle={{
+            backgroundColor: atomPalette.accent,
+            borderRadius: atomRadii.full,
+            height: 8,
+            width: 8
+          }}
         />
       </View>
       <AppText tone="accent" variant="meta">

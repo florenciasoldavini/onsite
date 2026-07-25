@@ -5,7 +5,7 @@ import {
   atomSpacing,
   atomTypeScale
 } from "@/shared/ui/components/theme";
-import { atomMotion } from "@/shared/ui/components/motion";
+import { FocusGlow } from "@/shared/ui/components/focus-glow";
 import { FormField } from "@/shared/ui/forms";
 import {
   ClosedEyeIcon,
@@ -40,11 +40,6 @@ import {
   type TextStyle,
   type ViewStyle
 } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
-} from "react-native-reanimated";
 
 type FieldSize = "sm" | "md" | "lg";
 type TextFieldProps = Omit<
@@ -111,7 +106,6 @@ export function TextField({
   const [isFocused, setIsFocused] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isEditingTruncated, setIsEditingTruncated] = useState(false);
-  const focusGlow = useSharedValue(0);
   const isDisabled = editable === false;
   const borderColor = getFieldBorderColor({
     errorText,
@@ -165,11 +159,6 @@ export function TextField({
         : "";
   const shouldRenderTruncatedText =
     truncate && !isFocused && !isEditingTruncated && displayValue.length > 0;
-  const focusGlowStyle = useAnimatedStyle(() => ({
-    opacity: focusGlow.value,
-    transform: [{ scale: 1 + focusGlow.value * atomMotion.scale.focusGlow }]
-  }));
-
   useEffect(() => {
     if (!isEditingTruncated || isDisabled) {
       return;
@@ -177,13 +166,6 @@ export function TextField({
 
     inputRef.current?.focus?.();
   }, [isDisabled, isEditingTruncated]);
-
-  useEffect(() => {
-    focusGlow.value = withTiming(isFocused && !isDisabled ? 1 : 0, {
-      duration: atomMotion.duration.focus,
-      easing: atomMotion.easing.measured
-    });
-  }, [focusGlow, isDisabled, isFocused]);
 
   return (
     <FormField
@@ -194,22 +176,19 @@ export function TextField({
       required={required}
     >
       <View style={{ position: "relative" }}>
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            {
-              backgroundColor: `${atomPalette.accent}05`,
-              borderColor: `${atomPalette.accent}24`,
-              borderRadius: config.radius + 2,
-              borderWidth: 1,
-              bottom: -2,
-              left: -2,
-              position: "absolute",
-              right: -2,
-              top: -2
-            },
-            focusGlowStyle
-          ]}
+        <FocusGlow
+          active={isFocused && !isDisabled}
+          style={{
+            backgroundColor: `${atomPalette.accent}05`,
+            borderColor: `${atomPalette.accent}24`,
+            borderRadius: config.radius + 2,
+            borderWidth: 1,
+            bottom: -2,
+            left: -2,
+            position: "absolute",
+            right: -2,
+            top: -2
+          }}
         />
         <Input
           isInvalid={Boolean(errorText)}

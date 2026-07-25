@@ -5,8 +5,8 @@ const { resolve } = require("path");
 const { gzipSync } = require("zlib");
 
 const budgets = {
-  initialJavaScriptGzip: 1_100_000,
-  initialJavaScriptRaw: 4_500_000,
+  initialJavaScriptGzip: 900_000,
+  initialJavaScriptRaw: 3_500_000,
   stylesheetRaw: 100_000
 };
 const distDirectory = resolve(process.cwd(), "dist");
@@ -25,6 +25,9 @@ const localFontPreloadPaths = getAssetPaths(
 );
 const initialJavaScriptRaw = getRawSize(scriptPaths);
 const initialJavaScriptGzip = getGzipSize(scriptPaths);
+const initialJavaScriptSource = scriptPaths
+  .map((scriptPath) => readFileSync(toLocalPath(scriptPath), "utf8"))
+  .join("\n");
 const stylesheetRaw = getRawSize(stylesheetPaths);
 const results = [
   ["Initial JavaScript", initialJavaScriptRaw, budgets.initialJavaScriptRaw],
@@ -42,6 +45,20 @@ for (const [label, actual, budget] of results) {
 
 console.log(`Local font preloads: ${localFontPreloadPaths.length} / 0`);
 
+const forbiddenInitialModules = [
+  "@sentry-internal/replay",
+  "react-native-reanimated",
+  "react-native-worklets"
+].filter((moduleName) => initialJavaScriptSource.includes(moduleName));
+
+console.log(
+  `Forbidden initial modules: ${
+    forbiddenInitialModules.length > 0
+      ? forbiddenInitialModules.join(", ")
+      : "none"
+  }`
+);
+
 const exceeded = results.filter(([, actual, budget]) => actual > budget);
 
 if (exceeded.length > 0) {
@@ -54,6 +71,14 @@ if (exceeded.length > 0) {
 
 if (localFontPreloadPaths.length > 0) {
   fail("Web export must not preload native local font assets.");
+}
+
+if (forbiddenInitialModules.length > 0) {
+  fail(
+    `Web export must not include optional initial modules: ${forbiddenInitialModules.join(
+      ", "
+    )}.`
+  );
 }
 
 function getAssetPaths(source, pattern) {

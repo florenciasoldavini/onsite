@@ -1,14 +1,12 @@
-import {
-  AppButton,
-  AppCard,
-  AppHeading,
-  AppText,
-  Breadcrumb,
-  EmptyState,
-  Screen,
-  SkeletonBlock,
-  useAppToast
-} from "@/shared/ui/components";
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { Screen } from "@/shared/ui/components/screen";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
+import { AppText } from "@/shared/ui/components/text";
+import { useAppToast } from "@/shared/ui/components/toast";
 import {
   atomPalette,
   atomRadii,

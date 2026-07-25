@@ -1,13 +1,12 @@
-import { atomMotion } from "@/shared/ui/components/motion";
+import { TabThumb } from "@/shared/ui/components/tab-thumb";
 import { AppText } from "@/shared/ui/components/text";
-import { atomPalette, atomRadii, atomSpacing } from "@/shared/ui/components/theme";
-import { useEffect, useState } from "react";
+import {
+  atomPalette,
+  atomRadii,
+  atomSpacing
+} from "@/shared/ui/components/theme";
+import { useState } from "react";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  withTiming
-} from "react-native-reanimated";
 
 export type SegmentedTabOption<TValue extends string> = {
   disabled?: boolean;
@@ -37,7 +36,6 @@ export function SegmentedTabs<TValue extends string>({
     options.findIndex((option) => option.value === value),
     0
   );
-  const thumbX = useSharedValue(0);
   const optionGap = atomSpacing[1];
   const containerPadding = atomSpacing[1];
   const thumbWidth =
@@ -50,19 +48,8 @@ export function SegmentedTabs<TValue extends string>({
             options.length
         )
       : 0;
-  const thumbStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: thumbX.value }]
-  }));
-
-  useEffect(() => {
-    thumbX.value = withTiming(
-      containerPadding + selectedIndex * (thumbWidth + optionGap),
-      {
-        duration: atomMotion.duration.thumb,
-        easing: atomMotion.easing.measured
-      }
-    );
-  }, [containerPadding, optionGap, selectedIndex, thumbWidth, thumbX]);
+  const thumbTranslateX =
+    containerPadding + selectedIndex * (thumbWidth + optionGap);
 
   return (
     <View
@@ -82,22 +69,19 @@ export function SegmentedTabs<TValue extends string>({
       }}
     >
       {thumbWidth > 0 ? (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            {
-              backgroundColor: selectedColor,
-              borderColor: selectedColor,
-              borderRadius: atomRadii.md,
-              borderWidth: 1,
-              height: 40,
-              left: 0,
-              position: "absolute",
-              top: containerPadding,
-              width: thumbWidth
-            },
-            thumbStyle
-          ]}
+        <TabThumb
+          translateX={thumbTranslateX}
+          style={{
+            backgroundColor: selectedColor,
+            borderColor: selectedColor,
+            borderRadius: atomRadii.md,
+            borderWidth: 1,
+            height: 40,
+            left: 0,
+            position: "absolute",
+            top: containerPadding,
+            width: thumbWidth
+          }}
         />
       ) : null}
       {options.map((option) => {

@@ -1,5 +1,5 @@
 import { AppText } from "@/shared/ui/components/text";
-import { atomMotion } from "@/shared/ui/components/motion";
+import { TransitionView } from "@/shared/ui/components/transition-view";
 import {
   atomControlHeights,
   atomPalette,
@@ -22,7 +22,6 @@ import {
   type LayoutRectangle,
   type ViewStyle
 } from "react-native";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 
 export interface SelectMenuOption<TValue extends string> {
   label: string;
@@ -149,9 +148,9 @@ export function SelectMenu<TValue extends string>({
             onPress={() => setIsOpen(false)}
             style={StyleSheet.absoluteFill}
           />
-          <Animated.View
-            entering={FadeIn.duration(atomMotion.duration.enter)}
-            exiting={FadeOut.duration(atomMotion.duration.exit)}
+          <TransitionView
+            animateEnter
+            animateExit
             style={[
               styles.menu,
               {
@@ -201,7 +200,7 @@ export function SelectMenu<TValue extends string>({
                 </Pressable>
               );
             })}
-          </Animated.View>
+          </TransitionView>
         </View>
       </Modal>
     </>

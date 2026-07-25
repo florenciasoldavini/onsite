@@ -1,10 +1,8 @@
-import {
-  AppCard,
-  AppHeading,
-  AppLink,
-  AppText,
-  Screen
-} from "@/shared/ui/components";
+import { AppCard } from "@/shared/ui/components/card";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { AppLink } from "@/shared/ui/components/link";
+import { Screen } from "@/shared/ui/components/screen";
+import { AppText } from "@/shared/ui/components/text";
 import {
   atomControlHeights,
   atomControlRadius,

@@ -1,4 +1,5 @@
-import { AppCard, SkeletonBlock } from "@/shared/ui/components";
+import { AppCard } from "@/shared/ui/components/card";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { View } from "react-native";
 

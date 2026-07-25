@@ -1,17 +1,19 @@
+import { AppButton } from "@/shared/ui/components/button";
+import { AppCard } from "@/shared/ui/components/card";
+import { EmptyState } from "@/shared/ui/components/empty-state";
+import { TextField } from "@/shared/ui/components/input";
+import { MultiSelectField } from "@/shared/ui/components/multi-select-field";
+import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { Screen } from "@/shared/ui/components/screen";
+import { SelectMenu } from "@/shared/ui/components/select-menu";
+import { SegmentedTabs } from "@/shared/ui/components/tabs";
+import { AppText } from "@/shared/ui/components/text";
+import { TransitionView } from "@/shared/ui/components/transition-view";
 import {
-  AppButton,
-  AppCard,
-  AppText,
-  EmptyState,
-  MultiSelectField,
-  NavScreenHeader,
-  Screen,
-  SegmentedTabs,
-  SelectMenu,
-  TextField
-} from "@/shared/ui/components";
-import { atomMotion } from "@/shared/ui/components/motion";
-import { atomLayout, atomPalette, atomSpacing } from "@/shared/ui/components/theme";
+  atomLayout,
+  atomPalette,
+  atomSpacing
+} from "@/shared/ui/components/theme";
 import { ProjectCard } from "@/features/projects/components/project-card";
 import { ProjectCardSkeleton } from "@/features/projects/components/project-card-skeleton";
 import {
@@ -60,11 +62,6 @@ import {
   type ListRenderItemInfo,
   type ViewStyle
 } from "react-native";
-import Animated, {
-  FadeIn,
-  FadeOut,
-  LinearTransition
-} from "react-native-reanimated";
 
 const ProjectsMapView = lazy(async () => {
   const module = await import(
@@ -206,7 +203,9 @@ export default function ProjectsScreen() {
         title="Projects"
       />
 
-      <View style={[styles.toolbar, isExpanded ? styles.toolbarExpanded : null]}>
+      <View
+        style={[styles.toolbar, isExpanded ? styles.toolbarExpanded : null]}
+      >
         <View style={isExpanded ? styles.searchExpanded : styles.searchFluid}>
           <TextField
             leftIcon={SearchIcon}
@@ -424,16 +423,15 @@ const ProjectListItem = memo(function ProjectListItem({
   style: ViewStyle;
 }) {
   return (
-    <Animated.View
-      entering={FadeIn.duration(atomMotion.duration.enter).delay(
-        Math.min(index, 6) * 36
-      )}
-      exiting={FadeOut.duration(atomMotion.duration.exit)}
-      layout={LinearTransition.duration(atomMotion.duration.layout)}
+    <TransitionView
+      animateEnter
+      animateExit
+      animateLayout
+      animationDelay={Math.min(index, 6) * 36}
       style={style}
     >
       <ProjectCard onPress={() => onPress(project.id)} project={project} />
-    </Animated.View>
+    </TransitionView>
   );
 });
 
@@ -501,10 +499,7 @@ function ProjectFiltersModal({
           style={StyleSheet.absoluteFill}
         />
         <View pointerEvents="none" style={styles.modalBackdrop} />
-        <Animated.View
-          entering={FadeIn.duration(atomMotion.duration.enter)}
-          style={styles.modalContent}
-        >
+        <TransitionView animateEnter style={styles.modalContent}>
           <AppCard padding="md" style={styles.modalCard}>
             <View style={styles.modalHeader}>
               <AppText variant="formLabel">Project filters</AppText>
@@ -558,7 +553,7 @@ function ProjectFiltersModal({
               </View>
             </View>
           </AppCard>
-        </Animated.View>
+        </TransitionView>
       </View>
     </Modal>
   );
