@@ -107,6 +107,25 @@ jobs:
       - name: Verify Edge Functions
         run: npm run functions:verify
 
+  database_tests:
+    name: Database and RLS tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: 2.98.2
+
+      - name: Start local Postgres
+        run: supabase db start
+
+      - name: Run database and RLS tests
+        run: supabase test db
+
   ci-checks:
     name: ci-checks
     if: ${{ always() }}
@@ -115,6 +134,7 @@ jobs:
       - tests
       - web_build
       - edge_functions
+      - database_tests
     runs-on: ubuntu-latest
 
     steps:
@@ -124,11 +144,13 @@ jobs:
           TESTS_RESULT: ${{ needs.tests.result }}
           WEB_BUILD_RESULT: ${{ needs.web_build.result }}
           EDGE_FUNCTIONS_RESULT: ${{ needs.edge_functions.result }}
+          DATABASE_TESTS_RESULT: ${{ needs.database_tests.result }}
         run: |
           if [[ "$QUALITY_RESULT" != "success" || \
                 "$TESTS_RESULT" != "success" || \
                 "$WEB_BUILD_RESULT" != "success" || \
-                "$EDGE_FUNCTIONS_RESULT" != "success" ]]; then
+                "$EDGE_FUNCTIONS_RESULT" != "success" || \
+                "$DATABASE_TESTS_RESULT" != "success" ]]; then
             echo "One or more required CI jobs did not pass."
             exit 1
           fi

@@ -3,7 +3,7 @@
 Purpose: tracked Supabase schema, migration, RLS, Edge Function, and auth URL guidance
 Source of truth for: current Supabase bootstrap scope, migration expectations, Edge Function verification, and direct client-access policy
 Update when: migrations, RLS policy, Edge Function runtime or security boundaries, auth redirect configuration, or client data-access rules change
-Last reviewed: 2026-07-16
+Last reviewed: 2026-07-22
 
 This folder is the starting point for tracked Supabase database changes.
 
@@ -68,7 +68,9 @@ Those policies should use explicit participant or owner rules plus admin-wide su
 ## Supabase tests
 
 - Database and RLS changes should include pgTAP tests under `supabase/tests/`.
-- Run `npx supabase test db` after migrations or policy changes when local Supabase is available.
+- The committed `supabase/config.toml` makes the local database version and service configuration reproducible.
+- Run `npx supabase db start` once to start local Postgres and apply migrations, then run `npx supabase test db` after migrations or policy changes.
+- CI starts a clean local Postgres instance and runs the full database test suite on every pull request and on pushes to `development` or `main`; failures block the aggregate `ci-checks` job.
 - Tests should cover owner access, admin access, cross-user denial, soft-delete filtering, and storage policy behavior.
 
 ## Edge Functions
