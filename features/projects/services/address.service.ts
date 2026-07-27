@@ -1,8 +1,8 @@
 import {
-  autocompleteAddressSuggestions,
-  getStaticMapPreview,
-  resolveAddressSuggestion
-} from "@/features/projects/repositories/maps.repository";
+  autocompleteAddresses,
+  getLocationMapPreview,
+  resolveAddress
+} from "@/features/locations/services/locations.service";
 import type {
   StaticMapPoint,
   StaticMapViewport
@@ -15,7 +15,7 @@ export async function autocompleteProjectAddress({
   input: string;
   sessionToken: string;
 }) {
-  return autocompleteAddressSuggestions({ input, sessionToken });
+  return autocompleteAddresses({ input, sessionToken });
 }
 
 export async function resolveProjectAddress({
@@ -25,7 +25,7 @@ export async function resolveProjectAddress({
   placeId: string;
   sessionToken: string;
 }) {
-  return resolveAddressSuggestion({ placeId, sessionToken });
+  return resolveAddress({ placeId, sessionToken });
 }
 
 export async function getProjectAddressMapPreview({
@@ -35,7 +35,7 @@ export async function getProjectAddressMapPreview({
   latitude: number;
   longitude: number;
 }) {
-  return getStaticMapPreview({ latitude, longitude });
+  return getLocationMapPreview({ latitude, longitude });
 }
 
 export async function getProjectsMapPreview({
@@ -45,5 +45,5 @@ export async function getProjectsMapPreview({
   points: StaticMapPoint[];
   viewport?: StaticMapViewport | null;
 }) {
-  return getStaticMapPreview({ points, viewport });
+  return getLocationMapPreview({ points, viewport });
 }
