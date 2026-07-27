@@ -23,7 +23,7 @@ This folder is the starting point for tracked Supabase database changes.
   Create the manager-owned client catalog, project relationship, least-privilege grants, and soft-delete-compatible RLS.
 - `20260727154854_create_contractors_catalog.sql`
   Creates the manager-owned contractor contact catalog with least-privilege grants, normalization, owner/admin RLS, and soft deletion.
-- `20260727203459_create_project_photos_feature.sql`
+- `20260727213244_create_project_photos_feature.sql`
   Creates project photo metadata, owner/admin RLS, deterministic gallery indexes, and private immutable full/thumbnail Storage policies.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.

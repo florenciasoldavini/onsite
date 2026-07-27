@@ -1,3 +1,5 @@
+-- Project-specific photo metadata and private Storage policies.
+
 create type public.project_photo_kind as enum (
   'general',
   'progress',

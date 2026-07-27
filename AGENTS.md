@@ -125,7 +125,7 @@ Last reviewed: 2026-07-21
 - [20260727181524_align_directory_active_select_policies.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181524_align_directory_active_select_policies.sql:1)
 - [20260727181533_create_suppliers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181533_create_suppliers_catalog.sql:1)
 - [20260727191057_allow_directory_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727191057_allow_directory_soft_delete_updates.sql:1)
-- [20260727203459_create_project_photos_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727203459_create_project_photos_feature.sql:1)
+- [20260727213244_create_project_photos_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727213244_create_project_photos_feature.sql:1)
 
 ### RLS Baseline
 
