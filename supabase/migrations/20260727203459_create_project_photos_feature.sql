@@ -278,7 +278,6 @@ using (
           project_photos.full_path = name
           or project_photos.thumbnail_path = name
         )
-      )
     )
   )
 );
