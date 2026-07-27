@@ -22,6 +22,7 @@ export type ContractorSummary = Pick<
 >;
 
 export interface ContractorFilters {
+  ownerId?: string;
   query?: string;
   sort?: ContractorSort;
 }

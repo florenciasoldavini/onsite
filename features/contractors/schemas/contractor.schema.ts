@@ -64,10 +64,9 @@ export function toContractorInput(
   };
 }
 
-export function normalizeContractorFilters(
-  filters: ContractorFilters = {}
-) {
+export function normalizeContractorFilters(filters: ContractorFilters = {}) {
   return {
+    ownerId: normalizeNullableText(filters.ownerId ?? ""),
     query: normalizeNullableText(filters.query ?? ""),
     sort: normalizeContractorSort(filters.sort)
   };
