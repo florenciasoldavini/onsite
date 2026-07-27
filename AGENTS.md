@@ -121,6 +121,7 @@ Last reviewed: 2026-07-21
 - [20260727150428_restrict_clients_table_grants.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727150428_restrict_clients_table_grants.sql:1)
 - [20260727152922_allow_client_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727152922_allow_client_soft_delete_updates.sql:1)
 - [20260727154854_create_contractors_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727154854_create_contractors_catalog.sql:1)
+- [20260727173645_create_workers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727173645_create_workers_catalog.sql:1)
 
 ### RLS Baseline
 
@@ -168,6 +169,18 @@ Last reviewed: 2026-07-21
 - contractor lists must remain paginated and exclude soft-deleted records
 - worker assignment, trade expertise, project relationships, import/export, and duplicate detection remain deferred
 - clients and contractors share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
+
+### Workers Catalog
+
+- workers are manager-owned contact records and do not have Supabase Auth identities or app login access
+- worker records contain a required first name plus optional last name, phone number, and email; worker avatars are deferred
+- a worker may reference one optional active contractor owned by the same manager; archiving that contractor automatically unlinks the worker without deleting them
+- a worker may reference zero or more active entries from the canonical `trade_categories` catalog to describe the work they usually perform
+- worker contact and relationship changes are saved atomically through RLS-protected security-invoker database functions
+- normal users can manage only their own workers, while admins may read and update all active worker records without transferring ownership or linking records across owners
+- deleting a worker means soft deletion after explicit confirmation; worker lists remain paginated and exclude soft-deleted records
+- project assignments, payment contracts, imports, duplicate detection, and worker login identities remain deferred
+- clients, contractors, and workers share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
 
 ## User Model Decisions
 

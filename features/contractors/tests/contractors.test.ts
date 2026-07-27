@@ -54,19 +54,28 @@ describe("contractor schema helpers", () => {
     expect(
       getContractorInitials({ first_name: "Alex", last_name: "Morgan" })
     ).toBe("AM");
-    expect(
-      getContractorInitials({ first_name: "Alex", last_name: null })
-    ).toBe("AL");
+    expect(getContractorInitials({ first_name: "Alex", last_name: null })).toBe(
+      "AL"
+    );
   });
 
   it("normalizes filters", () => {
     expect(normalizeContractorFilters()).toEqual({
+      ownerId: null,
       query: null,
       sort: "created_desc"
     });
     expect(
-      normalizeContractorFilters({ query: "  mason ", sort: "name_asc" })
-    ).toEqual({ query: "mason", sort: "name_asc" });
+      normalizeContractorFilters({
+        ownerId: " owner-1 ",
+        query: "  mason ",
+        sort: "name_asc"
+      })
+    ).toEqual({
+      ownerId: "owner-1",
+      query: "mason",
+      sort: "name_asc"
+    });
   });
 });
 
@@ -89,8 +98,19 @@ describe("contractor list query plan", () => {
         userId: "admin-1",
         userRole: "admin"
       }).filters
+    ).toEqual([{ column: "deleted_at", operator: "is", value: null }]);
+  });
+
+  it("lets admins explicitly scope a contractor picker by owner", () => {
+    expect(
+      buildContractorListQueryPlan({
+        filters: { ownerId: "owner-1" },
+        userId: "admin-1",
+        userRole: "admin"
+      }).filters
     ).toEqual([
-      { column: "deleted_at", operator: "is", value: null }
+      { column: "deleted_at", operator: "is", value: null },
+      { column: "owner_id", operator: "eq", value: "owner-1" }
     ]);
   });
 

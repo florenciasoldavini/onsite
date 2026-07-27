@@ -103,7 +103,10 @@ export function useCreateContractor() {
         [...contractorsKey, "detail", contractor.id],
         contractor
       );
-      await queryClient.invalidateQueries({ queryKey: contractorsKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contractorsKey }),
+        queryClient.invalidateQueries({ queryKey: ["workers"] })
+      ]);
     }
   });
 }
@@ -119,7 +122,10 @@ export function useUpdateContractor(contractorId: string) {
         [...contractorsKey, "detail", contractor.id],
         contractor
       );
-      await queryClient.invalidateQueries({ queryKey: contractorsKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contractorsKey }),
+        queryClient.invalidateQueries({ queryKey: ["workers"] })
+      ]);
     }
   });
 }
@@ -131,7 +137,10 @@ export function useSoftDeleteContractor() {
     mutationFn: (contractorId: string) =>
       softDeleteContractor(contractorId),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: contractorsKey });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: contractorsKey }),
+        queryClient.invalidateQueries({ queryKey: ["workers"] })
+      ]);
     }
   });
 }

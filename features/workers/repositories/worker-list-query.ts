@@ -1,38 +1,53 @@
-import { normalizeContractorFilters } from "@/features/contractors/schemas/contractor.schema";
+import { normalizeWorkerFilters } from "@/features/workers/schemas/worker.schema";
 import type {
-  ContractorFilters,
-  ContractorSort
-} from "@/features/contractors/types/contractor";
+  WorkerFilters,
+  WorkerSort
+} from "@/features/workers/types/worker";
 
-export interface ContractorListQueryPlan {
+export interface WorkerListQueryPlan {
   filters: {
     column: string;
-    operator: "eq" | "is" | "or";
-    value: string | null;
+    operator: "eq" | "in" | "is" | "or";
+    value: string | string[] | null;
   }[];
   orders: { ascending: boolean; column: string }[];
 }
 
-export function buildContractorListQueryPlan({
+export function buildWorkerListQueryPlan({
   filters,
   userId,
   userRole
 }: {
-  filters?: ContractorFilters;
+  filters?: WorkerFilters;
   userId: string;
   userRole: "admin" | "user";
-}): ContractorListQueryPlan {
-  const normalized = normalizeContractorFilters(filters);
-  const ownerId = userRole === "admin" ? normalized.ownerId : userId;
-  const queryFilters: ContractorListQueryPlan["filters"] = [
+}): WorkerListQueryPlan {
+  const normalized = normalizeWorkerFilters(filters);
+  const queryFilters: WorkerListQueryPlan["filters"] = [
     { column: "deleted_at", operator: "is", value: null }
   ];
 
-  if (ownerId) {
+  if (userRole !== "admin") {
     queryFilters.push({
       column: "owner_id",
       operator: "eq",
-      value: ownerId
+      value: userId
+    });
+  }
+
+  if (normalized.contractorId) {
+    queryFilters.push({
+      column: "contractor_id",
+      operator: "eq",
+      value: normalized.contractorId
+    });
+  }
+
+  if (normalized.tradeCategoryIds.length > 0) {
+    queryFilters.push({
+      column: "trade_filter.trade_category_id",
+      operator: "in",
+      value: normalized.tradeCategoryIds
     });
   }
 
@@ -40,17 +55,17 @@ export function buildContractorListQueryPlan({
     queryFilters.push({
       column: "",
       operator: "or",
-      value: buildContractorSearchFilter(normalized.query)
+      value: buildWorkerSearchFilter(normalized.query)
     });
   }
 
   return {
     filters: queryFilters,
-    orders: getContractorOrders(normalized.sort)
+    orders: getWorkerOrders(normalized.sort)
   };
 }
 
-export function buildContractorSearchFilter(query: string) {
+export function buildWorkerSearchFilter(query: string) {
   const escaped = query.replaceAll("\\", "\\\\").replaceAll('"', '\\"');
   const pattern = `"%${escaped}%"`;
 
@@ -62,7 +77,7 @@ export function buildContractorSearchFilter(query: string) {
   ].join(",");
 }
 
-function getContractorOrders(sort: ContractorSort) {
+function getWorkerOrders(sort: WorkerSort) {
   if (sort.startsWith("name")) {
     return [
       { ascending: sort === "name_asc", column: "first_name" },
