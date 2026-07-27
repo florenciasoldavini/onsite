@@ -123,7 +123,7 @@ function ClientDetailContent({
         title: "Client deleted",
         tone: "success"
       });
-      router.replace("/clients" as never);
+      router.replace("/directory?section=clients" as never);
     } catch (error) {
       setDeleteError(
         getUserFacingErrorMessage(
@@ -142,7 +142,8 @@ function ClientDetailContent({
             {
               accessibilityLabel: "Back to clients",
               label: "Clients",
-              onPress: () => router.replace("/clients" as never)
+              onPress: () =>
+                router.replace("/directory?section=clients" as never)
             },
             { label: "Client Detail" }
           ]}

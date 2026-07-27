@@ -118,8 +118,9 @@ Last reviewed: 2026-07-21
 - [20260706191340_add_welcome_email_sent_at_to_users.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260706191340_add_welcome_email_sent_at_to_users.sql:1)
 - [20260725191048_create_trade_categories_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260725191048_create_trade_categories_catalog.sql:1)
 - [20260726205600_create_clients_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260726205600_create_clients_catalog.sql:1)
-- [20260727150408_restrict_clients_table_grants.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727150408_restrict_clients_table_grants.sql:1)
+- [20260727150428_restrict_clients_table_grants.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727150428_restrict_clients_table_grants.sql:1)
 - [20260727152922_allow_client_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727152922_allow_client_soft_delete_updates.sql:1)
+- [20260727154854_create_contractors_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727154854_create_contractors_catalog.sql:1)
 
 ### RLS Baseline
 
@@ -157,6 +158,16 @@ Last reviewed: 2026-07-21
 - normal users can manage only their own clients, while admins may read and update all active client records
 - deleting a client means soft deletion after explicit confirmation; linked active projects are atomically unlinked
 - client catalog, picker, and linked-project queries must remain paginated and exclude soft-deleted records
+
+### Contractors Catalog
+
+- contractors are manager-owned contact records and do not have Supabase Auth identities or app login access
+- contractor records contain a required first name plus optional last name, phone number, and email; initials are presentation-only and there is no contractor avatar storage
+- normal users can manage only their own contractors, while admins may read and update all active contractor records
+- deleting a contractor means soft deletion after explicit confirmation
+- contractor lists must remain paginated and exclude soft-deleted records
+- worker assignment, trade expertise, project relationships, import/export, and duplicate detection remain deferred
+- clients and contractors share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
 
 ## User Model Decisions
 

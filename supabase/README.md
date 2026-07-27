@@ -3,7 +3,7 @@
 Purpose: tracked Supabase schema, migration, RLS, Edge Function, and auth URL guidance
 Source of truth for: current Supabase bootstrap scope, migration expectations, Edge Function verification, and direct client-access policy
 Update when: migrations, RLS policy, Edge Function runtime or security boundaries, auth redirect configuration, or client data-access rules change
-Last reviewed: 2026-07-25
+Last reviewed: 2026-07-27
 
 This folder is the starting point for tracked Supabase database changes.
 
@@ -19,6 +19,10 @@ This folder is the starting point for tracked Supabase database changes.
   Adds `public.users.welcome_email_sent_at` as the once-per-user marker for the product welcome email.
 - `20260725191048_create_trade_categories_catalog.sql`
   Creates and seeds ten stable language-neutral construction expertise codes and adds authenticated read-only RLS.
+- `20260726205600_create_clients_catalog.sql` and its follow-up policy migrations
+  Create the manager-owned client catalog, project relationship, least-privilege grants, and soft-delete-compatible RLS.
+- `20260727154854_create_contractors_catalog.sql`
+  Creates the manager-owned contractor contact catalog with least-privilege grants, normalization, owner/admin RLS, and soft deletion.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.
 
@@ -30,6 +34,8 @@ The current frontend talks directly to:
 - `public.users`
 - `public.projects`
 - `public.trade_categories`
+- `public.clients`
+- `public.contractors`
 - private Supabase Storage for project cover images
 
 Current policy rules:

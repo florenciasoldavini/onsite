@@ -23,7 +23,12 @@ const sideNavigationMuted = atomPalette.textMuted;
 
 const primaryDestinations = [
   { href: "/projects", icon: ProjectsIcon, label: "Projects" },
-  { href: "/clients", icon: UserIcon, label: "Clients" },
+  {
+    activePrefixes: ["/clients", "/contractors"],
+    href: "/directory",
+    icon: UserIcon,
+    label: "Directory"
+  },
   { href: "/tasks", icon: ToDoIcon, label: "Tasks" }
 ] as const;
 
@@ -105,6 +110,7 @@ function SideNavigationDestination({
   expanded
 }: {
   destination: {
+    activePrefixes?: readonly string[];
     href: string;
     icon: AppIconComponent;
     label: string;
@@ -115,7 +121,10 @@ function SideNavigationDestination({
   const router = useRouter();
   const focused =
     pathname === destination.href ||
-    pathname.startsWith(`${destination.href}/`);
+    pathname.startsWith(`${destination.href}/`) ||
+    destination.activePrefixes?.some(
+      (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`)
+    );
   const color = focused ? atomPalette.accent : sideNavigationMuted;
   const Icon = destination.icon;
 

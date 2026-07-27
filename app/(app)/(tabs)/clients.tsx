@@ -1,14 +1,14 @@
-import { RouteLoadingScreen } from "@/shared/route-loading-screen";
-import { lazy, Suspense } from "react";
+import { Redirect } from "expo-router";
 
-const ClientsScreen = lazy(
-  () => import("@/features/clients/screens/clients-screen")
-);
-
-export default function Clients() {
+export default function ClientsRedirect() {
   return (
-    <Suspense fallback={<RouteLoadingScreen />}>
-      <ClientsScreen />
-    </Suspense>
+    <Redirect
+      href={
+        {
+          pathname: "/directory",
+          params: { section: "clients" }
+        } as never
+      }
+    />
   );
 }

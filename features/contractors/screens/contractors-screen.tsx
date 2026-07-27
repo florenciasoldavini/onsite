@@ -1,9 +1,9 @@
-import { ClientCard } from "@/features/clients/components/client-card";
-import { useClients } from "@/features/clients/hooks/use-clients";
+import { ContractorCard } from "@/features/contractors/components/contractor-card";
+import { useContractors } from "@/features/contractors/hooks/use-contractors";
 import type {
-  ClientSort,
-  ClientSummary
-} from "@/features/clients/types/client";
+  ContractorSort,
+  ContractorSummary
+} from "@/features/contractors/types/contractor";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { EmptyState } from "@/shared/ui/components/empty-state";
@@ -14,10 +14,10 @@ import { SelectMenu } from "@/shared/ui/components/select-menu";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import {
+  HardHatIcon,
   PlusIcon,
   RefreshIcon,
-  SortIcon,
-  UserIcon
+  SortIcon
 } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
@@ -25,14 +25,14 @@ import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
 import { FlatList, View, type ListRenderItemInfo } from "react-native";
 
-const clientSortOptions = [
+const contractorSortOptions = [
   { label: "Newest", value: "created_desc" },
   { label: "Oldest", value: "created_asc" },
   { label: "A-Z", value: "name_asc" },
   { label: "Z-A", value: "name_desc" }
-] satisfies { label: string; value: ClientSort }[];
+] satisfies { label: string; value: ContractorSort }[];
 
-export default function ClientsScreen({
+export default function ContractorsScreen({
   directoryHeader
 }: {
   directoryHeader?: ReactNode;
@@ -40,19 +40,21 @@ export default function ClientsScreen({
   const router = useRouter();
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
-  const [sort, setSort] = useState<ClientSort>("created_desc");
-  const clientsQuery = useClients({ query, sort });
-  const clients = useMemo(
-    () => clientsQuery.data?.pages.flatMap((page) => page.items) ?? [],
-    [clientsQuery.data]
+  const [sort, setSort] = useState<ContractorSort>("created_desc");
+  const contractorsQuery = useContractors({ query, sort });
+  const contractors = useMemo(
+    () =>
+      contractorsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    [contractorsQuery.data]
   );
   const columns = isExpanded ? 3 : isCompact ? 1 : 2;
-  const openClient = useCallback(
-    (clientId: string) => router.push(`/clients/${clientId}` as never),
+  const openContractor = useCallback(
+    (contractorId: string) =>
+      router.push(`/contractors/${contractorId}` as never),
     [router]
   );
-  const renderClient = useCallback(
-    ({ item }: ListRenderItemInfo<ClientSummary>) => (
+  const renderContractor = useCallback(
+    ({ item }: ListRenderItemInfo<ContractorSummary>) => (
       <View
         style={{
           flex: 1 / columns,
@@ -60,16 +62,22 @@ export default function ClientsScreen({
           padding: atomSpacing[2]
         }}
       >
-        <ClientCard client={item} onPress={() => openClient(item.id)} />
+        <ContractorCard
+          contractor={item}
+          onPress={() => openContractor(item.id)}
+        />
       </View>
     ),
-    [columns, openClient]
+    [columns, openContractor]
   );
   const loadMore = useCallback(() => {
-    if (clientsQuery.hasNextPage && !clientsQuery.isFetchingNextPage) {
-      void clientsQuery.fetchNextPage();
+    if (
+      contractorsQuery.hasNextPage &&
+      !contractorsQuery.isFetchingNextPage
+    ) {
+      void contractorsQuery.fetchNextPage();
     }
-  }, [clientsQuery]);
+  }, [contractorsQuery]);
   const hasSearch = query.trim().length > 0;
 
   const header = (
@@ -82,15 +90,15 @@ export default function ClientsScreen({
                 fullWidth={false}
                 icon={PlusIcon}
                 iconAfter={false}
-                onPress={() => router.push("/clients/new" as never)}
+                onPress={() => router.push("/contractors/new" as never)}
                 size="sm"
               >
-                New client
+                New contractor
               </AppButton>
             ) : null
           }
-          description="Keep client contact details connected to the right projects."
-          title="Clients"
+          description="Keep contractor contact details ready for future worker assignments."
+          title="Contractors"
         />
       )}
       <View
@@ -103,41 +111,41 @@ export default function ClientsScreen({
         <View style={{ flex: 1 }}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search clients"
+            placeholder="Search contractors"
             value={query}
           />
         </View>
         <SelectMenu
-          accessibilityLabel="Sort clients"
+          accessibilityLabel="Sort contractors"
           icon={SortIcon}
           labelPrefix="Sort"
           onChange={setSort}
-          options={clientSortOptions}
+          options={contractorSortOptions}
           value={sort}
         />
       </View>
     </View>
   );
 
-  const empty = clientsQuery.isLoading ? (
+  const empty = contractorsQuery.isLoading ? (
     <View style={{ gap: atomSpacing[4], padding: atomSpacing[2] }}>
       {[0, 1, 2].map((item) => (
         <SkeletonBlock height={156} key={item} />
       ))}
     </View>
-  ) : clientsQuery.isError ? (
+  ) : contractorsQuery.isError ? (
     <EmptyState
       action={{
         icon: RefreshIcon,
         label: "Retry",
-        onPress: () => void clientsQuery.refetch()
+        onPress: () => void contractorsQuery.refetch()
       }}
       description={getUserFacingErrorMessage(
-        clientsQuery.error,
-        "We couldn't load your clients. Check your connection and try again."
+        contractorsQuery.error,
+        "We couldn't load your contractors. Check your connection and try again."
       )}
-      icon={UserIcon}
-      title="Clients unavailable"
+      icon={HardHatIcon}
+      title="Contractors unavailable"
     />
   ) : (
     <EmptyState
@@ -146,29 +154,31 @@ export default function ClientsScreen({
           ? { label: "Clear search", onPress: () => setQuery("") }
           : {
               icon: PlusIcon,
-              label: "New client",
-              onPress: () => router.push("/clients/new" as never)
+              label: "New contractor",
+              onPress: () => router.push("/contractors/new" as never)
             }
       }
       description={
         hasSearch
           ? "Try another name, phone number, or email."
-          : "Add your first client to connect their contact details to projects."
+          : "Add your first contractor to start building your directory."
       }
-      icon={UserIcon}
-      title={hasSearch ? "No matching clients" : "No clients yet"}
+      icon={HardHatIcon}
+      title={
+        hasSearch ? "No matching contractors" : "No contractors yet"
+      }
     />
   );
 
   return (
     <Screen
       floatingAction={
-        clients.length > 0 && isCompact ? (
+        contractors.length > 0 && isCompact ? (
           <AppButton
-            accessibilityLabel="New client"
+            accessibilityLabel="New contractor"
             icon={PlusIcon}
             layout="icon"
-            onPress={() => router.push("/clients/new" as never)}
+            onPress={() => router.push("/contractors/new" as never)}
             shape="pill"
           />
         ) : null
@@ -176,23 +186,26 @@ export default function ClientsScreen({
       scrollable={false}
     >
       <FlatList
-        contentContainerStyle={{ flexGrow: 1, paddingBottom: atomSpacing[10] }}
+        contentContainerStyle={{
+          flexGrow: 1,
+          paddingBottom: atomSpacing[10]
+        }}
         contentInsetAdjustmentBehavior="automatic"
-        data={clients}
-        key={`clients-${columns}`}
+        data={contractors}
+        key={`contractors-${columns}`}
         keyExtractor={(item) => item.id}
         ListEmptyComponent={empty}
         ListFooterComponent={
-          clientsQuery.hasNextPage ? (
+          contractorsQuery.hasNextPage ? (
             <View style={{ padding: atomSpacing[4] }}>
               <AppButton
                 color="neutral"
-                loading={clientsQuery.isFetchingNextPage}
+                loading={contractorsQuery.isFetchingNextPage}
                 onPress={loadMore}
                 size="sm"
                 variant="bordered"
               >
-                Load more clients
+                Load more contractors
               </AppButton>
             </View>
           ) : null
@@ -201,7 +214,7 @@ export default function ClientsScreen({
         numColumns={columns}
         onEndReached={loadMore}
         onEndReachedThreshold={0.35}
-        renderItem={renderClient}
+        renderItem={renderContractor}
         showsVerticalScrollIndicator={false}
       />
     </Screen>
