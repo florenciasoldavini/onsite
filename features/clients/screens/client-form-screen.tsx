@@ -131,7 +131,8 @@ export default function ClientFormScreen({
         <EmptyState
           action={{
             label: "Back to clients",
-            onPress: () => router.replace("/clients" as never)
+            onPress: () =>
+              router.replace("/directory?section=clients" as never)
           }}
           description="This client may have been removed or you may not have access."
           icon={UserIcon}
@@ -157,7 +158,8 @@ export default function ClientFormScreen({
               {
                 accessibilityLabel: "Back to clients",
                 label: "Client",
-                onPress: () => router.replace("/clients" as never)
+                onPress: () =>
+                  router.replace("/directory?section=clients" as never)
               },
               {
                 accessibilityLabel: "Back to client detail",
@@ -174,7 +176,8 @@ export default function ClientFormScreen({
               {
                 accessibilityLabel: "Back to clients",
                 label: "Client",
-                onPress: () => router.replace("/clients" as never)
+                onPress: () =>
+                  router.replace("/directory?section=clients" as never)
               },
               { label: "New" }
             ]}

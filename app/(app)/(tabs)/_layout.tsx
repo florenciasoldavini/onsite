@@ -74,7 +74,13 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="clients"
         options={{
-          title: "Clients",
+          href: null
+        }}
+      />
+      <Tabs.Screen
+        name="directory"
+        options={{
+          title: "Directory",
           tabBarIcon: ({ color }) => (
             <UserIcon color={color} size={tabIconSize} />
           )
