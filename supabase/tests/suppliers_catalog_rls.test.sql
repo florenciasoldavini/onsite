@@ -218,9 +218,10 @@ select is(
     select count(*)::integer
     from public.suppliers
     where id = '40000000-0000-4000-8000-000000000041'
+      and deleted_at is null
   ),
   0,
-  'RLS hides a soft-deleted supplier'
+  'active supplier reads hide a soft-deleted supplier'
 );
 
 select results_eq(

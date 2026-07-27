@@ -170,9 +170,10 @@ select is(
     select count(*)::integer
     from public.contractors
     where id = '20000000-0000-4000-8000-000000000021'
+      and deleted_at is null
   ),
   0,
-  'RLS hides a soft-deleted contractor'
+  'active contractor reads hide a soft-deleted contractor'
 );
 
 select results_eq(

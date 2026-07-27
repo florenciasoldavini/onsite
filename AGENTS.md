@@ -124,6 +124,7 @@ Last reviewed: 2026-07-21
 - [20260727173645_create_workers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727173645_create_workers_catalog.sql:1)
 - [20260727181524_align_directory_active_select_policies.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181524_align_directory_active_select_policies.sql:1)
 - [20260727181533_create_suppliers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181533_create_suppliers_catalog.sql:1)
+- [20260727191057_allow_directory_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727191057_allow_directory_soft_delete_updates.sql:1)
 
 ### RLS Baseline
 
@@ -132,6 +133,7 @@ Last reviewed: 2026-07-21
 - Admin users should see all non-deleted rows for feature tables unless a feature documents a narrower rule
 - Normal users should see only their own rows unless a feature explicitly introduces participant access
 - All get/list reads must filter out rows where `deleted_at` is not null
+- Owner/admin `SELECT` policies may retain access to archived owner-scoped rows when PostgreSQL requires that visibility for direct RLS-protected soft-deletion updates; archived-row exclusion remains mandatory in every product get/list query
 - Policies are anchored to `auth.uid()` plus trusted database role checks, not client-only role checks
 - Insert policies must prevent clients from assigning privileged ownership, membership, or role values
 - Update policies must preserve ownership/role invariants and use both `USING` and `WITH CHECK` where ownership could change

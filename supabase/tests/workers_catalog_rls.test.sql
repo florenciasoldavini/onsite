@@ -362,9 +362,10 @@ select is(
     select count(*)::integer
     from public.workers
     where email = 'worker@example.com'
+      and deleted_at is null
   ),
   0,
-  'RLS hides a soft-deleted worker'
+  'active worker reads hide a soft-deleted worker'
 );
 
 select results_eq(
