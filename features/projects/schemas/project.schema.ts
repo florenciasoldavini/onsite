@@ -18,6 +18,7 @@ export const ProjectSchema: z.ZodType<Project> = z.object({
   latitude: z.number(),
   longitude: z.number(),
   building_type: z.enum(PROJECT_BUILDING_TYPES),
+  client_id: z.string().nullable(),
   project_type: z.enum(PROJECT_TYPES),
   status: z.enum(PROJECT_STATUSES),
   phase: z.enum(PROJECT_PHASES),

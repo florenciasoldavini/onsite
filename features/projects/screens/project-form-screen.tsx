@@ -1,9 +1,14 @@
 import { AppButton } from "@/shared/ui/components/button";
+import { ClientPickerField } from "@/features/clients/components/client-picker-field";
 import { AppCard } from "@/shared/ui/components/card";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { FieldMessage } from "@/shared/ui/components/field-message";
 import { AppHeading } from "@/shared/ui/components/heading";
-import { NumericField, TextField } from "@/shared/ui/components/input";
+import {
+  NumericField,
+  SearchField,
+  TextField
+} from "@/shared/ui/components/input";
 import { FieldLabel } from "@/shared/ui/components/label";
 import { Screen } from "@/shared/ui/components/screen";
 import { SelectField } from "@/shared/ui/components/select-field";
@@ -81,6 +86,7 @@ import {
 const defaultValues: ProjectFormValues = {
   address: null,
   building_type: "residential",
+  client_id: null,
   coverAsset: null,
   description: "",
   end_date: "",
@@ -386,6 +392,21 @@ export function ProjectFormScreen({
                     setFormError(null);
                   }}
                   placeholder="Scope, crew notes, client context..."
+                  value={field.value}
+                />
+              )}
+            />
+
+            <Controller
+              control={control}
+              name="client_id"
+              render={({ field }) => (
+                <ClientPickerField
+                  onChange={(clientId) => {
+                    field.onChange(clientId);
+                    setFormError(null);
+                  }}
+                  ownerId={projectQuery.data?.owner_id}
                   value={field.value}
                 />
               )}
@@ -753,7 +774,8 @@ function AddressField({
 
   return (
     <View style={{ gap: atomSpacing[3] }}>
-      <TextField
+      <SearchField
+        clearAccessibilityLabel="Clear project address"
         errorText={errorText}
         label="Project Address"
         leftIcon={MapPinIcon}
@@ -769,6 +791,10 @@ function AddressField({
           }
         }}
         onFocus={openSuggestions}
+        onClear={() => {
+          closeSuggestions();
+          onChange(null);
+        }}
         onPressIn={() => {
           openSuggestions();
         }}
@@ -1426,6 +1452,7 @@ function getValuesFromProject(project: Project): ProjectFormValues {
       placeId: project.google_place_id
     },
     building_type: project.building_type,
+    client_id: project.client_id,
     coverAsset: null,
     description: project.description ?? "",
     end_date: project.end_date ?? "",

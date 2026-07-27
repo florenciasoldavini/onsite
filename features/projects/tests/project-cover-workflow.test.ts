@@ -39,6 +39,7 @@ const asset = { uri: "file:///cover.jpg" };
 const createInput = {
   address: "Main Street 1",
   building_type: "residential" as const,
+  client_id: null,
   description: null,
   end_date: null,
   estimated_end_date: "2026-08-01",
@@ -56,6 +57,7 @@ const createInput = {
 const project = {
   address: "Main Street 1",
   building_type: "residential" as const,
+  client_id: null,
   cover_image_path: null,
   created_at: "2026-07-21T12:00:00.000Z",
   deleted_at: null,

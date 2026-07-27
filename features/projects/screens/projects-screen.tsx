@@ -1,7 +1,7 @@
 import { AppButton } from "@/shared/ui/components/button";
 import { AppCard } from "@/shared/ui/components/card";
 import { EmptyState } from "@/shared/ui/components/empty-state";
-import { TextField } from "@/shared/ui/components/input";
+import { SearchField } from "@/shared/ui/components/input";
 import { MultiSelectField } from "@/shared/ui/components/multi-select-field";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
 import { Screen } from "@/shared/ui/components/screen";
@@ -45,7 +45,6 @@ import {
   FilterIcon,
   FolderPlusIcon,
   RefreshIcon,
-  SearchIcon,
   SortIcon
 } from "@/shared/ui/icons";
 import { useRouter } from "expo-router";
@@ -207,8 +206,7 @@ export default function ProjectsScreen() {
         style={[styles.toolbar, isExpanded ? styles.toolbarExpanded : null]}
       >
         <View style={isExpanded ? styles.searchExpanded : styles.searchFluid}>
-          <TextField
-            leftIcon={SearchIcon}
+          <SearchField
             onChangeText={setQuery}
             placeholder="Search projects"
             value={query}
