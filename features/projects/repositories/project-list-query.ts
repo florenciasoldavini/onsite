@@ -28,6 +28,14 @@ export function buildProjectListQueryPlan({
     queryFilters.push({ column: "owner_id", operator: "eq", value: userId });
   }
 
+  if (normalized.clientId) {
+    queryFilters.push({
+      column: "client_id",
+      operator: "eq",
+      value: normalized.clientId
+    });
+  }
+
   if (normalized.statuses) {
     queryFilters.push({
       column: "status",

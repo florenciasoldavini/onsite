@@ -10,6 +10,7 @@ import {
   ProfileIcon,
   ProjectsIcon,
   ToDoIcon,
+  UserIcon,
   type AppIconComponent
 } from "@/shared/ui/icons";
 import { usePathname, useRouter } from "expo-router";
@@ -22,6 +23,7 @@ const sideNavigationMuted = atomPalette.textMuted;
 
 const primaryDestinations = [
   { href: "/projects", icon: ProjectsIcon, label: "Projects" },
+  { href: "/clients", icon: UserIcon, label: "Clients" },
   { href: "/tasks", icon: ToDoIcon, label: "Tasks" }
 ] as const;
 

@@ -1,6 +1,11 @@
 import { HapticTab } from "@/shared/ui/haptic-tab";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
-import { ProfileIcon, ProjectsIcon, ToDoIcon } from "@/shared/ui/icons";
+import {
+  ProfileIcon,
+  ProjectsIcon,
+  ToDoIcon,
+  UserIcon
+} from "@/shared/ui/icons";
 import { getMonoFontStyle } from "@/shared/theme/fonts";
 import { designTokens } from "@/shared/theme/tokens";
 import { BottomTabBar } from "@react-navigation/bottom-tabs";
@@ -63,6 +68,15 @@ export default function TabsLayout() {
           title: "Projects",
           tabBarIcon: ({ color }) => (
             <ProjectsIcon color={color} size={tabIconSize} />
+          )
+        }}
+      />
+      <Tabs.Screen
+        name="clients"
+        options={{
+          title: "Clients",
+          tabBarIcon: ({ color }) => (
+            <UserIcon color={color} size={tabIconSize} />
           )
         }}
       />

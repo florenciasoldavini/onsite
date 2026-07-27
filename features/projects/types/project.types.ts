@@ -18,6 +18,7 @@ export type ProjectSort =
 export interface Project {
   address: string;
   building_type: ProjectBuildingType;
+  client_id: string | null;
   cover_image_path: string | null;
   cover_image_url?: string | null;
   created_at: string;
@@ -60,6 +61,7 @@ export type ProjectSummary = Pick<
 export interface ProjectFilters {
   buildingType?: ProjectBuildingType | "all";
   buildingTypes?: ProjectBuildingType[];
+  clientId?: string;
   phase?: ProjectPhase | "all";
   phases?: ProjectPhase[];
   projectType?: ProjectType | "all";
@@ -86,6 +88,7 @@ export interface ProjectCoverAsset {
 export interface ProjectFormValues {
   address: ResolvedProjectAddress | null;
   building_type: ProjectBuildingType;
+  client_id: string | null;
   coverAsset?: ProjectCoverAsset | null;
   description: string;
   end_date: string;
@@ -102,6 +105,7 @@ export interface ProjectFormValues {
 export interface CreateProjectInput {
   address: string;
   building_type: ProjectBuildingType;
+  client_id: string | null;
   description: string | null;
   end_date: string | null;
   estimated_end_date: string | null;

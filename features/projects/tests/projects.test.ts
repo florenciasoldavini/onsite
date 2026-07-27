@@ -28,6 +28,7 @@ const validValues: ProjectFormValues = {
     placeId: "google-place-id"
   },
   building_type: "commercial",
+  client_id: null,
   coverAsset: null,
   description: "Lobby renovation",
   end_date: "",
@@ -45,6 +46,7 @@ function createProjectFixture(overrides: Partial<Project>): Project {
   return {
     address: "Av. Corrientes 1234, Buenos Aires",
     building_type: "commercial",
+    client_id: null,
     cover_image_path: null,
     created_at: "2026-07-01T00:00:00.000Z",
     deleted_at: null,
@@ -90,6 +92,7 @@ describe("project validation", () => {
 
     expect(input).toMatchObject({
       address: "Av. Corrientes 1234, Buenos Aires",
+      client_id: null,
       description: "Lobby renovation",
       google_place_id: "google-place-id",
       progress_percentage: 15
@@ -120,6 +123,7 @@ describe("project filters and query planning", () => {
       })
     ).toEqual({
       buildingTypes: null,
+      clientId: null,
       phases: null,
       projectTypes: null,
       query: null,
@@ -144,6 +148,20 @@ describe("project filters and query planning", () => {
       column: "owner_id",
       operator: "eq",
       value: "user-id"
+    });
+  });
+
+  it("filters linked projects by client", () => {
+    const plan = buildProjectListQueryPlan({
+      filters: { clientId: "client-id" },
+      userId: "user-id",
+      userRole: "user"
+    });
+
+    expect(plan.filters).toContainEqual({
+      column: "client_id",
+      operator: "eq",
+      value: "client-id"
     });
   });
 

@@ -117,6 +117,9 @@ Last reviewed: 2026-07-21
 - [20260510090002_enable_users_rls.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260510090002_enable_users_rls.sql:1)
 - [20260706191340_add_welcome_email_sent_at_to_users.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260706191340_add_welcome_email_sent_at_to_users.sql:1)
 - [20260725191048_create_trade_categories_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260725191048_create_trade_categories_catalog.sql:1)
+- [20260726205600_create_clients_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260726205600_create_clients_catalog.sql:1)
+- [20260727150408_restrict_clients_table_grants.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727150408_restrict_clients_table_grants.sql:1)
+- [20260727152922_allow_client_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727152922_allow_client_soft_delete_updates.sql:1)
 
 ### RLS Baseline
 
@@ -145,6 +148,15 @@ Last reviewed: 2026-07-21
 - catalog records store only a stable language-neutral code; localized names, descriptions, and display order belong in the presentation/i18n layer
 - obsolete entries should be soft-deleted so future worker history can retain valid references
 - worker expertise will link workers directly to trade categories when the workers feature defines its persisted ownership model; do not create that junction without a foreign key to the canonical workers table
+
+### Clients Catalog
+
+- clients are manager-owned contact records and do not have Supabase Auth identities or app login access
+- each project may reference one optional active client, while one client may be linked to multiple projects
+- a project and its client must have the same owner; database triggers enforce this relationship and reject archived clients
+- normal users can manage only their own clients, while admins may read and update all active client records
+- deleting a client means soft deletion after explicit confirmation; linked active projects are atomically unlinked
+- client catalog, picker, and linked-project queries must remain paginated and exclude soft-deleted records
 
 ## User Model Decisions
 

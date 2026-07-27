@@ -15,6 +15,9 @@ export default function AppLayout() {
           <Stack.Screen name="projects/new/index" />
           <Stack.Screen name="projects/[projectId]/index" />
           <Stack.Screen name="projects/[projectId]/edit" />
+          <Stack.Screen name="clients/new/index" />
+          <Stack.Screen name="clients/[clientId]/index" />
+          <Stack.Screen name="clients/[clientId]/edit" />
         </Stack>
       </View>
     </View>

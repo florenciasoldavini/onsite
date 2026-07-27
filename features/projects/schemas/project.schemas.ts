@@ -40,6 +40,7 @@ export const projectFormSchema = z
   .object({
     address: addressSchema.nullable(),
     building_type: z.enum(PROJECT_BUILDING_TYPES),
+    client_id: z.string().nullable(),
     coverAsset: coverAssetSchema,
     description: z.string().max(2000),
     end_date: optionalDateSchema,
@@ -131,6 +132,7 @@ export function toCreateProjectInput({
   return {
     address: values.address.address,
     building_type: values.building_type,
+    client_id: values.client_id,
     description: normalizeNullableText(values.description),
     end_date: normalizeNullableText(values.end_date),
     estimated_end_date: normalizeNullableText(values.estimated_end_date),
@@ -161,6 +163,7 @@ export function normalizeProjectFilters(filters: ProjectFilters = {}) {
       filters.buildingTypes,
       filters.buildingType
     ),
+    clientId: normalizeNullableText(filters.clientId ?? ""),
     phases: normalizeFilterList(filters.phases, filters.phase),
     projectTypes: normalizeFilterList(
       filters.projectTypes,

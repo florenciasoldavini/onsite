@@ -182,6 +182,7 @@ export async function softDeleteProjectRow(projectId: string) {
   const { error } = await client
     .from("projects")
     .update({
+      client_id: null,
       deleted_at: new Date().toISOString(),
       updated_at: new Date().toISOString()
     })
