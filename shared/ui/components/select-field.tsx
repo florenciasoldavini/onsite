@@ -10,6 +10,7 @@ export interface SelectFieldOption<T extends string> {
 }
 
 export function SelectField<T extends string>({
+  disabled = false,
   errorText,
   helperText,
   label,
@@ -18,6 +19,7 @@ export function SelectField<T extends string>({
   required = false,
   value
 }: {
+  disabled?: boolean;
   errorText?: string | null;
   helperText?: string | null;
   label: ReactNode;
@@ -45,6 +47,7 @@ export function SelectField<T extends string>({
 
           return (
             <SelectableChip
+              disabled={disabled}
               key={option.value}
               onPress={() => {
                 onChange(option.value);

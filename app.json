@@ -52,7 +52,8 @@
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow onzait to access your photo library so you can choose profile photos and project cover images."
+          "cameraPermission": "Allow onzait to use your camera so you can take project photos.",
+          "photosPermission": "Allow onzait to access your photo library so you can choose profile photos, project covers, and project photos."
         }
       ],
       "expo-secure-store",

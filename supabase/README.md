@@ -23,6 +23,8 @@ This folder is the starting point for tracked Supabase database changes.
   Create the manager-owned client catalog, project relationship, least-privilege grants, and soft-delete-compatible RLS.
 - `20260727154854_create_contractors_catalog.sql`
   Creates the manager-owned contractor contact catalog with least-privilege grants, normalization, owner/admin RLS, and soft deletion.
+- `20260727203459_create_project_photos_feature.sql`
+  Creates project photo metadata, owner/admin RLS, deterministic gallery indexes, and private immutable full/thumbnail Storage policies.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.
 
@@ -36,7 +38,9 @@ The current frontend talks directly to:
 - `public.trade_categories`
 - `public.clients`
 - `public.contractors`
+- `public.project_photos`
 - private Supabase Storage for project cover images
+- private Supabase Storage for project full images and thumbnails
 
 Current policy rules:
 
@@ -60,9 +64,8 @@ a real foreign key and enforceable RLS boundary.
 When the app starts exposing more project data directly from the client, the next tables to policy should likely be:
 
 - `project_participants`
-- `photos`
 - `todos`
-- storage buckets for project photos / receipts
+- storage buckets for receipts
 
 Those policies should use explicit participant or owner rules plus admin-wide support where the product requires it.
 
@@ -72,6 +75,16 @@ Those policies should use explicit participant or owner rules plus admin-wide su
 - Cover paths use `projects/{project_id}/cover/{generated_file_name}`.
 - Storage policies should allow only project owners or admins to read, upload, replace, and remove cover images.
 - Signed URLs are used for preview display; do not make operational project media globally public by default.
+
+## Project photo storage
+
+- `project-photos` is private and accepts JPEG objects up to 6 MiB each.
+- Full and thumbnail objects use immutable paths:
+  - `projects/{project_id}/photos/{photo_id}/full.jpg`
+  - `projects/{project_id}/photos/{photo_id}/thumbnail.jpg`
+- Storage inserts and cleanup require owner/admin project access; object updates are not granted.
+- Storage reads require an active `project_photos` row referencing the exact object, so soft-deleted and orphaned objects remain unreadable.
+- Photo row ownership and uploader identity are derived in the database rather than trusted from client input.
 
 ## Profile avatar storage
 
