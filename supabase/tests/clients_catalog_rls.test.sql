@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(16);
+select plan(17);
 
 insert into public.users (id, first_name, email, role)
 values
@@ -195,9 +195,24 @@ select is(
     select count(*)::integer
     from public.clients
     where id = '20000000-0000-4000-8000-000000000011'
+      and deleted_at is null
   ),
   0,
-  'soft-deleted clients are hidden from reads'
+  'soft-deleted clients are excluded from active reads'
+);
+
+select results_eq(
+  $$
+    with changed as (
+      update public.clients
+      set first_name = 'Restored'
+      where id = '20000000-0000-4000-8000-000000000011'
+      returning 1
+    )
+    select count(*)::integer from changed
+  $$,
+  $$ values (0) $$,
+  'owners cannot modify an archived client'
 );
 
 select throws_ok(

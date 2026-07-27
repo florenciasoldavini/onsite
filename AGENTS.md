@@ -119,6 +119,7 @@ Last reviewed: 2026-07-21
 - [20260725191048_create_trade_categories_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260725191048_create_trade_categories_catalog.sql:1)
 - [20260726205600_create_clients_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260726205600_create_clients_catalog.sql:1)
 - [20260727150408_restrict_clients_table_grants.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727150408_restrict_clients_table_grants.sql:1)
+- [20260727152922_allow_client_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727152922_allow_client_soft_delete_updates.sql:1)
 
 ### RLS Baseline
 
