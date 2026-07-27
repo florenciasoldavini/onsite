@@ -9,21 +9,25 @@ export function NavScreenHeader({
   action,
   breadcrumbLabel,
   description,
+  showBreadcrumb = true,
   style,
   title
 }: {
   action?: ReactNode;
   breadcrumbLabel?: ReactNode;
   description?: ReactNode;
+  showBreadcrumb?: boolean;
   style?: StyleProp<ViewStyle>;
   title: ReactNode;
 }) {
   return (
     <View style={[{ gap: atomSpacing[3] }, style]}>
-      <Breadcrumb
-        items={[{ label: breadcrumbLabel ?? title }]}
-        showTrailingSeparator
-      />
+      {showBreadcrumb ? (
+        <Breadcrumb
+          items={[{ label: breadcrumbLabel ?? title }]}
+          showTrailingSeparator
+        />
+      ) : null}
       <View
         style={{
           alignItems: "center",

@@ -2,14 +2,14 @@ import {
   mapAddressSuggestions,
   mapResolvedAddress,
   mapStaticMapPreview
-} from "@/features/projects/maps/map-payloads";
+} from "@/features/locations/maps/map-payloads";
 import {
   getDraggedProjectsMapViewport,
   getProjectMapPoints,
   getProjectsMapViewport
 } from "@/features/projects/maps/map-points";
 import { toLiveUserLocation } from "@/features/projects/maps/live-user-location-values";
-import { getMapsFunctionErrorMessage } from "@/features/projects/maps/map-errors";
+import { getMapsFunctionErrorMessage } from "@/features/locations/maps/map-errors";
 import { buildProjectListQueryPlan } from "@/features/projects/repositories/project-list-query";
 import type { Project, ProjectFormValues } from "@/features/projects/types/project.types";
 import {

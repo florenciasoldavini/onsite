@@ -1,22 +1,60 @@
 import ClientsScreen from "@/features/clients/screens/clients-screen";
 import ContractorsScreen from "@/features/contractors/screens/contractors-screen";
+import SuppliersScreen from "@/features/suppliers/screens/suppliers-screen";
 import WorkersScreen from "@/features/workers/screens/workers-screen";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { SelectMenu } from "@/shared/ui/components/select-menu";
 import { SegmentedTabs } from "@/shared/ui/components/tabs";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { PlusIcon } from "@/shared/ui/icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { View } from "react-native";
 
-type DirectorySection = "clients" | "contractors" | "workers";
+type DirectorySection = "clients" | "contractors" | "suppliers" | "workers";
 
 const directorySections = [
-  { label: "Clients", value: "clients" },
-  { label: "Contractors", value: "contractors" },
-  { label: "Workers", value: "workers" }
-] satisfies { label: string; value: DirectorySection }[];
+  {
+    createLabel: "New client",
+    createRoute: "/clients/new",
+    label: "Clients",
+    Screen: ClientsScreen,
+    value: "clients"
+  },
+  {
+    createLabel: "New contractor",
+    createRoute: "/contractors/new",
+    label: "Contractors",
+    Screen: ContractorsScreen,
+    value: "contractors"
+  },
+  {
+    createLabel: "New worker",
+    createRoute: "/workers/new",
+    label: "Workers",
+    Screen: WorkersScreen,
+    value: "workers"
+  },
+  {
+    createLabel: "New supplier",
+    createRoute: "/suppliers/new",
+    label: "Suppliers",
+    Screen: SuppliersScreen,
+    value: "suppliers"
+  }
+] satisfies {
+  createLabel: string;
+  createRoute: string;
+  label: string;
+  Screen: typeof ClientsScreen;
+  value: DirectorySection;
+}[];
+
+const directorySectionOptions = directorySections.map(({ label, value }) => ({
+  label,
+  value
+}));
 
 export default function DirectoryScreen() {
   const router = useRouter();
@@ -25,22 +63,11 @@ export default function DirectoryScreen() {
   const requestedSection = Array.isArray(params.section)
     ? params.section[0]
     : params.section;
-  const section: DirectorySection =
-    requestedSection === "contractors" || requestedSection === "workers"
-      ? requestedSection
-      : "clients";
-  const isClients = section === "clients";
-  const isContractors = section === "contractors";
-  const createRoute = isClients
-    ? "/clients/new"
-    : isContractors
-      ? "/contractors/new"
-      : "/workers/new";
-  const createLabel = isClients
-    ? "New client"
-    : isContractors
-      ? "New contractor"
-      : "New worker";
+  const selectedConfig =
+    directorySections.find(({ value }) => value === requestedSection) ??
+    directorySections[0];
+  const section = selectedConfig.value;
+  const SectionScreen = selectedConfig.Screen;
 
   const directoryHeader = (
     <View style={{ gap: atomSpacing[5] }}>
@@ -51,14 +78,14 @@ export default function DirectoryScreen() {
               fullWidth={false}
               icon={PlusIcon}
               iconAfter={false}
-              onPress={() => router.push(createRoute as never)}
+              onPress={() => router.push(selectedConfig.createRoute as never)}
               size="sm"
             >
-              {createLabel}
+              {selectedConfig.createLabel}
             </AppButton>
           ) : null
         }
-        description="Manage the people connected to your construction work."
+        description="Manage the people and businesses connected to your construction work."
         title="Directory"
       />
       <View
@@ -68,23 +95,30 @@ export default function DirectoryScreen() {
           width: isExpanded ? 560 : "100%"
         }}
       >
-        <SegmentedTabs
-          onChange={(nextSection) => router.setParams({ section: nextSection })}
-          options={directorySections}
-          selectedTone="accent"
-          value={section}
-        />
+        {isCompact ? (
+          <SelectMenu
+            accessibilityLabel="Choose directory section"
+            labelPrefix="Directory"
+            minWidth={220}
+            onChange={(nextSection) =>
+              router.setParams({ section: nextSection })
+            }
+            options={directorySectionOptions}
+            value={section}
+          />
+        ) : (
+          <SegmentedTabs
+            onChange={(nextSection) =>
+              router.setParams({ section: nextSection })
+            }
+            options={directorySectionOptions}
+            selectedTone="accent"
+            value={section}
+          />
+        )}
       </View>
     </View>
   );
 
-  if (isClients) {
-    return <ClientsScreen directoryHeader={directoryHeader} />;
-  }
-
-  if (isContractors) {
-    return <ContractorsScreen directoryHeader={directoryHeader} />;
-  }
-
-  return <WorkersScreen directoryHeader={directoryHeader} />;
+  return <SectionScreen directoryHeader={directoryHeader} />;
 }

@@ -122,6 +122,8 @@ Last reviewed: 2026-07-21
 - [20260727152922_allow_client_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727152922_allow_client_soft_delete_updates.sql:1)
 - [20260727154854_create_contractors_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727154854_create_contractors_catalog.sql:1)
 - [20260727173645_create_workers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727173645_create_workers_catalog.sql:1)
+- [20260727181524_align_directory_active_select_policies.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181524_align_directory_active_select_policies.sql:1)
+- [20260727181533_create_suppliers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181533_create_suppliers_catalog.sql:1)
 
 ### RLS Baseline
 
@@ -181,6 +183,16 @@ Last reviewed: 2026-07-21
 - deleting a worker means soft deletion after explicit confirmation; worker lists remain paginated and exclude soft-deleted records
 - project assignments, payment contracts, imports, duplicate detection, and worker login identities remain deferred
 - clients, contractors, and workers share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
+
+### Suppliers Catalog
+
+- suppliers are manager-owned business records and do not have Supabase Auth identities or app login access
+- supplier name is required; contact name, phone number, email, website, Google-selected address, and notes are optional
+- supplier addresses persist the formatted address, Google place ID, latitude, and longitude as one atomic optional bundle
+- normal users can manage only their own suppliers, while admins may read and update all active supplier records without transferring ownership
+- deleting a supplier means soft deletion after explicit confirmation; supplier lists remain paginated and exclude soft-deleted records
+- opening hours, multiple contacts, material categories, project relationships, purchasing, tax identifiers, imports, duplicate detection, and supplier avatars remain deferred
+- clients, contractors, workers, and suppliers share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
 
 ## User Model Decisions
 

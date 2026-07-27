@@ -1,20 +1,20 @@
+import { getMapsFunctionErrorMessage } from "@/features/locations/maps/map-errors";
 import {
   mapAddressSuggestions,
   mapResolvedAddress,
   mapStaticMapPreview
-} from "@/features/projects/maps/map-payloads";
-import { getMapsFunctionErrorMessage } from "@/features/projects/maps/map-errors";
-import { requireSupabase } from "@/infrastructure/supabase/repository";
+} from "@/features/locations/maps/map-payloads";
 import type {
   AddressSuggestion,
-  ResolvedProjectAddress,
+  ResolvedAddress,
   StaticMapPoint,
   StaticMapPreview,
   StaticMapViewport
-} from "@/features/projects/types/project.types";
+} from "@/features/locations/types/location";
+import { requireSupabase } from "@/infrastructure/supabase/repository";
 import { UserFacingError } from "@/shared/utils/user-facing-errors";
 
-export async function autocompleteAddressSuggestions({
+export async function autocompleteAddressRows({
   input,
   sessionToken
 }: {
@@ -36,13 +36,13 @@ export async function autocompleteAddressSuggestions({
   return mapAddressSuggestions(data);
 }
 
-export async function resolveAddressSuggestion({
+export async function resolveAddressRow({
   placeId,
   sessionToken
 }: {
   placeId: string;
   sessionToken: string;
-}): Promise<ResolvedProjectAddress> {
+}): Promise<ResolvedAddress> {
   const client = requireSupabase();
   const { data, error } = await client.functions.invoke("places-resolve", {
     body: { placeId, sessionToken }
@@ -58,7 +58,7 @@ export async function resolveAddressSuggestion({
   return mapResolvedAddress(data);
 }
 
-export async function getStaticMapPreview({
+export async function getStaticMapPreviewRow({
   latitude,
   longitude,
   points,
@@ -78,8 +78,8 @@ export async function getStaticMapPreview({
           centerLongitude: viewport?.centerLongitude,
           latitude: viewport?.centerLatitude ?? mapCenter?.latitude,
           longitude: viewport?.centerLongitude ?? mapCenter?.longitude,
-          zoom: viewport?.zoom,
-          points
+          points,
+          zoom: viewport?.zoom
         }
       : { latitude, longitude }
   });

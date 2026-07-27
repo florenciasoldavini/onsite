@@ -1,8 +1,8 @@
 import type {
   AddressSuggestion,
-  ResolvedProjectAddress,
+  ResolvedAddress,
   StaticMapPreview
-} from "@/features/projects/types/project.types";
+} from "@/features/locations/types/location";
 
 export function mapAddressSuggestions(payload: unknown): AddressSuggestion[] {
   if (!payload || typeof payload !== "object" || !("suggestions" in payload)) {
@@ -24,18 +24,16 @@ export function mapAddressSuggestions(payload: unknown): AddressSuggestion[] {
       const placeId = (suggestion as { placeId?: unknown }).placeId;
       const text = (suggestion as { text?: unknown }).text;
 
-      if (typeof placeId !== "string" || typeof text !== "string") {
-        return null;
-      }
-
-      return { placeId, text };
+      return typeof placeId === "string" && typeof text === "string"
+        ? { placeId, text }
+        : null;
     })
     .filter((suggestion): suggestion is AddressSuggestion =>
       Boolean(suggestion)
     );
 }
 
-export function mapResolvedAddress(payload: unknown): ResolvedProjectAddress {
+export function mapResolvedAddress(payload: unknown): ResolvedAddress {
   if (!payload || typeof payload !== "object") {
     throw new Error("Address lookup returned an invalid response.");
   }

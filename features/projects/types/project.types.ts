@@ -4,6 +4,13 @@ import type {
   PROJECT_STATUSES,
   PROJECT_TYPES
 } from "@/features/projects/constants/project.constants";
+import type {
+  AddressSuggestion as LocationAddressSuggestion,
+  ResolvedAddress,
+  StaticMapPoint as LocationStaticMapPoint,
+  StaticMapPreview as LocationStaticMapPreview,
+  StaticMapViewport as LocationStaticMapViewport
+} from "@/features/locations/types/location";
 
 export type ProjectBuildingType = (typeof PROJECT_BUILDING_TYPES)[number];
 export type ProjectType = (typeof PROJECT_TYPES)[number];
@@ -72,12 +79,7 @@ export interface ProjectFilters {
   statuses?: ProjectStatus[];
 }
 
-export interface ResolvedProjectAddress {
-  address: string;
-  latitude: number;
-  longitude: number;
-  placeId: string;
-}
+export type ResolvedProjectAddress = ResolvedAddress;
 
 export interface ProjectCoverAsset {
   fileName?: string | null;
@@ -130,24 +132,7 @@ export interface ProjectSaveOutcome {
   project: Project;
 }
 
-export interface AddressSuggestion {
-  placeId: string;
-  text: string;
-}
-
-export interface StaticMapPreview {
-  attribution: string;
-  imageDataUrl: string;
-}
-
-export interface StaticMapPoint {
-  label?: string;
-  latitude: number;
-  longitude: number;
-}
-
-export interface StaticMapViewport {
-  centerLatitude: number;
-  centerLongitude: number;
-  zoom: number;
-}
+export type AddressSuggestion = LocationAddressSuggestion;
+export type StaticMapPreview = LocationStaticMapPreview;
+export type StaticMapPoint = LocationStaticMapPoint;
+export type StaticMapViewport = LocationStaticMapViewport;
