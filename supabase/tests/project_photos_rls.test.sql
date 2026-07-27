@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(30);
+select plan(31);
 
 select set_config('storage.allow_delete_query', 'true', true);
 
@@ -368,7 +368,7 @@ select set_config(
 
 select lives_ok(
   $$
-    insert into storage.objects (bucket_id, name, owner, metadata)
+    insert into storage.objects (bucket_id, name, owner_id, metadata)
     values (
       'project-photos',
       'projects/10000000-0000-4000-8000-000000000011/photos/20000000-0000-4000-8000-000000000011/full.jpg',
@@ -392,7 +392,7 @@ select is(
 
 select lives_ok(
   $$
-    insert into storage.objects (bucket_id, name, owner, metadata)
+    insert into storage.objects (bucket_id, name, owner_id, metadata)
     values (
       'project-photos',
       'projects/10000000-0000-4000-8000-000000000011/photos/20000000-0000-4000-8000-000000000099/full.jpg',
@@ -402,6 +402,21 @@ select lives_ok(
   $$,
   'owner can stage an object before its database row exists'
 );
+
+select set_config('storage.operation', 'storage.object.upload', true);
+
+select is(
+  (
+    select count(*)::integer
+    from storage.objects
+    where bucket_id = 'project-photos'
+      and name = 'projects/10000000-0000-4000-8000-000000000011/photos/20000000-0000-4000-8000-000000000099/full.jpg'
+  ),
+  1,
+  'Storage can return staged object metadata during its upload request'
+);
+
+select set_config('storage.operation', '', true);
 
 select is(
   (
@@ -428,9 +443,10 @@ select is(
     select count(*)::integer
     from public.project_photos
     where id = '20000000-0000-4000-8000-000000000011'
+      and deleted_at is null
   ),
   0,
-  'soft-deleted photos are hidden from reads'
+  'product reads exclude soft-deleted photos'
 );
 
 select is(

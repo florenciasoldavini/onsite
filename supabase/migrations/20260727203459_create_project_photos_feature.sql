@@ -148,6 +148,7 @@ on public.project_photos
 for each row
 execute function public.set_project_photo_derived_fields();
 
+revoke all on table public.project_photos from anon, authenticated;
 grant select on table public.project_photos to authenticated;
 grant insert (
   id,
@@ -183,7 +184,6 @@ for select
 to authenticated
 using (
   (select auth.uid()) is not null
-  and deleted_at is null
   and (
     owner_id = (select auth.uid())
     or (select public.is_current_user_admin())
@@ -265,14 +265,21 @@ using (
   and (select public.can_current_user_access_project(
     (storage.foldername(name))[2]
   ))
-  and exists (
-    select 1
-    from public.project_photos
-    where project_photos.deleted_at is null
-      and (
-        project_photos.full_path = name
-        or project_photos.thumbnail_path = name
+  and (
+    (
+      storage.allow_only_operation('storage.object.upload')
+      and owner_id = (select auth.uid())::text
+    )
+    or exists (
+      select 1
+      from public.project_photos
+      where project_photos.deleted_at is null
+        and (
+          project_photos.full_path = name
+          or project_photos.thumbnail_path = name
+        )
       )
+    )
   )
 );
 
