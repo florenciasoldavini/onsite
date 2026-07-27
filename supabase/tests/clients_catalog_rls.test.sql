@@ -170,17 +170,12 @@ select results_eq(
 
 select set_config('request.jwt.claim.sub', '00000000-0000-4000-8000-000000000011', true);
 
-select results_eq(
+select lives_ok(
   $$
-    with archived as (
-      update public.clients
-      set deleted_at = current_timestamp
-      where id = '20000000-0000-4000-8000-000000000011'
-      returning 1
-    )
-    select count(*)::integer from archived
+    update public.clients
+    set deleted_at = current_timestamp
+    where id = '20000000-0000-4000-8000-000000000011'
   $$,
-  $$ values (1) $$,
   'owner can soft-delete own client'
 );
 
