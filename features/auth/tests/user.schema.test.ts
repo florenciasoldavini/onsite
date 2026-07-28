@@ -1,6 +1,5 @@
 import { USER_ROLES } from "@/features/auth/constants/user.constants";
 import { UserSchema } from "@/features/auth/schemas/user.schema";
-import { describe, expect, it } from "vitest";
 
 const validUser = {
   avatar: null,

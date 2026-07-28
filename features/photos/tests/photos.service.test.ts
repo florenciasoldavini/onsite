@@ -2,46 +2,69 @@ import type {
   ProjectPhoto,
   ProjectPhotoDraft
 } from "@/features/photos/types/photo";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const mocks = vi.hoisted(() => ({
-  captureException: vi.fn(),
-  createSignedUrl: vi.fn(),
-  getProject: vi.fn(),
-  getRow: vi.fn(),
-  insertRow: vi.fn(),
-  listRows: vi.fn(),
-  normalize: vi.fn(),
-  removeObjects: vi.fn(),
-  softDeleteRow: vi.fn(),
-  updateRow: vi.fn(),
-  uploadObjects: vi.fn()
+const mocks = {
+  captureException: jest.fn(),
+  createSignedUrl: jest.fn(),
+  getProject: jest.fn(),
+  getRow: jest.fn(),
+  insertRow: jest.fn(),
+  listRows: jest.fn(),
+  normalize: jest.fn(),
+  removeObjects: jest.fn(),
+  softDeleteRow: jest.fn(),
+  updateRow: jest.fn(),
+  uploadObjects: jest.fn()
+};
+
+jest.mock("@/features/photos/repositories/photo-storage.repository", () => ({
+  get createProjectPhotoSignedUrl() {
+    return mocks.createSignedUrl;
+  },
+  get removeProjectPhotoObjects() {
+    return mocks.removeObjects;
+  },
+  get uploadProjectPhotoObjects() {
+    return mocks.uploadObjects;
+  }
 }));
 
-vi.mock("@/features/photos/repositories/photo-storage.repository", () => ({
-  createProjectPhotoSignedUrl: mocks.createSignedUrl,
-  removeProjectPhotoObjects: mocks.removeObjects,
-  uploadProjectPhotoObjects: mocks.uploadObjects
+jest.mock("@/features/photos/repositories/photos.repository", () => ({
+  get getProjectPhotoRow() {
+    return mocks.getRow;
+  },
+  get insertProjectPhotoRow() {
+    return mocks.insertRow;
+  },
+  get listProjectPhotoRows() {
+    return mocks.listRows;
+  },
+  get softDeleteProjectPhotoRow() {
+    return mocks.softDeleteRow;
+  },
+  get updateProjectPhotoRow() {
+    return mocks.updateRow;
+  }
 }));
 
-vi.mock("@/features/photos/repositories/photos.repository", () => ({
-  getProjectPhotoRow: mocks.getRow,
-  insertProjectPhotoRow: mocks.insertRow,
-  listProjectPhotoRows: mocks.listRows,
-  softDeleteProjectPhotoRow: mocks.softDeleteRow,
-  updateProjectPhotoRow: mocks.updateRow
+jest.mock("@/features/photos/services/photo-normalization.service", () => ({
+  get normalizeProjectPhotoAsset() {
+    return mocks.normalize;
+  }
 }));
 
-vi.mock("@/features/photos/services/photo-normalization.service", () => ({
-  normalizeProjectPhotoAsset: mocks.normalize
+jest.mock("@/features/projects/services/projects.service", () => ({
+  get getProject() {
+    return mocks.getProject;
+  }
 }));
 
-vi.mock("@/features/projects/services/projects.service", () => ({
-  getProject: mocks.getProject
-}));
-
-vi.mock("@/infrastructure/monitoring/sentry", () => ({
-  Sentry: { captureException: mocks.captureException }
+jest.mock("@/infrastructure/monitoring/sentry", () => ({
+  Sentry: {
+    get captureException() {
+      return mocks.captureException;
+    }
+  }
 }));
 
 import {
@@ -92,7 +115,7 @@ function photo(id: string): ProjectPhoto {
 
 describe("project photo workflow", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mocks.getProject.mockResolvedValue({ id: "project-id" });
     mocks.getRow.mockResolvedValue(null);
     mocks.normalize.mockResolvedValue({
@@ -224,13 +247,11 @@ describe("project photo workflow", () => {
     mocks.getRow.mockResolvedValue(photo("photo-id"));
     mocks.removeObjects.mockRejectedValue(new Error("storage unavailable"));
 
-    await expect(
-      softDeleteProjectPhoto("photo-id")
-    ).resolves.toBeUndefined();
-    expect(mocks.softDeleteRow).toHaveBeenCalledBefore(
-      mocks.removeObjects
+    await expect(softDeleteProjectPhoto("photo-id")).resolves.toBeUndefined();
+    expect(mocks.softDeleteRow.mock.invocationCallOrder[0]).toBeLessThan(
+      mocks.removeObjects.mock.invocationCallOrder[0]
     );
-    expect(mocks.captureException).toHaveBeenCalledOnce();
+    expect(mocks.captureException).toHaveBeenCalledTimes(1);
   });
 
   it("preserves deterministic page metadata while signing thumbnails", async () => {
@@ -250,9 +271,7 @@ describe("project photo workflow", () => {
     });
 
     expect(result.nextOffset).toBe(24);
-    expect(result.items[0].thumbnail_url).toBe(
-      "https://signed.example/thumb"
-    );
+    expect(result.items[0].thumbnail_url).toBe("https://signed.example/thumb");
   });
 
   it("keeps a gallery row usable when its thumbnail URL cannot be signed", async () => {

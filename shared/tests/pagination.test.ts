@@ -4,7 +4,6 @@ import {
   getOffsetPageRange,
   toPaginatedResult
 } from "@/shared/utils/pagination";
-import { describe, expect, it } from "vitest";
 
 describe("offset pagination", () => {
   it("creates an inclusive range with one lookahead row", () => {

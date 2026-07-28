@@ -92,7 +92,7 @@ There is intentionally no separate application server today. A dedicated API or 
 The repository currently configures:
 
 - strict TypeScript checking and Expo ESLint for the app, plus native Deno typecheck and lint for Edge Functions;
-- Vitest unit tests for project validation/query planning, Maps response and error handling, rate limiting, and profile avatar paths;
+- Jest unit tests for project validation/query planning, Maps response and error handling, rate limiting, and profile avatar paths;
 - pgTAP tests for Projects RLS/storage policies and Google Maps usage caps;
 - GitHub Actions checks for environment-documentation drift, app TypeScript/lint, Edge Function typecheck/lint/tests, unit tests, frontend production export, and high/critical dependency vulnerabilities introduced by pull requests;
 - monthly grouped Dependabot version updates for the app, with routine update PRs targeting `development`;
@@ -109,20 +109,24 @@ npm run env:check
 npx tsc --noEmit
 npm run lint
 npm test
+npm run test:coverage
 npm run build
 npm run functions:verify
 ```
 
+`npm run test:coverage` is diagnostic and does not currently enforce a CI threshold. Test layers, naming, ownership, and change-based expectations are defined in [`docs/testing-strategy.md`](docs/testing-strategy.md).
+
+`npm test` runs the complete Jest/Expo application suite. Pass a test path to `npm test -- <path>` for a focused local run.
+
 ### Database and local security checks
 
-These remain local/manual because they are not safely configured in GitHub Actions yet:
+GitGuardian remains local/manual:
 
 ```bash
-npx supabase test db
 ggshield secret scan pre-commit
 ```
 
-`npx supabase test db` requires a running local Supabase stack and Docker-compatible CI setup. This repository does not currently include the `supabase/config.toml` needed to bootstrap that stack in GitHub Actions. To add reliable SQL CI, first commit and validate the local Supabase configuration, then start the stack and run the pgTAP suite in a dedicated job.
+`npx supabase test db` requires a running local Supabase stack for local development. CI starts a clean local Postgres instance and runs the pgTAP suite on pull requests and pushes to `development` or `main`.
 
 GitGuardian is configured as a local pre-commit hook. Automated GitGuardian scanning would require adding a `GITGUARDIAN_API_KEY` repository secret, so CI does not currently include a step that would fail without that credential.
 

@@ -1,5 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   buildAuthProfile,
   deliverWelcomeEmailIfNeeded,
@@ -8,38 +6,50 @@ import {
 import type { User } from "@/features/auth/types/auth.types";
 import type { Session } from "@supabase/supabase-js";
 
-const mocks = vi.hoisted(() => ({
-  captureException: vi.fn(),
-  findAuthProfileById: vi.fn(),
-  insertAuthProfile: vi.fn(),
-  sendWelcomeEmail: vi.fn(),
-  updateAuthProfileBackfill: vi.fn()
-}));
+const mocks = {
+  captureException: jest.fn(),
+  findAuthProfileById: jest.fn(),
+  insertAuthProfile: jest.fn(),
+  sendWelcomeEmail: jest.fn(),
+  updateAuthProfileBackfill: jest.fn()
+};
 
-vi.mock("@/features/auth/repositories/auth-profile.repository", () => ({
+jest.mock("@/features/auth/repositories/auth-profile.repository", () => ({
   AuthProfileRepositoryError: class AuthProfileRepositoryError extends Error {},
-  findAuthProfileById: mocks.findAuthProfileById,
-  insertAuthProfile: mocks.insertAuthProfile,
-  updateAuthProfileBackfill: mocks.updateAuthProfileBackfill
+  get findAuthProfileById() {
+    return mocks.findAuthProfileById;
+  },
+  get insertAuthProfile() {
+    return mocks.insertAuthProfile;
+  },
+  get updateAuthProfileBackfill() {
+    return mocks.updateAuthProfileBackfill;
+  }
 }));
 
-vi.mock("@/features/auth/repositories/auth.repository", () => ({
-  getCurrentAuthSession: vi.fn(),
-  isAuthSessionAvailable: vi.fn(() => true),
-  observeAuthSession: vi.fn(),
-  signOutAuthSession: vi.fn()
+jest.mock("@/features/auth/repositories/auth.repository", () => ({
+  getCurrentAuthSession: jest.fn(),
+  isAuthSessionAvailable: jest.fn(() => true),
+  observeAuthSession: jest.fn(),
+  signOutAuthSession: jest.fn()
 }));
 
-vi.mock("@/features/profile/services/profile.service", () => ({
-  saveProfile: vi.fn()
+jest.mock("@/features/profile/services/profile.service", () => ({
+  saveProfile: jest.fn()
 }));
 
-vi.mock("@/features/auth/services/welcome-email.service", () => ({
-  sendWelcomeToOnzaitEmail: mocks.sendWelcomeEmail
+jest.mock("@/features/auth/services/welcome-email.service", () => ({
+  get sendWelcomeToOnzaitEmail() {
+    return mocks.sendWelcomeEmail;
+  }
 }));
 
-vi.mock("@/infrastructure/monitoring/sentry", () => ({
-  Sentry: { captureException: mocks.captureException }
+jest.mock("@/infrastructure/monitoring/sentry", () => ({
+  Sentry: {
+    get captureException() {
+      return mocks.captureException;
+    }
+  }
 }));
 
 const session = {
@@ -76,7 +86,7 @@ const user = {
 
 describe("auth session service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("builds a normalized profile without accepting metadata roles", () => {

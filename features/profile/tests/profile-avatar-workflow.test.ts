@@ -1,36 +1,46 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   resolveProfileAvatarUrl,
   saveProfile
 } from "@/features/profile/services/profile.service";
 
-const mocks = vi.hoisted(() => ({
-  captureException: vi.fn(),
-  createProfileAvatarSignedUrl: vi.fn(),
-  removeProfileAvatarObject: vi.fn(),
-  updateProfileRow: vi.fn(),
-  uploadProfileAvatarObject: vi.fn()
+const mocks = {
+  captureException: jest.fn(),
+  createProfileAvatarSignedUrl: jest.fn(),
+  removeProfileAvatarObject: jest.fn(),
+  updateProfileRow: jest.fn(),
+  uploadProfileAvatarObject: jest.fn()
+};
+
+jest.mock("@/features/profile/repositories/profile-avatar.repository", () => ({
+  get createProfileAvatarSignedUrl() {
+    return mocks.createProfileAvatarSignedUrl;
+  },
+  get removeProfileAvatarObject() {
+    return mocks.removeProfileAvatarObject;
+  },
+  get uploadProfileAvatarObject() {
+    return mocks.uploadProfileAvatarObject;
+  }
 }));
 
-vi.mock("@/features/profile/repositories/profile-avatar.repository", () => ({
-  createProfileAvatarSignedUrl: mocks.createProfileAvatarSignedUrl,
-  removeProfileAvatarObject: mocks.removeProfileAvatarObject,
-  uploadProfileAvatarObject: mocks.uploadProfileAvatarObject
+jest.mock("@/features/profile/repositories/profile.repository", () => ({
+  get updateProfileRow() {
+    return mocks.updateProfileRow;
+  }
 }));
 
-vi.mock("@/features/profile/repositories/profile.repository", () => ({
-  updateProfileRow: mocks.updateProfileRow
+jest.mock("@/features/profile/repositories/profile-auth.repository", () => ({
+  getProfileUserIdentities: jest.fn(),
+  linkProfileOAuthIdentity: jest.fn(),
+  updateProfilePassword: jest.fn()
 }));
 
-vi.mock("@/features/profile/repositories/profile-auth.repository", () => ({
-  getProfileUserIdentities: vi.fn(),
-  linkProfileOAuthIdentity: vi.fn(),
-  updateProfilePassword: vi.fn()
-}));
-
-vi.mock("@/infrastructure/monitoring/sentry", () => ({
-  Sentry: { captureException: mocks.captureException }
+jest.mock("@/infrastructure/monitoring/sentry", () => ({
+  Sentry: {
+    get captureException() {
+      return mocks.captureException;
+    }
+  }
 }));
 
 const profile = {
@@ -43,7 +53,7 @@ const avatarAsset = { uri: "file:///avatar.jpg" };
 
 describe("profile avatar replacement", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
     mocks.uploadProfileAvatarObject.mockResolvedValue(
       "users/user-id/avatar/new.jpg"
     );
@@ -100,7 +110,7 @@ describe("profile avatar replacement", () => {
         userId: "user-id"
       })
     ).resolves.toEqual({ id: "user-id" });
-    expect(mocks.captureException).toHaveBeenCalledOnce();
+    expect(mocks.captureException).toHaveBeenCalledTimes(1);
   });
 
   it("resolves stored avatar paths to short-lived signed URLs", async () => {

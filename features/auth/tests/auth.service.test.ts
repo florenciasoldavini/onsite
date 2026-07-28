@@ -1,5 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import { AuthRepositoryError } from "@/features/auth/errors/auth.errors";
 import {
   AuthCallbackError,
@@ -10,45 +8,68 @@ import {
   signUpWithEmail
 } from "@/features/auth/services/auth.service";
 
-const repositoryMocks = vi.hoisted(() => ({
-  clearCompletedWebAuthCallback: vi.fn(),
-  completeAuthCallback: vi.fn(),
-  getAuthCallbackUrl: vi.fn(),
-  hasAuthCallbackPayload: vi.fn(),
-  parseAuthCallbackParams: vi.fn(),
-  resendVerificationEmail: vi.fn(),
-  signInWithEmailPassword: vi.fn(),
-  signUpWithEmailPassword: vi.fn()
-}));
+const mockRepository = {
+  clearCompletedWebAuthCallback: jest.fn(),
+  completeAuthCallback: jest.fn(),
+  getAuthCallbackUrl: jest.fn(),
+  hasAuthCallbackPayload: jest.fn(),
+  parseAuthCallbackParams: jest.fn(),
+  resendVerificationEmail: jest.fn(),
+  signInWithEmailPassword: jest.fn(),
+  signUpWithEmailPassword: jest.fn()
+};
 
-vi.mock("@/features/auth/repositories/auth.repository", () => ({
-  beginOAuthSignIn: vi.fn(),
-  changePassword: vi.fn(),
-  requestPasswordReset: vi.fn(),
-  ...repositoryMocks
+jest.mock("@/features/auth/repositories/auth.repository", () => ({
+  beginOAuthSignIn: jest.fn(),
+  changePassword: jest.fn(),
+  requestPasswordReset: jest.fn(),
+  get clearCompletedWebAuthCallback() {
+    return mockRepository.clearCompletedWebAuthCallback;
+  },
+  get completeAuthCallback() {
+    return mockRepository.completeAuthCallback;
+  },
+  get getAuthCallbackUrl() {
+    return mockRepository.getAuthCallbackUrl;
+  },
+  get hasAuthCallbackPayload() {
+    return mockRepository.hasAuthCallbackPayload;
+  },
+  get parseAuthCallbackParams() {
+    return mockRepository.parseAuthCallbackParams;
+  },
+  get resendVerificationEmail() {
+    return mockRepository.resendVerificationEmail;
+  },
+  get signInWithEmailPassword() {
+    return mockRepository.signInWithEmailPassword;
+  },
+  get signUpWithEmailPassword() {
+    return mockRepository.signUpWithEmailPassword;
+  }
 }));
 
 describe("auth service", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("normalizes email before signing in", async () => {
-    repositoryMocks.signInWithEmailPassword.mockResolvedValue({
+    mockRepository.signInWithEmailPassword.mockResolvedValue({
       session: { access_token: "token" }
     });
 
     await expect(
       signInWithEmail({ email: "  BUILDER@EXAMPLE.COM ", password: "secret" })
     ).resolves.toEqual({ status: "signed-in" });
-    expect(repositoryMocks.signInWithEmailPassword).toHaveBeenCalledWith({
+    expect(mockRepository.signInWithEmailPassword).toHaveBeenCalledWith({
       email: "builder@example.com",
       password: "secret"
     });
   });
 
   it("returns a verification outcome for an unconfirmed sign-in", async () => {
-    repositoryMocks.signInWithEmailPassword.mockRejectedValue(
+    mockRepository.signInWithEmailPassword.mockRejectedValue(
       new AuthRepositoryError("Email not confirmed", "email-not-confirmed")
     );
 
@@ -61,7 +82,7 @@ describe("auth service", () => {
   });
 
   it("returns a verification-sent outcome when sign-up has no session", async () => {
-    repositoryMocks.signUpWithEmailPassword.mockResolvedValue({
+    mockRepository.signUpWithEmailPassword.mockResolvedValue({
       session: null
     });
 
@@ -74,7 +95,7 @@ describe("auth service", () => {
   });
 
   it("returns a rate-limited outcome for sign-up cooldowns", async () => {
-    repositoryMocks.signUpWithEmailPassword.mockRejectedValue(
+    mockRepository.signUpWithEmailPassword.mockRejectedValue(
       new AuthRepositoryError("Wait before retrying", "email-cooldown")
     );
 
@@ -87,22 +108,22 @@ describe("auth service", () => {
   });
 
   it("represents verification resend cooldowns without leaking provider errors", async () => {
-    repositoryMocks.resendVerificationEmail.mockRejectedValue(
+    mockRepository.resendVerificationEmail.mockRejectedValue(
       new AuthRepositoryError("Wait before retrying", "email-cooldown")
     );
 
     await expect(resendEmailVerification("USER@example.com")).resolves.toEqual({
       status: "rate-limited"
     });
-    expect(repositoryMocks.resendVerificationEmail).toHaveBeenCalledWith(
+    expect(mockRepository.resendVerificationEmail).toHaveBeenCalledWith(
       "user@example.com"
     );
   });
 
   it("prepares a password update only from a recovery payload", async () => {
-    repositoryMocks.getAuthCallbackUrl.mockReturnValue("onzait://reset");
-    repositoryMocks.hasAuthCallbackPayload.mockReturnValue(true);
-    repositoryMocks.completeAuthCallback.mockResolvedValue({
+    mockRepository.getAuthCallbackUrl.mockReturnValue("onzait://reset");
+    mockRepository.hasAuthCallbackPayload.mockReturnValue(true);
+    mockRepository.completeAuthCallback.mockResolvedValue({
       session: null,
       type: "recovery"
     });
@@ -110,19 +131,19 @@ describe("auth service", () => {
     await expect(preparePasswordRecovery("onzait://reset")).resolves.toEqual({
       shouldUpdatePassword: true
     });
-    expect(
-      repositoryMocks.clearCompletedWebAuthCallback
-    ).toHaveBeenCalledOnce();
+    expect(mockRepository.clearCompletedWebAuthCallback).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it("rejects callback URLs without an auth payload and preserves link intent", async () => {
-    repositoryMocks.getAuthCallbackUrl.mockReturnValue(
+    mockRepository.getAuthCallbackUrl.mockReturnValue(
       "https://onzait.test/callback?auth_action=identity-link&provider=google"
     );
-    repositoryMocks.parseAuthCallbackParams.mockReturnValue(
+    mockRepository.parseAuthCallbackParams.mockReturnValue(
       new URLSearchParams("auth_action=identity-link&provider=google")
     );
-    repositoryMocks.hasAuthCallbackPayload.mockReturnValue(false);
+    mockRepository.hasAuthCallbackPayload.mockReturnValue(false);
 
     const completion = finishAuthCallback(null);
 
@@ -133,14 +154,14 @@ describe("auth service", () => {
   });
 
   it("completes auth callbacks and returns the safe destination", async () => {
-    repositoryMocks.getAuthCallbackUrl.mockReturnValue(
+    mockRepository.getAuthCallbackUrl.mockReturnValue(
       "https://onzait.test/callback?code=abc&next=%2Fprojects"
     );
-    repositoryMocks.parseAuthCallbackParams.mockReturnValue(
+    mockRepository.parseAuthCallbackParams.mockReturnValue(
       new URLSearchParams("code=abc&next=%2Fprojects")
     );
-    repositoryMocks.hasAuthCallbackPayload.mockReturnValue(true);
-    repositoryMocks.completeAuthCallback.mockResolvedValue({
+    mockRepository.hasAuthCallbackPayload.mockReturnValue(true);
+    mockRepository.completeAuthCallback.mockResolvedValue({
       session: { access_token: "token" },
       type: null
     });
@@ -149,8 +170,8 @@ describe("auth service", () => {
       intent: { kind: "sign-in" },
       redirectPath: "/projects"
     });
-    expect(
-      repositoryMocks.clearCompletedWebAuthCallback
-    ).toHaveBeenCalledOnce();
+    expect(mockRepository.clearCompletedWebAuthCallback).toHaveBeenCalledTimes(
+      1
+    );
   });
 });

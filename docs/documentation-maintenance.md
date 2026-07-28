@@ -42,6 +42,10 @@ When a new project rule is added, scan existing code, docs, env config, and test
   - Active design-system rules
   - Token and primitive source map
   - Reusable interaction-state decisions
+- `docs/testing-strategy.md`
+  - Automated test layers and ownership
+  - Test-file naming and design rules
+  - Change-based coverage expectations and testing gaps
 
 ## Update triggers
 
@@ -84,6 +88,14 @@ Update `docs/onzait-design-system.md` when:
 - a design-system primitive changes
 - a component state pattern changes
 - a screen-level design decision should become reusable
+
+Update `docs/testing-strategy.md` when:
+
+- a test runner or test harness changes
+- test-file location or naming conventions change
+- a test layer is introduced, removed, or materially redefined
+- CI test enforcement or coverage thresholds change
+- automated or manual platform-verification expectations change
 
 Update `docs/CONTRIBUTING.md` when:
 

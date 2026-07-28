@@ -3,7 +3,6 @@ import {
   destructiveConfirmationReducer,
   initialDestructiveConfirmationState
 } from "@/shared/ui/components/destructive-confirmation-state";
-import { describe, expect, it } from "vitest";
 
 describe("destructive confirmation state", () => {
   it("clears stale errors whenever the dialog opens", () => {

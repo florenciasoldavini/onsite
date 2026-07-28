@@ -1,5 +1,3 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   beginOAuthSignIn,
   getCurrentAuthSession,
@@ -9,30 +7,34 @@ import {
   signUpWithEmailPassword
 } from "@/features/auth/repositories/auth.repository";
 
-const authMocks = vi.hoisted(() => ({
-  getSession: vi.fn(),
-  getAuthRedirectUrl: vi.fn(() => "https://onzait.test/callback"),
-  onAuthStateChange: vi.fn(),
-  signOut: vi.fn(),
-  signInWithOAuth: vi.fn(),
-  signInWithPassword: vi.fn(),
-  signUp: vi.fn()
+const mockAuth = {
+  getSession: jest.fn(),
+  getAuthRedirectUrl: jest.fn(() => "https://onzait.test/callback"),
+  onAuthStateChange: jest.fn(),
+  signOut: jest.fn(),
+  signInWithOAuth: jest.fn(),
+  signInWithPassword: jest.fn(),
+  signUp: jest.fn()
+};
+
+jest.mock("@/features/auth/repositories/auth-transport.repository", () => ({
+  clearWebAuthUrlArtifacts: jest.fn(),
+  completeAuthSessionFromUrl: jest.fn(),
+  getActiveAuthUrl: jest.fn(),
+  getAuthParamsFromUrl: jest.fn(),
+  get getAuthRedirectUrl() {
+    return mockAuth.getAuthRedirectUrl;
+  },
+  resendSignUpConfirmationEmail: jest.fn(),
+  sendPasswordResetEmail: jest.fn(),
+  get startOAuthSignIn() {
+    return mockAuth.signInWithOAuth;
+  },
+  updatePassword: jest.fn(),
+  urlHasAuthPayload: jest.fn()
 }));
 
-vi.mock("@/features/auth/repositories/auth-transport.repository", () => ({
-  clearWebAuthUrlArtifacts: vi.fn(),
-  completeAuthSessionFromUrl: vi.fn(),
-  getActiveAuthUrl: vi.fn(),
-  getAuthParamsFromUrl: vi.fn(),
-  getAuthRedirectUrl: authMocks.getAuthRedirectUrl,
-  resendSignUpConfirmationEmail: vi.fn(),
-  sendPasswordResetEmail: vi.fn(),
-  startOAuthSignIn: authMocks.signInWithOAuth,
-  updatePassword: vi.fn(),
-  urlHasAuthPayload: vi.fn()
-}));
-
-vi.mock("@/infrastructure/supabase/client", () => ({
+jest.mock("@/infrastructure/supabase/client", () => ({
   getSupabaseErrorMessage: (error: unknown) =>
     error instanceof Error && error.message === "unconfirmed"
       ? "Confirm your email address before signing in."
@@ -43,22 +45,32 @@ vi.mock("@/infrastructure/supabase/client", () => ({
     error instanceof Error && error.message === "unconfirmed",
   supabase: {
     auth: {
-      getSession: authMocks.getSession,
-      onAuthStateChange: authMocks.onAuthStateChange,
-      signOut: authMocks.signOut,
-      signInWithPassword: authMocks.signInWithPassword,
-      signUp: authMocks.signUp
+      get getSession() {
+        return mockAuth.getSession;
+      },
+      get onAuthStateChange() {
+        return mockAuth.onAuthStateChange;
+      },
+      get signOut() {
+        return mockAuth.signOut;
+      },
+      get signInWithPassword() {
+        return mockAuth.signInWithPassword;
+      },
+      get signUp() {
+        return mockAuth.signUp;
+      }
     }
   }
 }));
 
 describe("auth repository", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("owns the Supabase password sign-in request", async () => {
-    authMocks.signInWithPassword.mockResolvedValue({
+    mockAuth.signInWithPassword.mockResolvedValue({
       data: { session: { access_token: "token" } },
       error: null
     });
@@ -68,14 +80,14 @@ describe("auth repository", () => {
       password: "secret"
     });
 
-    expect(authMocks.signInWithPassword).toHaveBeenCalledWith({
+    expect(mockAuth.signInWithPassword).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "secret"
     });
   });
 
   it("classifies unconfirmed email errors at the transport boundary", async () => {
-    authMocks.signInWithPassword.mockResolvedValue({
+    mockAuth.signInWithPassword.mockResolvedValue({
       data: { session: null },
       error: new Error("unconfirmed")
     });
@@ -92,7 +104,7 @@ describe("auth repository", () => {
   });
 
   it("owns sign-up redirect configuration", async () => {
-    authMocks.signUp.mockResolvedValue({
+    mockAuth.signUp.mockResolvedValue({
       data: { session: null },
       error: null
     });
@@ -102,7 +114,7 @@ describe("auth repository", () => {
       password: "secret"
     });
 
-    expect(authMocks.signUp).toHaveBeenCalledWith({
+    expect(mockAuth.signUp).toHaveBeenCalledWith({
       email: "user@example.com",
       password: "secret",
       options: {
@@ -112,7 +124,7 @@ describe("auth repository", () => {
   });
 
   it("normalizes OAuth transport failures", async () => {
-    authMocks.signInWithOAuth.mockRejectedValue(new Error("oauth failed"));
+    mockAuth.signInWithOAuth.mockRejectedValue(new Error("oauth failed"));
 
     await expect(beginOAuthSignIn("google")).rejects.toMatchObject({
       code: "unknown",
@@ -122,17 +134,17 @@ describe("auth repository", () => {
 
   it("owns session restoration, observation, and sign-out transport", async () => {
     const session = { access_token: "token" };
-    const unsubscribe = vi.fn();
-    const listener = vi.fn();
-    authMocks.getSession.mockResolvedValue({
+    const unsubscribe = jest.fn();
+    const listener = jest.fn();
+    mockAuth.getSession.mockResolvedValue({
       data: { session },
       error: null
     });
-    authMocks.onAuthStateChange.mockImplementation((callback) => {
+    mockAuth.onAuthStateChange.mockImplementation((callback) => {
       callback("SIGNED_IN", session);
       return { data: { subscription: { unsubscribe } } };
     });
-    authMocks.signOut.mockResolvedValue({ error: null });
+    mockAuth.signOut.mockResolvedValue({ error: null });
 
     await expect(getCurrentAuthSession()).resolves.toEqual(session);
     const stopObserving = observeAuthSession(listener);
@@ -140,6 +152,6 @@ describe("auth repository", () => {
 
     expect(listener).toHaveBeenCalledWith(session);
     stopObserving();
-    expect(unsubscribe).toHaveBeenCalledOnce();
+    expect(unsubscribe).toHaveBeenCalledTimes(1);
   });
 });
