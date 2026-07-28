@@ -20,6 +20,7 @@ import { SafeAreaProvider, type Metrics } from "react-native-safe-area-context";
 
 const defaultQueryOptions: DefaultOptions = {
   mutations: {
+    gcTime: Infinity,
     retry: false
   },
   queries: {

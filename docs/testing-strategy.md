@@ -22,16 +22,21 @@ The goal is risk-based confidence, not a large test count or a universal line-co
 
 The repository audit on 2026-07-28 found:
 
-- 40 responsibility-focused Jest unit and workflow files containing 163 test cases;
-- 3 rendered Jest files containing 5 React Native behavior tests;
+- 50 responsibility-focused Jest unit, hook, and workflow files containing 199 test cases;
+- 30 rendered Jest files containing 75 React Native behavior tests;
 - 2 Deno test files containing 11 Edge Function test cases;
 - 8 pgTAP files planning 153 database assertions;
+- 3 Playwright web smoke journeys running in desktop and mobile Chromium;
+- 1 Maestro native smoke flow for installed iOS and Android development builds;
 - strong coverage of schemas, pure utilities, service compensation workflows, query planning, Edge Function helpers, and RLS;
 - all application test files located under their feature, shared, infrastructure, or root harness `tests/` owner;
 - production-subject or cohesive-workflow filenames across the migrated Jest suite;
 - an Expo/Jest React Native Testing Library harness with shared auth, React Query, navigation, theme, and safe-area providers;
-- initial rendered coverage for the shared empty state, destructive confirmation dialog, and provider harness;
-- no automated browser or native end-to-end suite;
+- rendered coverage for shared states; every public auth screen; client, contractor, worker, and supplier catalogs/forms; project list/form/detail behavior; project-photo list/upload/detail behavior; profile information/security/identity interactions; confirmed deletion; and compact/expanded directory behavior;
+- React Query hook coverage for client, contractor, worker, supplier, trade-category, location, project, project-map, live-location, project-photo, and profile authentication boundaries, bounded loading, cache priming, and invalidation;
+- automated public-auth and route-protection browser smoke coverage at desktop and phone viewports;
+- a native Maestro smoke flow that requires an installed development build and remains outside CI;
+- no seeded authenticated end-to-end project create/edit/delete journey yet;
 - no enforced code-coverage threshold.
 
 The existing suite was migrated to these location and naming rules on 2026-07-28. This strategy applies immediately to every new or changed test.
@@ -123,9 +128,15 @@ Expo TypeScript, ESLint, and Jest must not absorb the Deno test surface.
 
 ### 7. End-to-end and manual platform verification
 
-There is no automated end-to-end harness yet. Do not describe end-to-end coverage as implemented.
+Web runner: Playwright against a production Expo static export served locally.
 
-Until automation is introduced, user-critical UI changes require recorded manual verification on every affected runtime:
+Native runner: Maestro against an installed iOS or Android development build.
+
+The Playwright smoke suite runs in CI with desktop and mobile Chromium. Keep it small and limited to stable cross-screen behavior. It currently proves public sign-in validation, public account-entry navigation, and unauthenticated route protection. It does not use production credentials or data.
+
+The Maestro flow verifies the equivalent unauthenticated entry behavior on an installed native build. It is not a required CI job because CI does not currently produce and boot native development builds.
+
+Authenticated project creation, editing, and confirmed deletion require an isolated seeded Supabase test-data strategy before they can become reliable end-to-end tests. Until those journeys and device/provider automation exist, user-critical changes still require recorded manual verification on every affected runtime:
 
 - web at representative phone and desktop widths;
 - iOS for native or platform-sensitive behavior;
@@ -133,7 +144,7 @@ Until automation is introduced, user-critical UI changes require recorded manual
 - portrait, landscape, tablet, or multitasking layouts when the change can affect them;
 - keyboard interaction, permission denial, OAuth, maps, image selection, and other device/provider paths when relevant.
 
-An end-to-end tool should be introduced only with a small, reliable smoke suite and documented ownership. The first automated journeys should be sign-in, project creation/editing, and confirmed deletion rather than broad low-value coverage.
+Do not point automated tests at production accounts or data. Add authenticated browser journeys only with isolated local users, deterministic cleanup, and no provider-console dependency.
 
 ## File Location and Naming
 
@@ -261,12 +272,14 @@ Run the smallest useful command while developing, then the full relevant suite b
 npm test
 npm run test:watch
 npm run test:coverage
+npm run test:e2e:web
+npm run test:e2e:native
 npm run functions:test
 npm run functions:verify
 npx supabase test db
 ```
 
-The root package requires Node 22 or newer. A failure caused by running the suite on an unsupported Node version is an environment failure, not evidence that the test suite passed or failed.
+The root package requires Node 22 or newer. Install Playwright Chromium with `npx playwright install chromium` before the first local web smoke run. Native smoke runs require Maestro plus an installed Onzait development build. A failure caused by missing required tooling is an environment failure, not evidence that the product behavior passed or failed.
 
 ## Suite Migration Status
 
@@ -284,7 +297,7 @@ Future test-organization changes should preserve the same behavior-first rule: d
 
 ## Adoption Priorities
 
-1. Cover representative form, async-state, retry, and destructive-confirmation behavior with the rendered harness.
-2. Add rendered hook tests for React Query cache behavior and auth-provider session transitions.
-3. Establish a meaningful coverage baseline before adding numeric CI gates.
-4. Add a small automated end-to-end smoke suite after the critical flows and test data strategy are stable.
+1. Add isolated Supabase test users and cleanup so Playwright can cover authenticated project creation, editing, confirmed deletion, and photo upload.
+2. Add a reproducible native development-build job before making the Maestro flow a required CI check.
+3. Add controlled automation for OAuth, maps, image-picker, permission, keyboard, and tablet-landscape behavior where the provider or device boundary permits it.
+4. Establish a meaningful coverage baseline before adding numeric CI gates.

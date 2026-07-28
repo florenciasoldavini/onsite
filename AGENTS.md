@@ -237,6 +237,8 @@ Last reviewed: 2026-07-21
 - `ggshield secret scan pre-commit`
 - `npm test`
 - `npm run test:coverage`
+- `npm run test:e2e:web`
+- `npm run test:e2e:native`
 - `npm run test:watch`
 - `npx supabase test db`
 
@@ -248,6 +250,7 @@ Last reviewed: 2026-07-21
   - `npm run lint`
   - `npm run build`
   - `npm test`
+  - `npm run test:e2e:web`
   - `npm run functions:verify`
   - `supabase db start` followed by `supabase test db`
   - pull requests targeting `development` or `main` are reviewed for newly introduced high- or critical-severity dependency vulnerabilities
@@ -260,6 +263,7 @@ Last reviewed: 2026-07-21
 - `npm run build`
 - `npm run lint`
 - `npm test`
+- `npm run test:e2e:web`
 - `npm run functions:verify`
 - `npx supabase test db`
 

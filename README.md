@@ -110,6 +110,7 @@ npx tsc --noEmit
 npm run lint
 npm test
 npm run test:coverage
+npm run test:e2e:web
 npm run build
 npm run functions:verify
 ```
@@ -117,6 +118,8 @@ npm run functions:verify
 `npm run test:coverage` is diagnostic and does not currently enforce a CI threshold. Test layers, naming, ownership, and change-based expectations are defined in [`docs/testing-strategy.md`](docs/testing-strategy.md).
 
 `npm test` runs the complete Jest/Expo application suite. Pass a test path to `npm test -- <path>` for a focused local run.
+
+`npm run test:e2e:web` builds a production web export and runs the Playwright smoke suite in desktop and mobile Chromium. Install its local browser once with `npx playwright install chromium`. Native smoke automation uses `npm run test:e2e:native` with Maestro and an installed development build.
 
 ### Database and local security checks
 

@@ -72,11 +72,14 @@ npx tsc --noEmit
 npm run lint
 npm test
 npm run test:coverage
+npm run test:e2e:web
 npm run build
 npm run functions:verify
 ```
 
 `npm run test:coverage` is diagnostic and has no CI threshold yet; use it when changing non-trivial business logic or when assessing a testing gap.
+
+Install Playwright Chromium once with `npx playwright install chromium` before running the web smoke suite. Native smoke automation requires Maestro and an installed Onzait development build, then runs with `npm run test:e2e:native`.
 
 Also run:
 
@@ -84,7 +87,7 @@ Also run:
 - Manual web verification for web-facing behavior.
 - Manual iOS and Android verification when native behavior changes.
 
-GitHub Actions runs focused quality, Edge Function, unit-test, and web-build jobs. The final required aggregation check is `ci-checks`. Pull requests targeting `development` or `main` also run `dependency-review`, which fails when a dependency change introduces a high- or critical-severity vulnerability. Do not merge while a required check is failing, skipped unexpectedly, or still pending.
+GitHub Actions runs focused quality, Edge Function, unit-test, web-build, and Playwright web-smoke jobs. The final required aggregation check is `ci-checks`. Pull requests targeting `development` or `main` also run `dependency-review`, which fails when a dependency change introduces a high- or critical-severity vulnerability. Do not merge while a required check is failing, skipped unexpectedly, or still pending.
 
 Existing lint warnings or unrelated failures must be reported honestly; they must not be hidden by disabling checks or using `--no-verify`.
 

@@ -374,9 +374,9 @@ function ProjectActionsMenu({
       : preferredMenuTop;
 
   const openMenu = () => {
+    setIsMenuOpen(true);
     triggerRef.current?.measureInWindow((x, y, width, height) => {
       setTriggerLayout({ height, width, x, y });
-      setIsMenuOpen(true);
     });
   };
 

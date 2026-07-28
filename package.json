@@ -50,6 +50,8 @@
     "lint": "expo lint",
     "test": "jest --runInBand",
     "test:coverage": "jest --coverage --runInBand",
+    "test:e2e:native": "maestro test .maestro",
+    "test:e2e:web": "playwright test",
     "test:watch": "jest --watch"
   },
   "dependencies": {
@@ -136,6 +138,7 @@
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",
+    "@playwright/test": "^1.62.0",
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
