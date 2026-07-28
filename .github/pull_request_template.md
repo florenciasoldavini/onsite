@@ -27,6 +27,8 @@
 - [ ] `npm run lint`
 - [ ] `npm test`
 - [ ] `npm run test:coverage` (diagnostic when non-trivial business logic changes)
+- [ ] `npm run test:e2e:web` (when browser journeys or shared navigation change)
+- [ ] `npm run test:e2e:native` (when native journeys change and a development build is available)
 - [ ] `npm run build`
 - [ ] `npm run functions:verify` (when Edge Functions or shared function code changes)
 - [ ] Supabase tests (when migrations, RLS policies, or database functions change)

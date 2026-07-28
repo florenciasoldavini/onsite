@@ -1,0 +1,10 @@
+appId: com.florenciasoldavini.onzait
+---
+- launchApp:
+    clearState: true
+- assertVisible: "Welcome Back"
+- tapOn: "Sign In"
+- assertVisible: "Invalid email address"
+- assertVisible: "Password is required"
+- tapOn: "Create an Account"
+- assertVisible: "Create Account"
