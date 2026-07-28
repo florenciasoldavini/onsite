@@ -23,12 +23,14 @@ The goal is risk-based confidence, not a large test count or a universal line-co
 The repository audit on 2026-07-28 found:
 
 - 40 responsibility-focused Vitest files containing 163 test cases;
+- 3 rendered Jest files containing 5 React Native behavior tests;
 - 2 Deno test files containing 11 Edge Function test cases;
 - 8 pgTAP files planning 153 database assertions;
 - strong coverage of schemas, pure utilities, service compensation workflows, query planning, Edge Function helpers, and RLS;
 - all Vitest files located under their feature, shared, or infrastructure `tests/` owner;
 - production-subject or cohesive-workflow filenames across the migrated Vitest suite;
-- no rendered component or screen tests;
+- an Expo/Jest React Native Testing Library harness with shared auth, React Query, navigation, theme, and safe-area providers;
+- initial rendered coverage for the shared empty state, destructive confirmation dialog, and provider harness;
 - no automated browser or native end-to-end suite;
 - no enforced code-coverage threshold.
 
@@ -72,7 +74,9 @@ Mock repositories and technical adapters at the subject's immediate boundary. As
 
 ### 4. Component and screen behavior tests
 
-Target runner: Vitest with React Native Testing Library.
+Runner: Jest with the `jest-expo` preset and React Native Testing Library.
+
+Vitest remains responsible for Node-based unit and service tests. Jest owns `.test.tsx` rendered tests because `jest-expo` supplies Expo and React Native module transforms and mocks that the Node-only Vitest configuration does not.
 
 Use rendered tests for behavior that cannot be proven through extracted pure state alone:
 
@@ -83,7 +87,9 @@ Use rendered tests for behavior that cannot be proven through extracted pure sta
 - compact, medium, and expanded conditional rendering;
 - platform-specific branches that affect product behavior.
 
-The React Native render harness is not installed yet. Until it is added, every affected UI flow requires explicit manual web and native verification, and pure helper tests do not count as screen coverage. Adding the harness and representative tests for the first critical flows is the highest-priority testing infrastructure follow-up.
+Use `renderWithAppProviders` from `tests/support/render.tsx` for product components that need the standard auth, React Query, navigation, Gluestack theme, or safe-area contexts. Tests may opt out of navigation or override auth, query-client, and safe-area values when the behavior requires it.
+
+The harness does not emulate a browser, physical device, native permissions, or provider consoles. Every affected UI flow still requires the applicable manual web and native verification, and pure helper tests do not count as screen coverage.
 
 Snapshot tests must not be the primary proof of behavior. Prefer queries and assertions that describe what a user can perceive or do.
 
@@ -145,6 +151,14 @@ Shared and infrastructure tests live in:
 shared/tests/
 infrastructure/tests/
 ```
+
+Cross-cutting app test configuration and provider helpers live in:
+
+```text
+tests/support/
+```
+
+Root `tests/` support may compose public feature providers for the app harness. Production code and `shared/` must not import from root test support, and root support must not own feature behavior tests.
 
 Use:
 
@@ -245,7 +259,10 @@ Run the smallest useful command while developing, then the full relevant suite b
 
 ```bash
 npm run test:watch
+npm run test:ui:watch
 npm test
+npm run test:unit
+npm run test:ui
 npm run test:coverage
 npm run functions:test
 npm run functions:verify
@@ -269,6 +286,7 @@ Future test-organization changes should preserve the same behavior-first rule: d
 
 ## Adoption Priorities
 
-1. Add the React Native Testing Library harness and cover representative form, async-state, and destructive-confirmation behavior.
-2. Establish a meaningful coverage baseline before adding numeric CI gates.
-3. Add a small automated end-to-end smoke suite after the critical flows and test data strategy are stable.
+1. Cover representative form, async-state, retry, and destructive-confirmation behavior with the rendered harness.
+2. Add rendered hook tests for React Query cache behavior and auth-provider session transitions.
+3. Establish a meaningful coverage baseline before adding numeric CI gates.
+4. Add a small automated end-to-end smoke suite after the critical flows and test data strategy are stable.

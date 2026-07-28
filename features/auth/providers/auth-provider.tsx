@@ -9,42 +9,17 @@ import {
   updateAuthenticatedUserProfile,
   type EditableUserProfile
 } from "@/features/auth/services/auth-session.service";
+import { AuthContext } from "@/features/auth/providers/auth-context";
 import type { ProfileAvatarAsset } from "@/features/profile/services/profile.service";
 import { Sentry } from "@/infrastructure/monitoring/sentry";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import type { User } from "@/features/auth/types/auth.types";
 import type { Session } from "@supabase/supabase-js";
-import { createContext, useCallback, useEffect, useRef, useState } from "react";
-
-interface AuthContextType {
-  authError: string | null;
-  createUser: (
-    session: Session,
-    profile?: Partial<User>
-  ) => Promise<User | null>;
-  isLoading: boolean;
-  logOut: () => Promise<void>;
-  session: Session | null;
-  updateUserProfile: (
-    profile: Partial<EditableUserProfile>,
-    avatarAsset?: ProfileAvatarAsset | null
-  ) => Promise<User | null>;
-  user: User | null;
-}
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const defaultAuthError = hasAuthSessionSupport()
   ? null
   : "The app is not connected to its data service. Try again later.";
-
-export const AuthContext = createContext<AuthContextType>({
-  authError: defaultAuthError,
-  createUser: async () => null,
-  isLoading: true,
-  logOut: async () => {},
-  session: null,
-  updateUserProfile: async () => null,
-  user: null
-});
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [authError, setAuthError] = useState<string | null>(defaultAuthError);

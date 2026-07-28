@@ -116,6 +116,8 @@ npm run functions:verify
 
 `npm run test:coverage` is diagnostic and does not currently enforce a CI threshold. Test layers, naming, ownership, and change-based expectations are defined in [`docs/testing-strategy.md`](docs/testing-strategy.md).
 
+`npm test` runs the Vitest unit/workflow suite followed by the Jest/Expo rendered UI suite. Use `npm run test:unit` or `npm run test:ui` for a focused local pass.
+
 ### Database and local security checks
 
 GitGuardian remains local/manual:
