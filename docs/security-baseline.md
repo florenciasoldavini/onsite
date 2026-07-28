@@ -3,7 +3,7 @@
 Purpose: practical security rules for upcoming MVP feature work
 Source of truth for: security expectations around auth, authorization, RLS, uploads, validation, secrets, and release review
 Update when: auth architecture, storage strategy, client data-access scope, trusted server boundaries, dependency automation, or MVP entity model changes
-Last reviewed: 2026-07-16
+Last reviewed: 2026-07-27
 
 ## Scope
 
@@ -129,8 +129,20 @@ Baseline rules:
 Recommended path structure:
 
 - `projects/{project_id}/cover/{generated_file_name}`
-- `projects/{project_id}/photos/{generated_file_name}`
+- `projects/{project_id}/photos/{photo_id}/full.jpg`
+- `projects/{project_id}/photos/{photo_id}/thumbnail.jpg`
 - `projects/{project_id}/documents/{generated_file_name}`
+
+Project photo rules:
+
+- normalize selected input to new JPEG full and thumbnail objects; never upload or retain the original
+- allow at most 6 MiB per generated object and do not grant object updates or upserts
+- require an active photo-row reference for every Storage read so soft-deleted and orphaned objects are unreadable
+- derive `owner_id` from the active project and `uploaded_by` from `auth.uid()`
+- soft-delete the row before removing objects, and report failed cleanup for reconciliation
+- strip EXIF from generated files; retain optional capture time and GPS only in the RLS-protected row
+- do not request device location for photo upload in the current version
+- treat `is_marketing` as organization only, never as publication consent or a visibility change
 
 Before shipping other upload categories, decide:
 

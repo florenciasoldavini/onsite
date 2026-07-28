@@ -125,6 +125,7 @@ Last reviewed: 2026-07-21
 - [20260727181524_align_directory_active_select_policies.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181524_align_directory_active_select_policies.sql:1)
 - [20260727181533_create_suppliers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181533_create_suppliers_catalog.sql:1)
 - [20260727191057_allow_directory_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727191057_allow_directory_soft_delete_updates.sql:1)
+- [20260727213244_create_project_photos_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727213244_create_project_photos_feature.sql:1)
 
 ### RLS Baseline
 
@@ -195,6 +196,17 @@ Last reviewed: 2026-07-21
 - deleting a supplier means soft deletion after explicit confirmation; supplier lists remain paginated and exclude soft-deleted records
 - opening hours, multiple contacts, material categories, project relationships, purchasing, tax identifiers, imports, duplicate detection, and supplier avatars remain deferred
 - clients, contractors, workers, and suppliers share the Directory navigation destination but retain separate feature ownership, persistence, queries, and forms
+
+### Project Photos
+
+- project photos are private, project-owned operational records; normal users manage only photos in their own active projects and admins may manage all active project photos
+- each photo keeps one operational category plus an independent marketing flag; marketing classification does not publish the photo or imply consent
+- uploads normalize selected images to JPEG full and thumbnail variants and never retain the original file
+- Apple HEIC/HEIF input is converted automatically, including on web
+- capture time and optional coordinates come only from existing photo EXIF in this version; the app does not request device location for photo upload
+- generated JPEG objects contain no retained EXIF, while selected EXIF coordinates remain in the RLS-protected database row for future project-assignment assistance
+- photo rows are soft-deleted before Storage cleanup; active row references are required for Storage reads
+- the complete product, privacy, processing, and deferred-scope contract lives in [docs/project-photos.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-photos.md:1)
 
 ## User Model Decisions
 

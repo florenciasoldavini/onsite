@@ -23,6 +23,7 @@ The current MVP foundation focuses on secure account access and project manageme
 - **Projects V1:** create, view, edit, search, filter, sort, and soft-delete projects with explicit delete confirmation.
 - **Project context:** status, phase, dates, building/project type, progress, description, cover image, and a Google-selected address with stored coordinates.
 - **List and map discovery:** responsive project cards plus web/native map implementations, project markers, previews, and optional live user location.
+- **Project photos:** private project galleries, camera/library batch review, automatic HEIC conversion, operational categories, independent marketing classification, EXIF capture context, metadata editing, and confirmed soft deletion.
 - **Secure data access:** owner-scoped project access for normal users, admin-wide access through database policies, private project-cover storage, and repository-level filtering of soft-deleted records.
 - **Trusted Maps workflows:** address autocomplete, place resolution, and static previews run through Supabase Edge Functions with authentication, validation, rate limiting, and durable monthly usage caps before provider calls.
 - **Reusable UI foundation:** shared design tokens and primitives for typography, fields, buttons, cards, navigation, skeletons, empty states, toasts, and responsive layouts.
@@ -31,7 +32,7 @@ The current MVP foundation focuses on secure account access and project manageme
 ### In progress or intentionally deferred
 
 - **Tasks:** the Tasks tab is a styled placeholder on this branch; task persistence and CRUD are not presented here as complete.
-- **Project workspace modules:** Documentation, Incident Log, To-do List, and Daily Report cards on project detail are future affordances and do not navigate to working modules yet.
+- **Project workspace modules:** Photos is implemented separately from Documentation. Documentation, Incident Log, To-do List, and Daily Report remain future affordances.
 - **Multi-user collaboration:** project participation, invitations, and participant-based access are deferred; Projects V1 currently uses owner/admin access.
 - **Portfolio media:** no product screenshots or walkthrough video are committed yet. The capture plan is documented below.
 - **Launch polish:** custom domain, branded auth/email configuration, and related launch setup remain tracked in `docs/pending-launch-setup.md`.

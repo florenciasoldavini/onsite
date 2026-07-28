@@ -144,6 +144,16 @@ Recommended behavior:
 - visible upload progress
 - recoverable failure states for slow or interrupted uploads
 
+Current project-photo limits:
+
+- review batches contain at most 20 photos
+- normalization and upload use at most two concurrent workers
+- full JPEGs use a maximum 3,200-pixel long edge and iteratively reduce quality until at most 6 MiB
+- thumbnail JPEGs use a maximum 640-pixel long edge
+- gallery queries use deterministic 24-item pages ordered by capture time and UUID
+- galleries render through a virtualized adaptive grid and load signed thumbnails; full images load only on detail screens
+- HEIC/HEIF conversion is dynamically imported on web so the decoder is not part of the initial route graph
+
 ## Web performance
 
 Because the app is also usable on web, bundle size and first load matter.
@@ -161,15 +171,16 @@ Current enforced export budgets:
 - initial CSS: at most 100,000 raw bytes
 - authenticated feature screens and heavy optional integrations should use route or interaction-level code splitting when it reduces the initial graph
 
-Current production-export baseline after icon, font, Sentry Replay, and web animation delivery optimization:
+Current production-export baseline after project-photo processing was added:
 
-- initial JavaScript: 3,025,683 raw bytes, 771,987 gzip bytes, and 609,087 Brotli bytes
+- initial JavaScript: 3,189.9 KiB raw and 811.9 KiB gzip
 - web uses Google-hosted Geist and JetBrains Mono from `global.css`; iOS and Android load the tracked local TTF files through the platform-specific app-font hook
 - web must not register or preload the native TTF assets
 - screens and components import named app icons and icon types only from `@/shared/ui/icons`; the central registry alone imports Lucide's individual ESM icon modules so Metro does not bundle the complete catalog
 - Sentry Session Replay is excluded from Metro's web graph because the product does not enable replay; core error and performance monitoring remain enabled
 - web animation adapters use React Native Animated or CSS transitions while iOS and Android retain Reanimated and Worklets
 - route modules should import shared components from their owning files instead of the aggregate `@/shared/ui/components` barrel when the barrel would promote optional component dependencies into the initial web graph
+- the browser-only HEIC decoder remains a separate interaction-loaded chunk and must not enter the iOS or Android Hermes bundles
 
 Run `npm run build` followed by `npm run bundle:check` after changing shared dependencies, route imports, NativeWind content paths, or font loading.
 

@@ -29,6 +29,7 @@ import {
   AlertIcon,
   CameraIcon,
   CirclePlusIcon,
+  FolderOpenIcon,
   ListChecksIcon,
   MoreVerticalIcon,
   MailIcon,
@@ -54,27 +55,38 @@ import {
 const projectActions = [
   {
     accent: false,
-    icon: CameraIcon,
+    icon: FolderOpenIcon,
     index: "01",
-    label: "DOCUMENTATION"
+    label: "DOCUMENTATION",
+    target: null
+  },
+  {
+    accent: false,
+    icon: CameraIcon,
+    index: "02",
+    label: "PHOTOS",
+    target: "photos"
   },
   {
     accent: false,
     icon: AlertIcon,
-    index: "02",
-    label: "INCIDENT_LOG"
+    index: "03",
+    label: "INCIDENT_LOG",
+    target: null
   },
   {
     accent: false,
     icon: ListChecksIcon,
-    index: "03",
-    label: "TO_DO_LIST"
+    index: "04",
+    label: "TO_DO_LIST",
+    target: null
   },
   {
     accent: true,
     icon: CirclePlusIcon,
-    index: "04",
-    label: "DAILY_REPORT"
+    index: "05",
+    label: "DAILY_REPORT",
+    target: null
   }
 ] as const;
 
@@ -172,6 +184,14 @@ export default function ProjectDetailScreen() {
               <ProjectActionCard
                 expanded={isExpanded}
                 key={action.index}
+                onPress={
+                  action.target === "photos"
+                    ? () =>
+                        router.push(
+                          `/projects/${projectId}/photos` as never
+                        )
+                    : undefined
+                }
                 {...action}
               />
             ))}
@@ -689,20 +709,28 @@ function ProjectActionCard({
   expanded,
   icon: Icon,
   index,
-  label
-}: (typeof projectActions)[number] & { expanded: boolean }) {
+  label,
+  onPress
+}: (typeof projectActions)[number] & {
+  expanded: boolean;
+  onPress?: () => void;
+}) {
   const [isHovered, setIsHovered] = useState(false);
   const iconColor = accent ? atomPalette.accentText : atomPalette.textMuted;
   const textTone = accent ? "inverse" : "default";
 
   return (
     <Pressable
-      accessibilityHint="This action will be available in a future update."
+      accessibilityHint={
+        onPress
+          ? "Opens this project feature."
+          : "This action will be available in a future update."
+      }
       accessibilityLabel={label.replaceAll("_", " ").toLowerCase()}
       accessibilityRole="button"
       onHoverIn={() => setIsHovered(true)}
       onHoverOut={() => setIsHovered(false)}
-      onPress={() => undefined}
+      onPress={onPress}
       style={({ pressed }) => [
         styles.actionCard,
         expanded ? styles.actionCardExpanded : null,
