@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { normalizeClientFilters } from "@/features/clients/schemas/client.schema";
 import type {
   ClientFilters,
@@ -20,7 +21,7 @@ export function buildClientListQueryPlan({
 }: {
   filters?: ClientFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 }): ClientListQueryPlan {
   const normalized = normalizeClientFilters(filters);
   const ownerId = userRole === "admin" ? normalized.ownerId : userId;

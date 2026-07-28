@@ -1,4 +1,5 @@
-import { User } from "@/features/auth/types/auth.types";
+import { USER_ROLES } from "@/features/auth/constants/user.constants";
+import type { User } from "@/features/auth/types/auth.types";
 import { z } from "zod";
 
 export const UserSchema: z.ZodType<User> = z.object({
@@ -8,7 +9,7 @@ export const UserSchema: z.ZodType<User> = z.object({
   avatar: z.string().nullable(),
   email: z.string().email(),
   phone_number: z.string().nullable(),
-  role: z.enum(["admin", "user"]),
+  role: z.enum(USER_ROLES),
   welcome_email_sent_at: z.date().nullable(),
   created_at: z.date(),
   updated_at: z.date().nullable(),

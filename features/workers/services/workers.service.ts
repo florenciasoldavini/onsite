@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import {
   getWorkerRow,
   insertWorkerRow,
@@ -21,7 +22,7 @@ export function listWorkers({
 }: {
   filters?: WorkerFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   return listWorkerRows({
     filters,

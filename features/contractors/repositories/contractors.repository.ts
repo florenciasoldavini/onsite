@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { buildContractorListQueryPlan } from "@/features/contractors/repositories/contractor-list-query";
 import type {
   Contractor,
@@ -35,7 +36,7 @@ export async function listContractorRows({
 }: {
   filters?: ContractorFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   const client = requireSupabase();
   const plan = buildContractorListQueryPlan({ filters, userId, userRole });

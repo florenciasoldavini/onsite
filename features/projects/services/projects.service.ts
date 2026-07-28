@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import {
   createProjectCoverSignedUrl,
   removeProjectCoverObject,
@@ -33,7 +34,7 @@ export async function listProjects({
 }: {
   filters?: ProjectFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest): Promise<PaginatedResult<ProjectSummary>> {
   const page = await listProjectRows({
     filters,

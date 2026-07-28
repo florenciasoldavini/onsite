@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import {
   getContractorRow,
   insertContractorRow,
@@ -21,7 +22,7 @@ export function listContractors({
 }: {
   filters?: ContractorFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   return listContractorRows({
     filters,

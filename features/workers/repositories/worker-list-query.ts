@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { normalizeWorkerFilters } from "@/features/workers/schemas/worker.schema";
 import type {
   WorkerFilters,
@@ -20,7 +21,7 @@ export function buildWorkerListQueryPlan({
 }: {
   filters?: WorkerFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 }): WorkerListQueryPlan {
   const normalized = normalizeWorkerFilters(filters);
   const queryFilters: WorkerListQueryPlan["filters"] = [

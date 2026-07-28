@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { buildSupplierListQueryPlan } from "@/features/suppliers/repositories/supplier-list-query";
 import type {
   CreateSupplierInput,
@@ -37,7 +38,7 @@ export async function listSupplierRows({
 }: {
   filters?: SupplierFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   const client = requireSupabase();
   const plan = buildSupplierListQueryPlan({ filters, userId, userRole });

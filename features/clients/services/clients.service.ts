@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import {
   countClientProjectRows,
   getClientRow,
@@ -22,7 +23,7 @@ export function listClients({
 }: {
   filters?: ClientFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   return listClientRows({
     filters,

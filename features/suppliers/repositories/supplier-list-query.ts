@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { normalizeSupplierFilters } from "@/features/suppliers/schemas/supplier.schema";
 import type {
   SupplierFilters,
@@ -20,7 +21,7 @@ export function buildSupplierListQueryPlan({
 }: {
   filters?: SupplierFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 }): SupplierListQueryPlan {
   const normalized = normalizeSupplierFilters(filters);
   const ownerId = userRole === "admin" ? normalized.ownerId : userId;
