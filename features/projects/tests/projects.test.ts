@@ -16,7 +16,7 @@ import {
   normalizeProjectFilters,
   toCreateProjectInput,
   validateProjectForm
-} from "@/features/projects/schemas/project.schemas";
+} from "@/features/projects/schemas/project.schema";
 import { consumeFixedWindowRateLimit } from "@/shared/utils/rate-limit";
 import { describe, expect, it } from "vitest";
 

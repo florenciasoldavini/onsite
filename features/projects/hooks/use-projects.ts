@@ -21,7 +21,7 @@ import type {
   StaticMapViewport,
   UpdateProjectInput
 } from "@/features/projects/types/project.types";
-import { normalizeProjectFilters } from "@/features/projects/schemas/project.schemas";
+import { normalizeProjectFilters } from "@/features/projects/schemas/project.schema";
 import { DEFAULT_PAGE_SIZE, type PaginatedResult } from "@/shared/utils/pagination";
 import { UserFacingError } from "@/shared/utils/user-facing-errors";
 import {

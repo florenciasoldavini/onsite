@@ -1,6 +1,6 @@
 import type { UserRole } from "@/features/auth/types/auth.types";
 import type { ProjectFilters } from "@/features/projects/types/project.types";
-import { normalizeProjectFilters } from "@/features/projects/schemas/project.schemas";
+import { normalizeProjectFilters } from "@/features/projects/schemas/project.schema";
 
 export interface ProjectListQueryPlan {
   filters: {

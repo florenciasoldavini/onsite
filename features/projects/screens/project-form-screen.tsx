@@ -50,7 +50,7 @@ import {
   projectFormSchema,
   toCreateProjectInput,
   toUpdateProjectInput
-} from "@/features/projects/schemas/project.schemas";
+} from "@/features/projects/schemas/project.schema";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
