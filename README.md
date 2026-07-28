@@ -109,20 +109,22 @@ npm run env:check
 npx tsc --noEmit
 npm run lint
 npm test
+npm run test:coverage
 npm run build
 npm run functions:verify
 ```
 
+`npm run test:coverage` is diagnostic and does not currently enforce a CI threshold. Test layers, naming, ownership, and change-based expectations are defined in [`docs/testing-strategy.md`](docs/testing-strategy.md).
+
 ### Database and local security checks
 
-These remain local/manual because they are not safely configured in GitHub Actions yet:
+GitGuardian remains local/manual:
 
 ```bash
-npx supabase test db
 ggshield secret scan pre-commit
 ```
 
-`npx supabase test db` requires a running local Supabase stack and Docker-compatible CI setup. This repository does not currently include the `supabase/config.toml` needed to bootstrap that stack in GitHub Actions. To add reliable SQL CI, first commit and validate the local Supabase configuration, then start the stack and run the pgTAP suite in a dedicated job.
+`npx supabase test db` requires a running local Supabase stack for local development. CI starts a clean local Postgres instance and runs the pgTAP suite on pull requests and pushes to `development` or `main`.
 
 GitGuardian is configured as a local pre-commit hook. Automated GitGuardian scanning would require adding a `GITGUARDIAN_API_KEY` repository secret, so CI does not currently include a step that would fail without that credential.
 

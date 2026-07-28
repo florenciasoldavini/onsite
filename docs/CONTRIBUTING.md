@@ -59,7 +59,7 @@ Real values belong in `.env.local`. Never commit `.env.local`, credentials, serv
 - Every product feature must account for web, iOS, and Android. Use platform-specific adapters or UI when shared behavior would be incorrect.
 - Include explicit loading, empty, error, disabled, and destructive-action confirmation states where applicable.
 - Production submit forms use React Hook Form with Zod validation.
-- Add unit, flow/UI, and database/RLS tests appropriate to the affected behavior.
+- Add the unit, service-workflow, UI, Edge Function, and database/RLS tests required by [`docs/testing-strategy.md`](testing-strategy.md). Until the UI harness exists, record the required manual platform checks instead of representing helper tests as screen coverage.
 - Do not present planned behavior as implemented in code, screenshots, documentation, or pull request descriptions.
 
 ## Verification
@@ -71,9 +71,12 @@ npm run env:check
 npx tsc --noEmit
 npm run lint
 npm test
+npm run test:coverage
 npm run build
 npm run functions:verify
 ```
+
+`npm run test:coverage` is diagnostic and has no CI threshold yet; use it when changing non-trivial business logic or when assessing a testing gap.
 
 Also run:
 

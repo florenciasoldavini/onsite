@@ -236,6 +236,7 @@ Last reviewed: 2026-07-21
 - `npm run sync:env -- --dry-run`
 - `ggshield secret scan pre-commit`
 - `npm test`
+- `npm run test:coverage`
 - `npm run test:watch`
 - `npx supabase test db`
 
@@ -264,7 +265,7 @@ Last reviewed: 2026-07-21
 
 ## Feature Implementation Rules
 
-- Every feature must include appropriate tests for the work: unit tests for reusable logic, database/RLS tests for Supabase access rules, and flow/UI tests for user-critical behavior.
+- Every feature must include the tests required by [docs/testing-strategy.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/testing-strategy.md:1). New and changed suites follow its ownership and naming rules. Until the rendered UI harness exists, user-critical UI changes require explicit manual platform verification and must not present pure helper tests as screen coverage.
 - Every feature must explicitly account for web, iOS, and Android behavior. If the correct implementation differs by platform, use platform-specific files or adapters while keeping the business logic shared.
 - When adding a new project rule or product constraint, scan existing features, docs, env config, and tests for places where the rule already applies. Refactor, document follow-up work, or clearly call out any existing gap instead of applying the rule only to future code.
 - Every async surface must handle loading explicitly with an appropriate spinner, skeleton, disabled state, optimistic state, or other clear indicator.

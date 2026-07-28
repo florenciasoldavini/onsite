@@ -6,14 +6,11 @@ const { createProjectCoverSignedUrl, listProjectRows } = vi.hoisted(() => ({
   listProjectRows: vi.fn()
 }));
 
-vi.mock(
-  "@/features/projects/repositories/project-covers.repository",
-  () => ({
-    createProjectCoverSignedUrl,
-    removeProjectCoverObject: vi.fn(),
-    uploadProjectCoverObject: vi.fn()
-  })
-);
+vi.mock("@/features/projects/repositories/project-covers.repository", () => ({
+  createProjectCoverSignedUrl,
+  removeProjectCoverObject: vi.fn(),
+  uploadProjectCoverObject: vi.fn()
+}));
 
 vi.mock("@/features/projects/repositories/projects.repository", () => ({
   getProjectRow: vi.fn(),

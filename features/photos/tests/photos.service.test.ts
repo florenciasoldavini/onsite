@@ -224,12 +224,8 @@ describe("project photo workflow", () => {
     mocks.getRow.mockResolvedValue(photo("photo-id"));
     mocks.removeObjects.mockRejectedValue(new Error("storage unavailable"));
 
-    await expect(
-      softDeleteProjectPhoto("photo-id")
-    ).resolves.toBeUndefined();
-    expect(mocks.softDeleteRow).toHaveBeenCalledBefore(
-      mocks.removeObjects
-    );
+    await expect(softDeleteProjectPhoto("photo-id")).resolves.toBeUndefined();
+    expect(mocks.softDeleteRow).toHaveBeenCalledBefore(mocks.removeObjects);
     expect(mocks.captureException).toHaveBeenCalledOnce();
   });
 
@@ -250,9 +246,7 @@ describe("project photo workflow", () => {
     });
 
     expect(result.nextOffset).toBe(24);
-    expect(result.items[0].thumbnail_url).toBe(
-      "https://signed.example/thumb"
-    );
+    expect(result.items[0].thumbnail_url).toBe("https://signed.example/thumb");
   });
 
   it("keeps a gallery row usable when its thumbnail URL cannot be signed", async () => {

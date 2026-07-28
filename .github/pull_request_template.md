@@ -26,11 +26,16 @@
 - [ ] `npx tsc --noEmit`
 - [ ] `npm run lint`
 - [ ] `npm test`
+- [ ] `npm run test:coverage` (diagnostic when non-trivial business logic changes)
 - [ ] `npm run build`
 - [ ] `npm run functions:verify` (when Edge Functions or shared function code changes)
 - [ ] Supabase tests (when migrations, RLS policies, or database functions change)
 - [ ] Manual web verification (when applicable)
 - [ ] Manual native verification (when applicable)
+
+**Test coverage added or updated:**
+
+<!-- Name the unit, workflow, UI, Edge Function, database/RLS, or regression behavior covered. If an applicable automated layer is not available, state the gap and the manual evidence used. -->
 
 **Skipped or unavailable checks:**
 
