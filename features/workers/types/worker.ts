@@ -1,5 +1,10 @@
 import type { ContractorSummary } from "@/features/contractors/types/contractor";
 import type { TradeCategory } from "@/features/trade-categories/types/trade-category";
+import type {
+  OwnedPersonContactRecord,
+  PersonContactFormValues,
+  PersonContactInput
+} from "@/shared/types/contact";
 
 export type WorkerSort =
   | "created_asc"
@@ -7,19 +12,10 @@ export type WorkerSort =
   | "name_asc"
   | "name_desc";
 
-export interface Worker {
+export interface Worker extends OwnedPersonContactRecord {
   contractor: ContractorSummary | null;
   contractor_id: string | null;
-  created_at: string;
-  deleted_at: string | null;
-  email: string | null;
-  first_name: string;
-  id: string;
-  last_name: string | null;
-  owner_id: string;
-  phone_number: string | null;
   trade_categories: TradeCategory[];
-  updated_at: string | null;
 }
 
 export type WorkerSummary = Pick<
@@ -42,21 +38,13 @@ export interface WorkerFilters {
   tradeCategoryIds?: string[];
 }
 
-export interface WorkerFormValues {
+export interface WorkerFormValues extends PersonContactFormValues {
   contractor_id: string | null;
-  email: string;
-  first_name: string;
-  last_name: string;
-  phone_number: string;
   trade_category_ids: string[];
 }
 
-export interface CreateWorkerInput {
+export interface CreateWorkerInput extends PersonContactInput {
   contractor_id: string | null;
-  email: string | null;
-  first_name: string;
-  last_name: string | null;
-  phone_number: string | null;
   trade_category_ids: string[];
 }
 

@@ -5,6 +5,14 @@ import type {
   SupplierFormValues,
   SupplierSort
 } from "@/features/suppliers/types/supplier";
+import {
+  optionalEmailSchema,
+  optionalPhoneSchema
+} from "@/shared/schemas/contact";
+import {
+  normalizeEmailInput,
+  normalizeNullableText
+} from "@/shared/utils/contact";
 import { z } from "zod";
 
 export const SupplierSchema: z.ZodType<Supplier> = z.object({
@@ -24,26 +32,6 @@ export const SupplierSchema: z.ZodType<Supplier> = z.object({
   updated_at: z.string().nullable(),
   website_url: z.string().nullable()
 });
-
-const optionalEmailSchema = z
-  .string()
-  .trim()
-  .refine(
-    (value) =>
-      value.length === 0 ||
-      z.string().email().max(254).safeParse(value).success,
-    { message: "Enter a valid email address." }
-  );
-
-const optionalPhoneSchema = z
-  .string()
-  .trim()
-  .refine((value) => value.length === 0 || value.length >= 3, {
-    message: "Enter a valid phone number."
-  })
-  .refine((value) => value.length <= 40, {
-    message: "Phone number must be 40 characters or fewer."
-  });
 
 const optionalWebsiteSchema = z
   .string()
@@ -75,10 +63,7 @@ export const supplierFormSchema = z.object({
     .trim()
     .min(2, "Supplier name must be at least 2 characters.")
     .max(120, "Supplier name must be 120 characters or fewer."),
-  notes: z
-    .string()
-    .trim()
-    .max(2000, "Notes must be 2000 characters or fewer."),
+  notes: z.string().trim().max(2000, "Notes must be 2000 characters or fewer."),
   phone_number: optionalPhoneSchema,
   website_url: optionalWebsiteSchema
 });
@@ -89,7 +74,7 @@ export function toSupplierInput(
   return {
     address: values.address?.address.trim() ?? null,
     contact_name: normalizeNullableText(values.contact_name),
-    email: normalizeNullableText(values.email)?.toLowerCase() ?? null,
+    email: normalizeEmailInput(values.email),
     google_place_id: values.address?.placeId.trim() ?? null,
     latitude: values.address?.latitude ?? null,
     longitude: values.address?.longitude ?? null,
@@ -146,9 +131,4 @@ function normalizeSupplierSort(sort: SupplierFilters["sort"]): SupplierSort {
     default:
       return "created_desc";
   }
-}
-
-function normalizeNullableText(value: string) {
-  const trimmed = value.trim();
-  return trimmed ? trimmed : null;
 }
