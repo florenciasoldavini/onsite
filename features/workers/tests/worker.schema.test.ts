@@ -5,7 +5,6 @@ import {
   toWorkerInput,
   workerFormSchema
 } from "@/features/workers/schemas/worker.schema";
-import { describe, expect, it } from "vitest";
 
 describe("worker schema", () => {
   it("normalizes contact and relationship form values", () => {

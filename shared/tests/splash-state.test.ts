@@ -7,7 +7,6 @@ import {
   canFinishSplash,
   getSplashFadeDuration
 } from "@/shared/splash/splash-state";
-import { describe, expect, it } from "vitest";
 
 describe("animated splash state", () => {
   it("waits for both the animation and app initialization", () => {

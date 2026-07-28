@@ -3,7 +3,6 @@ import {
   mapResolvedAddress,
   mapStaticMapPreview
 } from "@/features/locations/maps/map-payloads";
-import { describe, expect, it } from "vitest";
 
 describe("map payloads", () => {
   it("maps autocomplete suggestions defensively", () => {

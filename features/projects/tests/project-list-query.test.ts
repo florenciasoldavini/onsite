@@ -1,5 +1,4 @@
 import { buildProjectListQueryPlan } from "@/features/projects/repositories/project-list-query";
-import { describe, expect, it } from "vitest";
 
 describe("project list query", () => {
   it("adds active and owner filtering for normal users", () => {

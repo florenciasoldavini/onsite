@@ -237,9 +237,6 @@ Last reviewed: 2026-07-21
 - `ggshield secret scan pre-commit`
 - `npm test`
 - `npm run test:coverage`
-- `npm run test:unit`
-- `npm run test:ui`
-- `npm run test:ui:watch`
 - `npm run test:watch`
 - `npx supabase test db`
 

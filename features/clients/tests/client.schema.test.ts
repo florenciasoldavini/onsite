@@ -5,7 +5,6 @@ import {
   normalizeClientFilters,
   toClientInput
 } from "@/features/clients/schemas/client.schema";
-import { describe, expect, it } from "vitest";
 
 describe("client schema", () => {
   it("normalizes optional contact fields", () => {

@@ -4,7 +4,6 @@ import {
   personContactFormSchema,
   personContactRecordSchema
 } from "@/shared/schemas/contact";
-import { describe, expect, it } from "vitest";
 
 describe("contact schema", () => {
   it("validates optional email and phone fields consistently", () => {

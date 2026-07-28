@@ -1,28 +1,29 @@
 import type { ProjectSummary } from "@/features/projects/types/project.types";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { createProjectCoverSignedUrl, listProjectRows } = vi.hoisted(() => ({
-  createProjectCoverSignedUrl: vi.fn(),
-  listProjectRows: vi.fn()
+const mockCreateProjectCoverSignedUrl = jest.fn();
+const mockListProjectRows = jest.fn();
+
+jest.mock("@/features/projects/repositories/project-covers.repository", () => ({
+  get createProjectCoverSignedUrl() {
+    return mockCreateProjectCoverSignedUrl;
+  },
+  removeProjectCoverObject: jest.fn(),
+  uploadProjectCoverObject: jest.fn()
 }));
 
-vi.mock("@/features/projects/repositories/project-covers.repository", () => ({
-  createProjectCoverSignedUrl,
-  removeProjectCoverObject: vi.fn(),
-  uploadProjectCoverObject: vi.fn()
+jest.mock("@/features/projects/repositories/projects.repository", () => ({
+  getProjectRow: jest.fn(),
+  insertProjectRow: jest.fn(),
+  get listProjectRows() {
+    return mockListProjectRows;
+  },
+  replaceProjectCoverPath: jest.fn(),
+  softDeleteProjectRow: jest.fn(),
+  updateProjectRow: jest.fn()
 }));
 
-vi.mock("@/features/projects/repositories/projects.repository", () => ({
-  getProjectRow: vi.fn(),
-  insertProjectRow: vi.fn(),
-  listProjectRows,
-  replaceProjectCoverPath: vi.fn(),
-  softDeleteProjectRow: vi.fn(),
-  updateProjectRow: vi.fn()
-}));
-
-vi.mock("@/infrastructure/monitoring/sentry", () => ({
-  Sentry: { captureException: vi.fn() }
+jest.mock("@/infrastructure/monitoring/sentry", () => ({
+  Sentry: { captureException: jest.fn() }
 }));
 
 import { listProjects } from "@/features/projects/services/projects.service";
@@ -48,18 +49,20 @@ function createSummary(
 
 describe("paginated project listing", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("preserves page metadata while resolving cover URLs", async () => {
-    listProjectRows.mockResolvedValue({
+    mockListProjectRows.mockResolvedValue({
       items: [
         createSummary({ cover_image_path: "projects/1/cover/image.jpg" }),
         createSummary({ id: "project-2" })
       ],
       nextOffset: 24
     });
-    createProjectCoverSignedUrl.mockResolvedValue("https://signed.example/1");
+    mockCreateProjectCoverSignedUrl.mockResolvedValue(
+      "https://signed.example/1"
+    );
 
     const result = await listProjects({
       filters: { status: "planned" },
@@ -69,7 +72,7 @@ describe("paginated project listing", () => {
       userRole: "user"
     });
 
-    expect(listProjectRows).toHaveBeenCalledWith({
+    expect(mockListProjectRows).toHaveBeenCalledWith({
       filters: { status: "planned" },
       offset: 0,
       pageSize: 24,

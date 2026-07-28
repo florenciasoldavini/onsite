@@ -5,7 +5,6 @@ import {
   ProjectPhotoSchema,
   toProjectPhotoUpdateInput
 } from "@/features/photos/schemas/photo.schema";
-import { describe, expect, it } from "vitest";
 
 const photoId = "10000000-0000-4000-8000-000000000001";
 const projectId = "20000000-0000-4000-8000-000000000001";

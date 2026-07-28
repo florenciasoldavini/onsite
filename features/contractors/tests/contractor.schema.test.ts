@@ -5,7 +5,6 @@ import {
   normalizeContractorFilters,
   toContractorInput
 } from "@/features/contractors/schemas/contractor.schema";
-import { describe, expect, it } from "vitest";
 
 describe("contractor schema", () => {
   it("normalizes contact form values", () => {

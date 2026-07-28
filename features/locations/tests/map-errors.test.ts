@@ -1,5 +1,4 @@
 import { getMapsFunctionErrorMessage } from "@/features/locations/maps/map-errors";
-import { describe, expect, it } from "vitest";
 
 describe("map errors", () => {
   it("does not expose Edge Function error payload messages", () => {

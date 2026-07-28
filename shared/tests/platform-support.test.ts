@@ -1,5 +1,4 @@
 import appConfig from "@/app.json";
-import { describe, expect, it } from "vitest";
 
 describe("supported platforms and orientations", () => {
   it("declares web, iOS, and Android as supported platforms", () => {

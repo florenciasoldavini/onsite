@@ -2,7 +2,6 @@ import {
   buildSupplierListQueryPlan,
   buildSupplierSearchFilter
 } from "@/features/suppliers/repositories/supplier-list-query";
-import { describe, expect, it } from "vitest";
 
 describe("supplier list query", () => {
   it("scopes normal users to their own active suppliers", () => {

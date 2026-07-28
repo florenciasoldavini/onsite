@@ -22,13 +22,13 @@ The goal is risk-based confidence, not a large test count or a universal line-co
 
 The repository audit on 2026-07-28 found:
 
-- 40 responsibility-focused Vitest files containing 163 test cases;
+- 40 responsibility-focused Jest unit and workflow files containing 163 test cases;
 - 3 rendered Jest files containing 5 React Native behavior tests;
 - 2 Deno test files containing 11 Edge Function test cases;
 - 8 pgTAP files planning 153 database assertions;
 - strong coverage of schemas, pure utilities, service compensation workflows, query planning, Edge Function helpers, and RLS;
-- all Vitest files located under their feature, shared, or infrastructure `tests/` owner;
-- production-subject or cohesive-workflow filenames across the migrated Vitest suite;
+- all application test files located under their feature, shared, infrastructure, or root harness `tests/` owner;
+- production-subject or cohesive-workflow filenames across the migrated Jest suite;
 - an Expo/Jest React Native Testing Library harness with shared auth, React Query, navigation, theme, and safe-area providers;
 - initial rendered coverage for the shared empty state, destructive confirmation dialog, and provider harness;
 - no automated browser or native end-to-end suite;
@@ -46,7 +46,7 @@ Static checks are required verification, but they are not substitutes for behavi
 
 ### 2. Unit and contract tests
 
-Runner: Vitest in the root Node environment.
+Runner: Jest with the `jest-expo` preset.
 
 Use these for:
 
@@ -60,7 +60,7 @@ Keep these tests deterministic and free of real network, filesystem, database, o
 
 ### 3. Service workflow tests
 
-Runner: Vitest.
+Runner: Jest with the `jest-expo` preset.
 
 Use these for workflows spanning multiple repository operations, including:
 
@@ -76,7 +76,7 @@ Mock repositories and technical adapters at the subject's immediate boundary. As
 
 Runner: Jest with the `jest-expo` preset and React Native Testing Library.
 
-Vitest remains responsible for Node-based unit and service tests. Jest owns `.test.tsx` rendered tests because `jest-expo` supplies Expo and React Native module transforms and mocks that the Node-only Vitest configuration does not.
+Jest owns both `.test.ts` logic/workflow tests and `.test.tsx` rendered tests. The shared `jest-expo` preset supplies consistent TypeScript, Expo, and React Native transforms and mocks across the application suite.
 
 Use rendered tests for behavior that cannot be proven through extracted pure state alone:
 
@@ -119,7 +119,7 @@ Runner: Deno, owned by `supabase/functions/deno.json`.
 
 Test request validation, authentication boundaries, stable error responses, rate limits, hard caps, cache behavior, provider response mapping, and failure redaction. Provider HTTP calls must be replaced with deterministic fakes.
 
-Expo TypeScript, ESLint, and Vitest must not absorb the Deno test surface.
+Expo TypeScript, ESLint, and Jest must not absorb the Deno test surface.
 
 ### 7. End-to-end and manual platform verification
 
@@ -137,7 +137,7 @@ An end-to-end tool should be introduced only with a small, reliable smoke suite 
 
 ## File Location and Naming
 
-### Vitest
+### Jest application tests
 
 Feature tests live in:
 
@@ -215,9 +215,9 @@ Use `Deno.test` and behavior-focused names. A capability suite may cover shared 
 
 | Change type                                          | Minimum automated coverage                                                               | Additional verification                         |
 | ---------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| Pure schema, utility, reducer, or mapper             | Vitest unit tests for success, boundary, and failure cases                               | TypeScript and lint                             |
-| Repository query or transport mapping                | Vitest contract tests for filters, ordering, pagination, and stable errors               | pgTAP if database behavior also changes         |
-| Multi-step service workflow                          | Vitest service test for success plus important partial failures and compensation         | Monitoring/error-language review                |
+| Pure schema, utility, reducer, or mapper             | Jest unit tests for success, boundary, and failure cases                                 | TypeScript and lint                             |
+| Repository query or transport mapping                | Jest contract tests for filters, ordering, pagination, and stable errors                 | pgTAP if database behavior also changes         |
+| Multi-step service workflow                          | Jest service test for success plus important partial failures and compensation           | Monitoring/error-language review                |
 | Hook, component, form, or screen                     | Rendered behavior test once the UI harness exists; otherwise document the automation gap | Manual checks on every affected platform/layout |
 | Migration, grant, RLS, trigger, or database function | pgTAP owner/admin/denial/invariant tests                                                 | Run against a clean local Supabase stack        |
 | Edge Function or shared function helper              | Deno tests for validation, auth, caps, mapping, and safe failures                        | `npm run functions:verify`                      |
@@ -258,11 +258,8 @@ New or materially changed business logic should still be fully exercised across 
 Run the smallest useful command while developing, then the full relevant suite before handoff:
 
 ```bash
-npm run test:watch
-npm run test:ui:watch
 npm test
-npm run test:unit
-npm run test:ui
+npm run test:watch
 npm run test:coverage
 npm run functions:test
 npm run functions:verify
@@ -280,7 +277,8 @@ The 2026-07-28 migration:
 - moved the shared rate-limit coverage to `shared/tests/`;
 - moved colocated layout and splash tests into `shared/tests/`;
 - renamed repository, service, schema, utility, and workflow suites around their actual subjects;
-- preserved all 163 Vitest cases while increasing the suite from 28 mixed files to 40 focused files.
+- preserved all 163 application cases while increasing the suite from 28 mixed files to 40 focused files;
+- consolidated the application suite on Jest after adding the Expo rendered-test harness.
 
 Future test-organization changes should preserve the same behavior-first rule: do not mix structural renames with unrelated product behavior when doing so would obscure review.
 

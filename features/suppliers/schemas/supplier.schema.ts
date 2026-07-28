@@ -95,6 +95,7 @@ export function normalizeWebsiteUrl(value: string) {
 
   try {
     const url = new URL(candidate);
+    url.hostname = url.hostname.toLowerCase();
     return url.protocol === "http:" || url.protocol === "https:"
       ? url.toString()
       : null;

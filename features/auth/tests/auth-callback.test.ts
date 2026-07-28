@@ -5,7 +5,6 @@ import {
   getSupportedOAuthProvider,
   isIdentityProviderLinked
 } from "@/features/auth/utils/auth-callback";
-import { describe, expect, it } from "vitest";
 
 describe("auth callback intent", () => {
   it("recognizes an app-generated identity-link callback", () => {

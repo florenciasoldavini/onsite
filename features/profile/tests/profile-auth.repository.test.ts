@@ -1,40 +1,44 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   getProfileUserIdentities,
   linkProfileOAuthIdentity,
   updateProfilePassword
 } from "@/features/profile/repositories/profile-auth.repository";
 
-const authMocks = vi.hoisted(() => ({
-  getUserIdentities: vi.fn(),
-  startOAuthIdentityLink: vi.fn(),
-  updatePassword: vi.fn()
+const mockAuth = {
+  getUserIdentities: jest.fn(),
+  startOAuthIdentityLink: jest.fn(),
+  updatePassword: jest.fn()
+};
+
+jest.mock("@/features/auth/repositories/auth-transport.repository", () => ({
+  get startOAuthIdentityLink() {
+    return mockAuth.startOAuthIdentityLink;
+  },
+  get updatePassword() {
+    return mockAuth.updatePassword;
+  }
 }));
 
-vi.mock("@/features/auth/repositories/auth-transport.repository", () => ({
-  startOAuthIdentityLink: authMocks.startOAuthIdentityLink,
-  updatePassword: authMocks.updatePassword
-}));
-
-vi.mock("@/infrastructure/supabase/client", () => ({
+jest.mock("@/infrastructure/supabase/client", () => ({
   getSupabaseErrorMessage: () =>
     "We couldn't load your sign-in methods. Try again.",
   supabase: {
     auth: {
-      getUserIdentities: authMocks.getUserIdentities
+      get getUserIdentities() {
+        return mockAuth.getUserIdentities;
+      }
     }
   }
 }));
 
 describe("profile auth repository", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("returns the identities reported by Supabase Auth", async () => {
     const identities = [{ id: "google-id", provider: "google" }];
-    authMocks.getUserIdentities.mockResolvedValue({
+    mockAuth.getUserIdentities.mockResolvedValue({
       data: { identities },
       error: null
     });
@@ -43,7 +47,7 @@ describe("profile auth repository", () => {
   });
 
   it("normalizes identity lookup errors at the repository boundary", async () => {
-    authMocks.getUserIdentities.mockResolvedValue({
+    mockAuth.getUserIdentities.mockResolvedValue({
       data: { identities: [] },
       error: new Error("Identity lookup failed")
     });
@@ -54,20 +58,20 @@ describe("profile auth repository", () => {
   });
 
   it("delegates OAuth linking to the shared cross-platform auth transport", async () => {
-    authMocks.startOAuthIdentityLink.mockResolvedValue({ provider: "google" });
+    mockAuth.startOAuthIdentityLink.mockResolvedValue({ provider: "google" });
 
     await expect(linkProfileOAuthIdentity("google")).resolves.toEqual({
       provider: "google"
     });
-    expect(authMocks.startOAuthIdentityLink).toHaveBeenCalledWith("google");
+    expect(mockAuth.startOAuthIdentityLink).toHaveBeenCalledWith("google");
   });
 
   it("delegates password changes to the shared auth transport", async () => {
-    authMocks.updatePassword.mockResolvedValue({ user: { id: "user-id" } });
+    mockAuth.updatePassword.mockResolvedValue({ user: { id: "user-id" } });
 
     await expect(updateProfilePassword("new-password")).resolves.toEqual({
       user: { id: "user-id" }
     });
-    expect(authMocks.updatePassword).toHaveBeenCalledWith("new-password");
+    expect(mockAuth.updatePassword).toHaveBeenCalledWith("new-password");
   });
 });

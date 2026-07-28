@@ -2,7 +2,6 @@ import {
   buildContractorListQueryPlan,
   buildContractorSearchFilter
 } from "@/features/contractors/repositories/contractor-list-query";
-import { describe, expect, it } from "vitest";
 
 describe("contractor list query", () => {
   it("scopes normal users to their own active contractors", () => {

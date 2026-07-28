@@ -2,7 +2,6 @@ import {
   findSelectedCatalogItem,
   getCatalogContactSummary
 } from "@/shared/ui/components/catalog-picker-state";
-import { describe, expect, it } from "vitest";
 
 describe("catalog picker state", () => {
   it("prefers a matching paginated item over the fallback record", () => {

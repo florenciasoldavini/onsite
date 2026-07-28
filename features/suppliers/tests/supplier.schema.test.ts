@@ -6,7 +6,6 @@ import {
   supplierFormSchema,
   toSupplierInput
 } from "@/features/suppliers/schemas/supplier.schema";
-import { describe, expect, it } from "vitest";
 
 const resolvedAddress = {
   address: "Av. Corrientes 1234, Buenos Aires",

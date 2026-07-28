@@ -2,11 +2,14 @@ import {
   getContainedSize,
   parseExifRecord
 } from "@/features/photos/services/photo-normalization.service";
-import { describe, expect, it, vi } from "vitest";
 
-vi.mock("expo-image-manipulator", () => ({
+jest.mock("expo-image-manipulator", () => ({
   ImageManipulator: {},
   SaveFormat: { JPEG: "jpeg" }
+}));
+
+jest.mock("exifr/dist/lite.esm.mjs", () => ({
+  parse: jest.fn()
 }));
 
 describe("photo normalization service", () => {

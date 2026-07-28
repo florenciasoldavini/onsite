@@ -2,7 +2,6 @@ import {
   buildProfileAvatarPath,
   getProfileAvatarStoragePath
 } from "@/features/profile/utils/avatar-storage";
-import { describe, expect, it } from "vitest";
 
 describe("profile avatar storage paths", () => {
   it("stores uploaded avatars under the current user folder", () => {

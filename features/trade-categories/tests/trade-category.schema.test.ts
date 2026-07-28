@@ -1,5 +1,4 @@
 import { TradeCategorySchema } from "@/features/trade-categories/schemas/trade-category.schema";
-import { describe, expect, it } from "vitest";
 
 describe("TradeCategorySchema", () => {
   it("accepts a database trade-category row", () => {

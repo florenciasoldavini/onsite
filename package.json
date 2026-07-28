@@ -48,14 +48,9 @@
     "web": "DARK_MODE=media expo start --web",
     "doctor": "expo-doctor",
     "lint": "expo lint",
-    "test": "npm run test:unit && npm run test:ui",
-    "test:coverage": "npm run test:coverage:unit && npm run test:coverage:ui",
-    "test:coverage:ui": "jest --coverage --runInBand --coverageDirectory=coverage/ui",
-    "test:coverage:unit": "vitest run --coverage --coverage.reportsDirectory=coverage/unit",
-    "test:ui": "jest --runInBand",
-    "test:ui:watch": "jest --watch",
-    "test:unit": "vitest run",
-    "test:watch": "vitest"
+    "test": "jest --runInBand",
+    "test:coverage": "jest --coverage --runInBand",
+    "test:watch": "jest --watch"
   },
   "dependencies": {
     "@expo/html-elements": "^0.4.2",
@@ -144,7 +139,6 @@
     "@testing-library/react-native": "^14.0.1",
     "@types/jest": "^29.5.14",
     "@types/react": "~19.1.10",
-    "@vitest/coverage-v8": "^4.1.9",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~10.0.0",
     "eslint-config-prettier": "^10.1.5",
@@ -156,8 +150,8 @@
     "prettier": "^3.6.0",
     "react-email": "6.6.6",
     "supabase": "^2.98.2",
-    "typescript": "~5.9.2",
-    "vitest": "^4.1.9"
+    "test-renderer": "^1.2.0",
+    "typescript": "~5.9.2"
   },
   "overrides": {
     "brace-expansion": "5.0.8",

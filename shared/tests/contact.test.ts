@@ -5,7 +5,6 @@ import {
   normalizeNullableText,
   toPersonContactInput
 } from "@/shared/utils/contact";
-import { describe, expect, it } from "vitest";
 
 describe("contact utilities", () => {
   it("normalizes optional text, email, and form input", () => {

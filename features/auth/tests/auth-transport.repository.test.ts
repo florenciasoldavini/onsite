@@ -1,48 +1,52 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
-
 import {
   startOAuthIdentityLink,
   startOAuthSignIn
 } from "@/features/auth/repositories/auth-transport.repository";
 
-const mocks = vi.hoisted(() => ({
-  linkIdentity: vi.fn(),
-  openAuthSessionAsync: vi.fn(),
-  signInWithOAuth: vi.fn()
-}));
+const mocks = {
+  linkIdentity: jest.fn(),
+  openAuthSessionAsync: jest.fn(),
+  signInWithOAuth: jest.fn()
+};
 
-vi.mock("@/infrastructure/supabase/client", () => ({
+jest.mock("@/infrastructure/supabase/client", () => ({
   getSupabaseErrorMessage: () =>
     "We couldn't complete this request. Please try again.",
   supabase: {
     auth: {
-      linkIdentity: mocks.linkIdentity,
-      signInWithOAuth: mocks.signInWithOAuth
+      get linkIdentity() {
+        return mocks.linkIdentity;
+      },
+      get signInWithOAuth() {
+        return mocks.signInWithOAuth;
+      }
     }
   }
 }));
 
-vi.mock("expo-constants", () => ({
+jest.mock("expo-constants", () => ({
   default: { executionEnvironment: "standalone" },
   ExecutionEnvironment: { StoreClient: "store-client" }
 }));
 
-vi.mock("expo-linking", () => ({
-  createURL: vi.fn((path: string) => `onzait://${path}`)
+jest.mock("expo-linking", () => ({
+  createURL: jest.fn((path: string) => `onzait://${path}`)
 }));
 
-vi.mock("expo-web-browser", () => ({
-  maybeCompleteAuthSession: vi.fn(),
-  openAuthSessionAsync: mocks.openAuthSessionAsync
+jest.mock("expo-web-browser", () => ({
+  maybeCompleteAuthSession: jest.fn(),
+  get openAuthSessionAsync() {
+    return mocks.openAuthSessionAsync;
+  }
 }));
 
-vi.mock("react-native", () => ({
+jest.mock("react-native", () => ({
   Platform: { OS: "ios" }
 }));
 
 describe("native OAuth product errors", () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    jest.clearAllMocks();
   });
 
   it("does not expose Supabase response details when sign-in cannot start", async () => {

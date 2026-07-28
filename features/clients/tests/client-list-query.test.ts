@@ -2,7 +2,6 @@ import {
   buildClientListQueryPlan,
   buildClientSearchFilter
 } from "@/features/clients/repositories/client-list-query";
-import { describe, expect, it } from "vitest";
 
 describe("client list query", () => {
   it("scopes normal users to their own clients", () => {

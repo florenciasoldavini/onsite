@@ -4,7 +4,6 @@ import {
   validateProjectForm
 } from "@/features/projects/schemas/project.schema";
 import type { ProjectFormValues } from "@/features/projects/types/project.types";
-import { describe, expect, it } from "vitest";
 
 const validValues: ProjectFormValues = {
   address: {

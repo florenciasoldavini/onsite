@@ -1,6 +1,5 @@
 import { designTokens } from "@/shared/theme/tokens";
 import { resolveLayoutMode } from "@/shared/utils/layout-mode";
-import { describe, expect, it } from "vitest";
 
 describe("adaptive layout mode", () => {
   const { breakpointDesktop, breakpointTablet } = designTokens.layout;

@@ -3,7 +3,6 @@ import {
   getUserFacingErrorMessage,
   toUserFacingError
 } from "@/shared/utils/user-facing-errors";
-import { describe, expect, it } from "vitest";
 
 describe("user-facing errors", () => {
   it("maps stable provider codes without exposing technical messages", () => {

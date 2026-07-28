@@ -1,5 +1,4 @@
 import { toLiveUserLocation } from "@/features/projects/maps/live-user-location-values";
-import { describe, expect, it } from "vitest";
 
 describe("live user location values", () => {
   it("normalizes Expo location coordinates for map markers", () => {

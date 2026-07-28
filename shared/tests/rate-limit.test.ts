@@ -1,5 +1,4 @@
 import { consumeFixedWindowRateLimit } from "@/shared/utils/rate-limit";
-import { describe, expect, it } from "vitest";
 
 describe("fixed-window rate limit", () => {
   it("allows requests until the fixed window limit is reached", () => {

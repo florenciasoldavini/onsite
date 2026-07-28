@@ -4,7 +4,6 @@ import {
   getProjectsMapViewport
 } from "@/features/projects/maps/map-points";
 import type { Project } from "@/features/projects/types/project.types";
-import { describe, expect, it } from "vitest";
 
 function createProjectFixture(overrides: Partial<Project>): Project {
   return {

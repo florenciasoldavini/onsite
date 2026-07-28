@@ -2,7 +2,6 @@ import {
   buildWorkerListQueryPlan,
   buildWorkerSearchFilter
 } from "@/features/workers/repositories/worker-list-query";
-import { describe, expect, it } from "vitest";
 
 describe("worker list query", () => {
   it("scopes normal users to their own active workers", () => {
