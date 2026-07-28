@@ -16,18 +16,14 @@ import type {
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { AppButton } from "@/shared/ui/components/button";
 import { AppCard } from "@/shared/ui/components/card";
+import { CatalogPickerField } from "@/shared/ui/components/catalog-picker-field";
 import { AppHeading } from "@/shared/ui/components/heading";
-import { SearchField } from "@/shared/ui/components/input";
 import { AppText } from "@/shared/ui/components/text";
-import {
-  atomPalette,
-  atomRadii,
-  atomSpacing
-} from "@/shared/ui/components/theme";
+import { atomSpacing } from "@/shared/ui/components/theme";
 import { PlusIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
@@ -56,108 +52,44 @@ export function ClientPickerField({
     query,
     sort: "name_asc"
   });
-  const clients = useMemo(
-    () => clientsQuery.data?.pages.flatMap((page) => page.items) ?? [],
-    [clientsQuery.data]
-  );
   const selectedClientQuery = useClient(value ?? undefined);
-  const selectedClient =
-    clients.find((client) => client.id === value) ??
-    selectedClientQuery.data ??
-    null;
   const canQuickCreate = Boolean(user) && (!ownerId || ownerId === user?.id);
 
   return (
-    <View style={{ gap: atomSpacing[3] }}>
-      <View
-        style={{
-          alignItems: "center",
-          flexDirection: "row",
-          justifyContent: "space-between"
-        }}
-      >
-        <AppText variant="label">Client</AppText>
-        <AppText tone="subtle" variant="meta">
-          (optional)
-        </AppText>
-      </View>
-      {selectedClient ? (
-        <SelectedClient
-          client={selectedClient}
-          onClear={() => onChange(null)}
-        />
-      ) : null}
-      <SearchField
-        onChangeText={setQuery}
-        placeholder="Search by name, phone, or email"
-        size="md"
-        value={query}
-      />
-      <AppCard padding="sm" tone="muted">
-        <View style={{ gap: atomSpacing[2] }}>
-          {clientsQuery.isLoading ? (
-            <AppText tone="muted">Loading clients…</AppText>
-          ) : clientsQuery.isError ? (
-            <AppText tone="danger">
-              We couldn&apos;t load clients. Try again.
-            </AppText>
-          ) : clients.length === 0 ? (
-            <AppText tone="muted">No matching clients.</AppText>
-          ) : (
-            clients.map((client) => (
-              <Pressable
-                accessibilityRole="button"
-                key={client.id}
-                onPress={() => onChange(client.id)}
-                style={({ pressed }) => ({
-                  backgroundColor:
-                    value === client.id
-                      ? `${atomPalette.accent}12`
-                      : atomPalette.surface,
-                  borderRadius: atomRadii.md,
-                  opacity: pressed ? 0.78 : 1,
-                  padding: atomSpacing[3]
-                })}
-              >
-                <AppText variant="label">
-                  {getClientDisplayName(client)}
-                </AppText>
-                {client.phone_number || client.email ? (
-                  <AppText tone="muted" variant="bodySm">
-                    {[client.phone_number, client.email]
-                      .filter(Boolean)
-                      .join(" · ")}
-                  </AppText>
-                ) : null}
-              </Pressable>
-            ))
-          )}
-          {clientsQuery.hasNextPage ? (
+    <>
+      <CatalogPickerField
+        entityName="client"
+        entityNamePlural="clients"
+        footer={
+          canQuickCreate ? (
             <AppButton
               color="neutral"
-              loading={clientsQuery.isFetchingNextPage}
-              onPress={() => void clientsQuery.fetchNextPage()}
+              fullWidth={false}
+              icon={PlusIcon}
+              iconAfter={false}
+              onPress={() => setQuickCreateOpen(true)}
               size="sm"
-              variant="ghost"
+              variant="bordered"
             >
-              Load more clients
+              Quick-create client
             </AppButton>
-          ) : null}
-        </View>
-      </AppCard>
-      {canQuickCreate ? (
-        <AppButton
-          color="neutral"
-          fullWidth={false}
-          icon={PlusIcon}
-          iconAfter={false}
-          onPress={() => setQuickCreateOpen(true)}
-          size="sm"
-          variant="bordered"
-        >
-          Quick-create client
-        </AppButton>
-      ) : null}
+          ) : null
+        }
+        getDisplayName={getClientDisplayName}
+        hasNextPage={clientsQuery.hasNextPage}
+        icon={UserIcon}
+        isError={clientsQuery.isError}
+        isFetchingNextPage={clientsQuery.isFetchingNextPage}
+        isLoading={clientsQuery.isLoading}
+        label="Client"
+        onChange={onChange}
+        onLoadMore={() => void clientsQuery.fetchNextPage()}
+        onQueryChange={setQuery}
+        pages={clientsQuery.data?.pages}
+        query={query}
+        selectedItemFallback={selectedClientQuery.data}
+        value={value}
+      />
       <QuickCreateClientModal
         onClose={() => setQuickCreateOpen(false)}
         onCreated={(client) => {
@@ -166,45 +98,7 @@ export function ClientPickerField({
         }}
         visible={quickCreateOpen}
       />
-    </View>
-  );
-}
-
-function SelectedClient({
-  client,
-  onClear
-}: {
-  client: ClientSummary;
-  onClear: () => void;
-}) {
-  return (
-    <AppCard padding="sm">
-      <View
-        style={{
-          alignItems: "center",
-          flexDirection: "row",
-          gap: atomSpacing[3]
-        }}
-      >
-        <UserIcon color={atomPalette.accent} size="md" />
-        <View style={{ flex: 1 }}>
-          <AppText variant="label">{getClientDisplayName(client)}</AppText>
-          <AppText tone="muted" variant="bodySm">
-            {[client.phone_number, client.email].filter(Boolean).join(" · ") ||
-              "No contact details"}
-          </AppText>
-        </View>
-        <AppButton
-          color="neutral"
-          fullWidth={false}
-          onPress={onClear}
-          size="sm"
-          variant="ghost"
-        >
-          Clear
-        </AppButton>
-      </View>
-    </AppCard>
+    </>
   );
 }
 
