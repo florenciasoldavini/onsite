@@ -5,10 +5,8 @@ import type {
   PROJECT_TYPES
 } from "@/features/projects/constants/project.constants";
 import type {
-  AddressSuggestion as LocationAddressSuggestion,
   ResolvedAddress,
   StaticMapPoint as LocationStaticMapPoint,
-  StaticMapPreview as LocationStaticMapPreview,
   StaticMapViewport as LocationStaticMapViewport
 } from "@/features/locations/types/location";
 
@@ -132,7 +130,5 @@ export interface ProjectSaveOutcome {
   project: Project;
 }
 
-export type AddressSuggestion = LocationAddressSuggestion;
-export type StaticMapPreview = LocationStaticMapPreview;
 export type StaticMapPoint = LocationStaticMapPoint;
 export type StaticMapViewport = LocationStaticMapViewport;
