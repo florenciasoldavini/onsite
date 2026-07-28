@@ -17,6 +17,10 @@ import { AppBadge } from "@/shared/ui/components/badge";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppButton } from "@/shared/ui/components/button";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { Screen } from "@/shared/ui/components/screen";
@@ -38,14 +42,9 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Controller, useForm } from "react-hook-form";
-import {
-  Modal,
-  Pressable,
-  StyleSheet,
-  View
-} from "react-native";
+import { View } from "react-native";
 import { z } from "zod";
 
 type EditValues = z.infer<typeof projectPhotoEditSchema>;
@@ -67,8 +66,7 @@ export default function ProjectPhotoDetailScreen() {
   const photoQuery = useProjectPhoto(photoId);
   const updateMutation = useUpdateProjectPhoto(photoId);
   const deleteMutation = useSoftDeleteProjectPhoto();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const form = useForm<EditValues>({
     defaultValues: {
       caption: "",
@@ -151,14 +149,15 @@ export default function ProjectPhotoDetailScreen() {
     }
   });
   const deletePhoto = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
 
     try {
       await deleteMutation.mutateAsync(photoId);
+      deleteConfirmation.close();
       toast.show({ title: "Photo deleted", tone: "success" });
       router.replace(`/projects/${projectId}/photos` as never);
     } catch (error) {
-      setDeleteError(
+      deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
           "We couldn't delete this photo. Check your connection and try again."
@@ -312,7 +311,7 @@ export default function ProjectPhotoDetailScreen() {
                 color="danger"
                 fullWidth={false}
                 icon={TrashIcon}
-                onPress={() => setDeleteOpen(true)}
+                onPress={deleteConfirmation.open}
                 variant="bordered"
               >
                 Delete photo
@@ -322,70 +321,14 @@ export default function ProjectPhotoDetailScreen() {
         </AppCard>
       </View>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) {
-            setDeleteOpen(false);
-          }
-        }}
-        transparent
-        visible={deleteOpen}
-      >
-        <View style={styles.dialogRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting photo"
-            onPress={() => {
-              if (!deleteMutation.isPending) {
-                setDeleteOpen(false);
-              }
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={styles.backdrop} />
-          <AppCard padding="lg" style={styles.dialogCard}>
-            <View style={{ gap: atomSpacing[5] }}>
-              <View style={{ gap: atomSpacing[2] }}>
-                <AppHeading variant="section">Delete photo?</AppHeading>
-                <AppText tone="muted">
-                  This photo will be removed from the project gallery. This
-                  action cannot currently be undone in the app.
-                </AppText>
-                {deleteError ? (
-                  <AppText selectable tone="danger">
-                    {deleteError}
-                  </AppText>
-                ) : null}
-              </View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: atomSpacing[3],
-                  justifyContent: "flex-end"
-                }}
-              >
-                <AppButton
-                  color="neutral"
-                  fullWidth={false}
-                  isDisabled={deleteMutation.isPending}
-                  onPress={() => setDeleteOpen(false)}
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-                <AppButton
-                  color="danger"
-                  fullWidth={false}
-                  loading={deleteMutation.isPending}
-                  onPress={() => void deletePhoto()}
-                >
-                  Delete
-                </AppButton>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting photo"
+        controller={deleteConfirmation}
+        description="This photo will be removed from the project gallery. This action cannot currently be undone in the app."
+        isPending={deleteMutation.isPending}
+        onConfirm={deletePhoto}
+        title="Delete photo?"
+      />
     </Screen>
   );
 }
@@ -411,20 +354,3 @@ function formatDate(value: string) {
 function firstParam(value: string | string[] | undefined) {
   return Array.isArray(value) ? value[0] : value;
 }
-
-const styles = StyleSheet.create({
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(15, 23, 42, 0.5)"
-  },
-  dialogCard: {
-    maxWidth: 520,
-    width: "90%"
-  },
-  dialogRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[5]
-  }
-});

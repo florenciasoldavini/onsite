@@ -10,6 +10,10 @@ import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { Screen } from "@/shared/ui/components/screen";
@@ -34,7 +38,6 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Linking,
-  Modal,
   Pressable,
   StyleSheet,
   View
@@ -108,16 +111,15 @@ function ContractorDetailContent({
   const { isCompact } = useLayoutMode();
   const toast = useAppToast();
   const deleteMutation = useSoftDeleteContractor();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const [contactError, setContactError] = useState<string | null>(null);
   const displayName = getContractorDisplayName(contractor);
 
   const deleteContractor = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
     try {
       await deleteMutation.mutateAsync(contractor.id);
-      setDeleteOpen(false);
+      deleteConfirmation.close();
       toast.show({
         description: `${displayName} was removed from your contractor catalog.`,
         title: "Contractor deleted",
@@ -125,7 +127,7 @@ function ContractorDetailContent({
       });
       router.replace("/directory?section=contractors" as never);
     } catch (error) {
-      setDeleteError(
+      deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
           "We couldn't delete this contractor. Try again."
@@ -209,10 +211,7 @@ function ContractorDetailContent({
                 fullWidth={isCompact}
                 icon={TrashIcon}
                 iconAfter={false}
-                onPress={() => {
-                  setDeleteError(null);
-                  setDeleteOpen(true);
-                }}
+                onPress={deleteConfirmation.open}
                 size="sm"
                 variant="bordered"
               >
@@ -273,60 +272,15 @@ function ContractorDetailContent({
         </AppCard>
       </View>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) setDeleteOpen(false);
-        }}
-        transparent
-        visible={deleteOpen}
-      >
-        <View style={styles.modalRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting contractor"
-            onPress={() => {
-              if (!deleteMutation.isPending) setDeleteOpen(false);
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={styles.backdrop} />
-          <AppCard padding="lg" style={styles.modalCard}>
-            <View style={{ gap: atomSpacing[5] }}>
-              <AppHeading variant="section">
-                Delete {displayName}?
-              </AppHeading>
-              <AppText tone="muted">
-                This removes the contractor from your active catalog. This
-                action cannot be undone.
-              </AppText>
-              {deleteError ? (
-                <AppText selectable tone="danger">
-                  {deleteError}
-                </AppText>
-              ) : null}
-              <View style={styles.modalActions}>
-                <AppButton
-                  color="neutral"
-                  fullWidth={false}
-                  isDisabled={deleteMutation.isPending}
-                  onPress={() => setDeleteOpen(false)}
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-                <AppButton
-                  color="danger"
-                  fullWidth={false}
-                  loading={deleteMutation.isPending}
-                  onPress={() => void deleteContractor()}
-                >
-                  Delete contractor
-                </AppButton>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting contractor"
+        confirmLabel="Delete contractor"
+        controller={deleteConfirmation}
+        description="This removes the contractor from your active catalog. This action cannot be undone."
+        isPending={deleteMutation.isPending}
+        onConfirm={deleteContractor}
+        title={`Delete ${displayName}?`}
+      />
     </Screen>
   );
 }
@@ -379,10 +333,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 72
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(17, 24, 39, 0.42)"
-  },
   contactIcon: {
     alignItems: "center",
     backgroundColor: `${atomPalette.accent}0d`,
@@ -429,21 +379,6 @@ const styles = StyleSheet.create({
   identityLayoutCompact: {
     alignItems: "flex-start",
     flexDirection: "column"
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3],
-    justifyContent: "flex-end"
-  },
-  modalCard: {
-    maxWidth: 520,
-    width: "100%"
-  },
-  modalRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[4]
   },
   page: {
     alignSelf: "center",

@@ -12,6 +12,10 @@ import { useProjects } from "@/features/projects/hooks/use-projects";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { Screen } from "@/shared/ui/components/screen";
@@ -35,8 +39,8 @@ import {
 } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useMemo, useState } from "react";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { useMemo } from "react";
+import { Pressable, StyleSheet, View } from "react-native";
 
 export default function ClientDetailScreen() {
   const params = useLocalSearchParams<{ clientId: string }>();
@@ -105,8 +109,7 @@ function ClientDetailContent({
   });
   const projectCountQuery = useClientProjectCount(client.id);
   const deleteMutation = useSoftDeleteClient();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const projects = useMemo(
     () => projectsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [projectsQuery.data]
@@ -114,10 +117,10 @@ function ClientDetailContent({
   const displayName = getClientDisplayName(client);
 
   const deleteClient = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
     try {
       await deleteMutation.mutateAsync(client.id);
-      setDeleteOpen(false);
+      deleteConfirmation.close();
       toast.show({
         description: `${displayName} was deleted and removed from linked projects.`,
         title: "Client deleted",
@@ -125,7 +128,7 @@ function ClientDetailContent({
       });
       router.replace("/directory?section=clients" as never);
     } catch (error) {
-      setDeleteError(
+      deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
           "We couldn't delete this client. Try again."
@@ -212,8 +215,7 @@ function ClientDetailContent({
                 icon={TrashIcon}
                 iconAfter={false}
                 onPress={() => {
-                  setDeleteError(null);
-                  setDeleteOpen(true);
+                  deleteConfirmation.open();
                   void projectCountQuery.refetch();
                 }}
                 size="sm"
@@ -348,81 +350,37 @@ function ClientDetailContent({
         </View>
       </View>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) setDeleteOpen(false);
-        }}
-        transparent
-        visible={deleteOpen}
-      >
-        <View style={detailStyles.modalRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting client"
-            onPress={() => {
-              if (!deleteMutation.isPending) setDeleteOpen(false);
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={detailStyles.backdrop} />
-          <AppCard padding="lg" style={detailStyles.modalCard}>
-            <View style={{ gap: atomSpacing[5] }}>
-              <AppHeading variant="section">Delete {displayName}?</AppHeading>
-              {projectCountQuery.isFetching ? (
-                <AppText tone="muted">Checking linked projects…</AppText>
-              ) : projectCountQuery.isError ? (
-                <AppText tone="danger">
-                  We couldn&apos;t check linked projects. Close this message and
-                  try again.
-                </AppText>
-              ) : (
-                <AppText tone="muted">
-                  {projectCountQuery.data === 0
-                    ? "This removes the client from your active catalog."
-                    : `This client is linked to ${projectCountQuery.data} ${
-                        projectCountQuery.data === 1 ? "project" : "projects"
-                      }. Deleting the client will unlink ${
-                        projectCountQuery.data === 1 ? "it" : "them"
-                      } from those projects.`}
-                </AppText>
-              )}
-              {deleteError ? (
-                <AppText tone="danger">{deleteError}</AppText>
-              ) : null}
-              <View
-                style={{
-                  flexDirection: "row",
-                  gap: atomSpacing[3],
-                  justifyContent: "flex-end"
-                }}
-              >
-                <AppButton
-                  color="neutral"
-                  fullWidth={false}
-                  isDisabled={deleteMutation.isPending}
-                  onPress={() => setDeleteOpen(false)}
-                  size="md"
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-                <AppButton
-                  color="danger"
-                  fullWidth={false}
-                  isDisabled={
-                    projectCountQuery.isFetching || projectCountQuery.isError
-                  }
-                  loading={deleteMutation.isPending}
-                  onPress={() => void deleteClient()}
-                  size="md"
-                >
-                  Delete client
-                </AppButton>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting client"
+        confirmLabel="Delete client"
+        controller={deleteConfirmation}
+        description={
+          projectCountQuery.isFetching ? (
+            <AppText tone="muted">Checking linked projects…</AppText>
+          ) : projectCountQuery.isError ? (
+            <AppText tone="danger">
+              We couldn&apos;t check linked projects. Close this message and try
+              again.
+            </AppText>
+          ) : (
+            <AppText tone="muted">
+              {projectCountQuery.data === 0
+                ? "This removes the client from your active catalog."
+                : `This client is linked to ${projectCountQuery.data} ${
+                    projectCountQuery.data === 1 ? "project" : "projects"
+                  }. Deleting the client will unlink ${
+                    projectCountQuery.data === 1 ? "it" : "them"
+                  } from those projects.`}
+            </AppText>
+          )
+        }
+        isConfirmDisabled={
+          projectCountQuery.isFetching || projectCountQuery.isError
+        }
+        isPending={deleteMutation.isPending}
+        onConfirm={deleteClient}
+        title={`Delete ${displayName}?`}
+      />
     </Screen>
   );
 }
@@ -468,10 +426,6 @@ const detailStyles = StyleSheet.create({
   },
   avatarTextCompact: {
     fontSize: 12
-  },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(17, 24, 39, 0.42)"
   },
   contactIcon: {
     alignItems: "center",
@@ -535,16 +489,6 @@ const detailStyles = StyleSheet.create({
   identityLayoutCompact: {
     alignItems: "flex-start",
     flexDirection: "column"
-  },
-  modalCard: {
-    maxWidth: 520,
-    width: "100%"
-  },
-  modalRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[4]
   },
   page: {
     alignSelf: "center",
