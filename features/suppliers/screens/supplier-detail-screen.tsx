@@ -9,6 +9,10 @@ import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { FieldMessage } from "@/shared/ui/components/field-message";
 import { AppHeading } from "@/shared/ui/components/heading";
@@ -39,7 +43,6 @@ import { useRouter } from "expo-router";
 import { useState } from "react";
 import {
   Linking,
-  Modal,
   Pressable,
   StyleSheet,
   View
@@ -113,8 +116,7 @@ function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
     latitude: supplier.latitude,
     longitude: supplier.longitude
   });
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const [actionError, setActionError] = useState<string | null>(null);
 
   const openAction = async (url: string, fallback: string) => {
@@ -127,10 +129,10 @@ function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
   };
 
   const deleteSupplier = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
     try {
       await deleteMutation.mutateAsync(supplier.id);
-      setDeleteOpen(false);
+      deleteConfirmation.close();
       toast.show({
         description: `${supplier.name} was removed from your supplier catalog.`,
         title: "Supplier deleted",
@@ -138,7 +140,7 @@ function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
       });
       router.replace("/directory?section=suppliers" as never);
     } catch (error) {
-      setDeleteError(
+      deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
           "We couldn't delete this supplier. Try again."
@@ -208,7 +210,7 @@ function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
                 fullWidth={isCompact}
                 icon={TrashIcon}
                 iconAfter={false}
-                onPress={() => setDeleteOpen(true)}
+                onPress={deleteConfirmation.open}
                 size="sm"
                 variant="bordered"
               >
@@ -339,60 +341,15 @@ function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
         ) : null}
       </View>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) setDeleteOpen(false);
-        }}
-        transparent
-        visible={deleteOpen}
-      >
-        <View style={styles.modalRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting supplier"
-            onPress={() => {
-              if (!deleteMutation.isPending) setDeleteOpen(false);
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={styles.backdrop} />
-          <AppCard padding="lg" style={styles.modalCard}>
-            <View style={{ gap: atomSpacing[5] }}>
-              <AppHeading variant="section">
-                Delete {supplier.name}?
-              </AppHeading>
-              <AppText tone="muted">
-                This removes the supplier from your active catalog. This action
-                cannot be undone.
-              </AppText>
-              {deleteError ? (
-                <AppText selectable tone="danger">
-                  {deleteError}
-                </AppText>
-              ) : null}
-              <View style={styles.modalActions}>
-                <AppButton
-                  color="neutral"
-                  fullWidth={false}
-                  isDisabled={deleteMutation.isPending}
-                  onPress={() => setDeleteOpen(false)}
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-                <AppButton
-                  color="danger"
-                  fullWidth={false}
-                  loading={deleteMutation.isPending}
-                  onPress={() => void deleteSupplier()}
-                >
-                  Delete supplier
-                </AppButton>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting supplier"
+        confirmLabel="Delete supplier"
+        controller={deleteConfirmation}
+        description="This removes the supplier from your active catalog. This action cannot be undone."
+        isPending={deleteMutation.isPending}
+        onConfirm={deleteSupplier}
+        title={`Delete ${supplier.name}?`}
+      />
     </Screen>
   );
 }
@@ -467,10 +424,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 64
   },
-  backdrop: {
-    backgroundColor: "rgba(18, 18, 18, 0.35)",
-    ...StyleSheet.absoluteFillObject
-  },
   detailRow: {
     alignItems: "center",
     flexDirection: "row",
@@ -498,21 +451,6 @@ const styles = StyleSheet.create({
     borderRadius: atomRadii.lg,
     height: 260,
     width: "100%"
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3],
-    justifyContent: "flex-end"
-  },
-  modalCard: {
-    maxWidth: 520,
-    width: "100%"
-  },
-  modalRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[5]
   },
   page: {
     alignSelf: "center",

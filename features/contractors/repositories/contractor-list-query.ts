@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { normalizeContractorFilters } from "@/features/contractors/schemas/contractor.schema";
 import type {
   ContractorFilters,
@@ -20,7 +21,7 @@ export function buildContractorListQueryPlan({
 }: {
   filters?: ContractorFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 }): ContractorListQueryPlan {
   const normalized = normalizeContractorFilters(filters);
   const ownerId = userRole === "admin" ? normalized.ownerId : userId;

@@ -2,6 +2,10 @@ import { AppButton } from "@/shared/ui/components/button";
 import { useClient } from "@/features/clients/hooks/use-clients";
 import { getClientDisplayName } from "@/features/clients/schemas/client.schema";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
@@ -348,8 +352,7 @@ function ProjectActionsMenu({
   const triggerRef = useRef<View>(null);
   const deleteMutation = useSoftDeleteProject();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(
     null
   );
@@ -378,11 +381,11 @@ function ProjectActionsMenu({
   };
 
   const deleteProject = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
 
     try {
       await deleteMutation.mutateAsync(projectId);
-      setIsDeleteDialogOpen(false);
+      deleteConfirmation.close();
       appToast.show({
         description: `${projectName} was removed from active projects.`,
         title: "Project deleted",
@@ -395,7 +398,7 @@ function ProjectActionsMenu({
         "We couldn't delete this project. Try again."
       );
 
-      setDeleteError(message);
+      deleteConfirmation.setError(message);
       appToast.show({
         description: message,
         title: "Project could not be deleted",
@@ -452,77 +455,21 @@ function ProjectActionsMenu({
               label="Delete"
               onPress={() => {
                 setIsMenuOpen(false);
-                setIsDeleteDialogOpen(true);
+                deleteConfirmation.open();
               }}
             />
           </View>
         </View>
       </Modal>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) {
-            setIsDeleteDialogOpen(false);
-          }
-        }}
-        transparent
-        visible={isDeleteDialogOpen}
-      >
-        <View style={styles.deleteDialogRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting project"
-            onPress={() => {
-              if (!deleteMutation.isPending) {
-                setIsDeleteDialogOpen(false);
-              }
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={styles.deleteDialogBackdrop} />
-          <AppCard padding="lg" style={styles.deleteDialogCard}>
-            <View style={styles.deleteDialogContent}>
-              <View style={styles.deleteDialogCopy}>
-                <AppHeading variant="section">Delete project?</AppHeading>
-                <AppText selectable tone="muted">
-                  {projectName} will be removed from active project views. This
-                  action cannot currently be undone in the app.
-                </AppText>
-                {deleteError ? (
-                  <AppText selectable tone="danger" variant="bodySm">
-                    {deleteError}
-                  </AppText>
-                ) : null}
-              </View>
-              <View style={styles.deleteDialogActions}>
-                <View style={styles.deleteDialogAction}>
-                  <AppButton
-                    color="neutral"
-                    isDisabled={deleteMutation.isPending}
-                    onPress={() => setIsDeleteDialogOpen(false)}
-                    size="md"
-                    variant="bordered"
-                  >
-                    Cancel
-                  </AppButton>
-                </View>
-                <View style={styles.deleteDialogAction}>
-                  <AppButton
-                    color="danger"
-                    loading={deleteMutation.isPending}
-                    onPress={() => {
-                      void deleteProject();
-                    }}
-                    size="md"
-                  >
-                    Delete
-                  </AppButton>
-                </View>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting project"
+        controller={deleteConfirmation}
+        description={`${projectName} will be removed from active project views. This action cannot currently be undone in the app.`}
+        isPending={deleteMutation.isPending}
+        onConfirm={deleteProject}
+        title="Delete project?"
+      />
     </>
   );
 }
@@ -831,34 +778,6 @@ const styles = StyleSheet.create({
   },
   actionsMenuItemPressed: {
     backgroundColor: atomPalette.surfaceLow
-  },
-  deleteDialogAction: {
-    flex: 1
-  },
-  deleteDialogActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3]
-  },
-  deleteDialogBackdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(18, 18, 18, 0.28)"
-  },
-  deleteDialogCard: {
-    maxWidth: 460,
-    width: "100%",
-    zIndex: 1
-  },
-  deleteDialogContent: {
-    gap: atomSpacing[6]
-  },
-  deleteDialogCopy: {
-    gap: atomSpacing[3]
-  },
-  deleteDialogRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[4]
   },
   pageStack: {
     gap: atomSpacing[6]

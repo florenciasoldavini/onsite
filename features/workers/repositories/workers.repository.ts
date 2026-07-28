@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { buildWorkerListQueryPlan } from "@/features/workers/repositories/worker-list-query";
 import type {
   CreateWorkerInput,
@@ -76,7 +77,7 @@ export async function listWorkerRows({
 }: {
   filters?: WorkerFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   const client = requireSupabase();
   const plan = buildWorkerListQueryPlan({ filters, userId, userRole });

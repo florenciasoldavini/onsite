@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import { buildProjectListQueryPlan } from "@/features/projects/repositories/project-list-query";
 import {
   requireSupabase,
@@ -40,7 +41,7 @@ export async function listProjectRows({
 }: {
   filters?: ProjectFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   const client = requireSupabase();
   const plan = buildProjectListQueryPlan({ filters, userId, userRole });

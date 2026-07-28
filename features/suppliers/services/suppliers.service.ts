@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import {
   getSupplierRow,
   insertSupplierRow,
@@ -21,7 +22,7 @@ export function listSuppliers({
 }: {
   filters?: SupplierFilters;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   return listSupplierRows({
     filters,

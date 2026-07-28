@@ -1,82 +1,44 @@
-import { AppButton } from "@/shared/ui/components/button";
-import { ClientPickerField } from "@/features/clients/components/client-picker-field";
-import { ProjectAddressField } from "@/features/projects/components/project-address-field";
-import { AppCard } from "@/shared/ui/components/card";
-import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
-import { FieldMessage } from "@/shared/ui/components/field-message";
-import { AppHeading } from "@/shared/ui/components/heading";
-import {
-  NumericField,
-  TextField
-} from "@/shared/ui/components/input";
-import { FieldLabel } from "@/shared/ui/components/label";
-import { Screen } from "@/shared/ui/components/screen";
-import { SelectField } from "@/shared/ui/components/select-field";
-import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
-import { AppText } from "@/shared/ui/components/text";
-import { TextAreaField } from "@/shared/ui/components/textarea";
-import { useAppToast } from "@/shared/ui/components/toast";
 import { useAuth } from "@/features/auth/hooks/use-auth";
-import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
-import { FormField } from "@/shared/ui/forms";
 import {
-  atomControlHeights,
-  atomControlRadius,
-  atomPalette,
-  atomSpacing
-} from "@/shared/ui/components/theme";
-import {
-  PROJECT_BUILDING_TYPE_LABELS,
-  PROJECT_BUILDING_TYPES,
-  PROJECT_PHASE_LABELS,
-  PROJECT_PHASES,
-  PROJECT_STATUS_LABELS,
-  PROJECT_STATUSES,
-  PROJECT_TYPE_LABELS,
-  PROJECT_TYPES
-} from "@/features/projects/constants/project.constants";
+  ProjectClassificationSection,
+  ProjectCoverSection,
+  ProjectFormActions,
+  ProjectIdentitySection,
+  ProjectScheduleSection
+} from "@/features/projects/components/project-form-sections";
 import {
   useCreateProject,
   useProject,
   useUpdateProject
 } from "@/features/projects/hooks/use-projects";
+import {
+  projectFormSchema,
+  toCreateProjectInput,
+  toUpdateProjectInput
+} from "@/features/projects/schemas/project.schema";
 import type {
   Project,
   ProjectFormValues,
   ProjectSaveOutcome,
   ResolvedProjectAddress
 } from "@/features/projects/types/project.types";
-import {
-  projectFormSchema,
-  toCreateProjectInput,
-  toUpdateProjectInput
-} from "@/features/projects/schemas/project.schemas";
-import { formatDateOnly } from "@/shared/utils/date-only";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Image } from "expo-image";
-import * as ImagePicker from "expo-image-picker";
-import {
-  CalendarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ImagePlusIcon,
-  RefreshIcon,
-  SaveIcon
-} from "@/shared/ui/icons";
+import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
+import { AppButton } from "@/shared/ui/components/button";
+import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
+import { AppCard } from "@/shared/ui/components/card";
+import { AppHeading } from "@/shared/ui/components/heading";
+import { Screen } from "@/shared/ui/components/screen";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
+import { AppText } from "@/shared/ui/components/text";
+import { atomSpacing } from "@/shared/ui/components/theme";
+import { useAppToast } from "@/shared/ui/components/toast";
+import { RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
-import { Controller, useForm } from "react-hook-form";
-import {
-  Modal,
-  Platform,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type GestureResponderEvent,
-  type ViewStyle
-} from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { StyleSheet, View } from "react-native";
 
 const defaultValues: ProjectFormValues = {
   address: null,
@@ -95,47 +57,6 @@ const defaultValues: ProjectFormValues = {
   status: "planned"
 };
 
-function showProjectSaveToast({
-  appToast,
-  mode,
-  outcome
-}: {
-  appToast: ReturnType<typeof useAppToast>;
-  mode: "create" | "edit";
-  outcome: ProjectSaveOutcome;
-}) {
-  const action = mode === "create" ? "created" : "updated";
-
-  if (outcome.coverStatus === "failed") {
-    appToast.show({
-      description: `${outcome.project.name} was ${action}, but its cover couldn't be uploaded. You can add it later by editing the project.`,
-      title: `Project ${action}`,
-      tone: "warning"
-    });
-    return;
-  }
-
-  appToast.show({
-    description: `${outcome.project.name} was ${action} successfully.`,
-    title: `Project ${action}`,
-    tone: "success"
-  });
-}
-
-function areProjectRequiredFieldsComplete(values: ProjectFormValues) {
-  return Boolean(
-    values.name.trim().length >= 2 &&
-      values.address &&
-      values.status &&
-      values.phase &&
-      values.project_type &&
-      values.building_type &&
-      Number.isInteger(values.progress_percentage) &&
-      values.progress_percentage >= 0 &&
-      values.progress_percentage <= 100
-  );
-}
-
 export function ProjectFormScreen({
   mode,
   projectId
@@ -151,24 +72,19 @@ export function ProjectFormScreen({
   const projectQuery = useProject(mode === "edit" ? projectId : undefined);
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject(projectId ?? "");
-  const form = useForm<ProjectFormValues>({
+  const {
+    control,
+    handleSubmit,
+    reset,
+    setValue,
+    trigger
+  } = useForm<ProjectFormValues>({
     defaultValues,
     mode: "onChange",
     resolver: zodResolver(projectFormSchema)
   });
-  const {
-    control,
-    formState: { isDirty, isValid },
-    handleSubmit,
-    reset,
-    setValue,
-    trigger,
-    watch
-  } = form;
-  const values = watch();
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
-  const areRequiredFieldsComplete = areProjectRequiredFieldsComplete(values);
-  const hasProjectChanges = mode === "create" || isDirty;
+  const clearFormError = useCallback(() => setFormError(null), []);
 
   useEffect(() => {
     if (mode === "edit" && projectQuery.data) {
@@ -232,411 +148,58 @@ export function ProjectFormScreen({
   });
 
   if (mode === "edit" && projectQuery.isLoading) {
-    return (
-      <Screen>
-        <View style={{ gap: atomSpacing[5] }}>
-          <SkeletonBlock height={36} width="50%" />
-          <SkeletonBlock height={220} />
-          <SkeletonBlock height={320} />
-        </View>
-      </Screen>
-    );
+    return <ProjectFormLoading />;
   }
 
   if (mode === "edit" && projectQuery.isError) {
     return (
-      <Screen centered>
-        <AppCard padding="lg">
-          <View style={{ gap: atomSpacing[4] }}>
-            <AppHeading variant="section">Project unavailable</AppHeading>
-            <AppText tone="muted">
-              {getUserFacingErrorMessage(
-                projectQuery.error,
-                "We couldn't load this project for editing. Check your connection and try again."
-              )}
-            </AppText>
-            <View style={{ gap: atomSpacing[3] }}>
-              <AppButton
-                icon={RefreshIcon}
-                onPress={() => {
-                  void projectQuery.refetch();
-                }}
-              >
-                Retry
-              </AppButton>
-              <AppButton
-                color="neutral"
-                onPress={() => router.replace("/projects" as never)}
-                variant="bordered"
-              >
-                Back to projects
-              </AppButton>
-            </View>
-          </View>
-        </AppCard>
-      </Screen>
+      <ProjectFormLoadError
+        error={projectQuery.error}
+        onBack={() => router.replace("/projects" as never)}
+        onRetry={() => void projectQuery.refetch()}
+      />
     );
   }
 
   if (mode === "edit" && !projectQuery.data) {
     return (
-      <Screen centered>
-        <AppCard padding="lg">
-          <View style={{ gap: atomSpacing[4] }}>
-            <AppHeading variant="section">Project not found</AppHeading>
-            <AppText tone="muted">
-              This project may have been removed or you may not have access.
-            </AppText>
-            <AppButton onPress={() => router.replace("/projects" as never)}>
-              Back to projects
-            </AppButton>
-          </View>
-        </AppCard>
-      </Screen>
+      <ProjectFormNotFound
+        onBack={() => router.replace("/projects" as never)}
+      />
     );
   }
 
   return (
     <Screen>
-      <View
-        style={[
-          projectFormStyles.page,
-          isExpanded ? projectFormStyles.pageExpanded : null
-        ]}
-      >
-        <View style={{ gap: atomSpacing[3] }}>
-          <Breadcrumb
-            items={[
-              {
-                accessibilityLabel: "Back to projects",
-                label: "Projects",
-                onPress: () => router.replace("/projects" as never)
-              },
-              ...(mode === "edit" && projectId
-                ? [
-                    {
-                      accessibilityLabel: "Back to project detail",
-                      label: "Project Detail",
-                      onPress: () =>
-                        router.replace(`/projects/${projectId}` as never)
-                    }
-                  ]
-                : []),
-              { label: mode === "create" ? "New" : "Edit" }
-            ]}
-          />
-          <AppHeading variant="hero">
-            {mode === "create"
-              ? "Create a project."
-              : "Update project details."}
-          </AppHeading>
-          <AppText tone="muted">
-            Projects anchor site tasks, uploads, location, and future
-            client-facing work.
-          </AppText>
-        </View>
+      <View style={[styles.page, isExpanded && styles.pageExpanded]}>
+        <ProjectFormHeader mode={mode} projectId={projectId} />
 
         <AppCard
           padding="lg"
-          style={isExpanded ? projectFormStyles.formCardExpanded : undefined}
+          style={isExpanded ? styles.formCardExpanded : undefined}
         >
-          <View style={{ gap: atomSpacing[5] }}>
-            <CoverPicker
+          <View style={styles.formContent}>
+            <ProjectCoverSection
+              control={control}
               currentUrl={projectQuery.data?.cover_image_url ?? null}
-              onChange={(asset) => {
-                setValue("coverAsset", asset, {
-                  shouldDirty: true,
-                  shouldValidate: true
-                });
-                setFormError(null);
-              }}
-              value={values.coverAsset ?? null}
+              onInteraction={clearFormError}
+              setValue={setValue}
             />
-
-            <Controller
+            <ProjectIdentitySection
               control={control}
-              name="name"
-              render={({ field, fieldState }) => (
-                <TextField
-                  errorText={fieldState.error?.message}
-                  label="Project Name"
-                  onBlur={field.onBlur}
-                  onChangeText={(text) => {
-                    field.onChange(text);
-                    setFormError(null);
-                  }}
-                  placeholder="Foundation Package"
-                  required
-                  value={field.value}
-                />
-              )}
+              onInteraction={clearFormError}
+              ownerId={projectQuery.data?.owner_id}
             />
-
-            <Controller
+            <ProjectClassificationSection
               control={control}
-              name="description"
-              render={({ field, fieldState }) => (
-                <TextAreaField
-                  errorText={fieldState.error?.message}
-                  label="Description"
-                  onBlur={field.onBlur}
-                  onChangeText={(text) => {
-                    field.onChange(text);
-                    setFormError(null);
-                  }}
-                  placeholder="Scope, crew notes, client context..."
-                  value={field.value}
-                />
-              )}
+              isCompact={isCompact}
+              onInteraction={clearFormError}
             />
-
-            <Controller
+            <ProjectScheduleSection
               control={control}
-              name="client_id"
-              render={({ field }) => (
-                <ClientPickerField
-                  onChange={(clientId) => {
-                    field.onChange(clientId);
-                    setFormError(null);
-                  }}
-                  ownerId={projectQuery.data?.owner_id}
-                  value={field.value}
-                />
-              )}
+              isCompact={isCompact}
+              onInteraction={clearFormError}
             />
-
-            <Controller
-              control={control}
-              name="address"
-              render={({ fieldState }) => (
-                <ProjectAddressField
-                  errorText={fieldState.error?.message}
-                  onChange={(address) => {
-                    setValue("address", address, {
-                      shouldDirty: true,
-                      shouldValidate: true
-                    });
-                    setFormError(null);
-                  }}
-                  value={values.address}
-                />
-              )}
-            />
-
-            <View
-              style={[
-                projectFormStyles.fieldGroup,
-                !isCompact ? projectFormStyles.fieldGroupWide : null
-              ]}
-            >
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="status"
-                  render={({ field }) => (
-                    <SelectField
-                      label="Status"
-                      onChange={(value) => {
-                        field.onChange(value);
-                        setFormError(null);
-                      }}
-                      options={PROJECT_STATUSES.map((value) => ({
-                        label: PROJECT_STATUS_LABELS[value],
-                        value
-                      }))}
-                      required
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="phase"
-                  render={({ field }) => (
-                    <SelectField
-                      label="Phase"
-                      onChange={(value) => {
-                        field.onChange(value);
-                        setFormError(null);
-                      }}
-                      options={PROJECT_PHASES.map((value) => ({
-                        label: PROJECT_PHASE_LABELS[value],
-                        value
-                      }))}
-                      required
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-            </View>
-
-            <View
-              style={[
-                projectFormStyles.fieldGroup,
-                !isCompact ? projectFormStyles.fieldGroupWide : null
-              ]}
-            >
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="project_type"
-                  render={({ field }) => (
-                    <SelectField
-                      label="Project Type"
-                      onChange={(value) => {
-                        field.onChange(value);
-                        setFormError(null);
-                      }}
-                      options={PROJECT_TYPES.map((value) => ({
-                        label: PROJECT_TYPE_LABELS[value],
-                        value
-                      }))}
-                      required
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="building_type"
-                  render={({ field }) => (
-                    <SelectField
-                      label="Building Type"
-                      onChange={(value) => {
-                        field.onChange(value);
-                        setFormError(null);
-                      }}
-                      options={PROJECT_BUILDING_TYPES.map((value) => ({
-                        label: PROJECT_BUILDING_TYPE_LABELS[value],
-                        value
-                      }))}
-                      required
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-            </View>
-
-            <Controller
-              control={control}
-              name="progress_percentage"
-              render={({ field, fieldState }) => (
-                <NumericField
-                  errorText={fieldState.error?.message}
-                  label="Progress Percentage"
-                  max={100}
-                  min={0}
-                  onBlur={field.onBlur}
-                  onChangeNumber={(value) => {
-                    field.onChange(value);
-                    setFormError(null);
-                  }}
-                  placeholder="0"
-                  required
-                  value={field.value}
-                />
-              )}
-            />
-
-            <View
-              style={[
-                projectFormStyles.dateGrid,
-                !isCompact ? projectFormStyles.dateGridWide : null
-              ]}
-            >
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="estimated_start_date"
-                  render={({ field, fieldState }) => (
-                    <CalendarDateField
-                      errorText={fieldState.error?.message}
-                      label="Estimated Start"
-                      onChange={(date) => {
-                        field.onChange(date);
-                        setFormError(null);
-                      }}
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="estimated_end_date"
-                  render={({ field, fieldState }) => (
-                    <CalendarDateField
-                      errorText={fieldState.error?.message}
-                      label="Estimated End"
-                      onChange={(date) => {
-                        field.onChange(date);
-                        setFormError(null);
-                      }}
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="start_date"
-                  render={({ field, fieldState }) => (
-                    <CalendarDateField
-                      errorText={fieldState.error?.message}
-                      label="Actual Start"
-                      onChange={(date) => {
-                        field.onChange(date);
-                        setFormError(null);
-                      }}
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-              <View
-                style={!isCompact ? projectFormStyles.fieldHalf : undefined}
-              >
-                <Controller
-                  control={control}
-                  name="end_date"
-                  render={({ field, fieldState }) => (
-                    <CalendarDateField
-                      errorText={fieldState.error?.message}
-                      label="Actual End"
-                      onChange={(date) => {
-                        field.onChange(date);
-                        setFormError(null);
-                      }}
-                      value={field.value}
-                    />
-                  )}
-                />
-              </View>
-            </View>
 
             {formError ? (
               <AppText selectable tone="danger">
@@ -644,41 +207,15 @@ export function ProjectFormScreen({
               </AppText>
             ) : null}
 
-            <View
-              style={[
-                projectFormStyles.formActions,
-                !isCompact ? projectFormStyles.formActionsWide : null
-              ]}
-            >
-              <View style={projectFormStyles.formAction}>
-                <AppButton
-                  isDisabled={isSubmitting}
-                  onPress={() => router.back()}
-                  color="neutral"
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-              </View>
-              <View style={projectFormStyles.formAction}>
-                <AppButton
-                  icon={SaveIcon}
-                  isDisabled={
-                    !areRequiredFieldsComplete ||
-                    !isValid ||
-                    !hasProjectChanges ||
-                    isSubmitting
-                  }
-                  loading={isSubmitting}
-                  onDisabledPress={() => {
-                    void trigger();
-                  }}
-                  onPress={submitProject}
-                >
-                  {mode === "create" ? "Create" : "Save"}
-                </AppButton>
-              </View>
-            </View>
+            <ProjectFormActions
+              control={control}
+              isCompact={isCompact}
+              isSubmitting={isSubmitting}
+              mode={mode}
+              onCancel={() => router.back()}
+              onSubmit={submitProject}
+              onValidate={trigger}
+            />
           </View>
         </AppCard>
       </View>
@@ -686,507 +223,138 @@ export function ProjectFormScreen({
   );
 }
 
-function CalendarDateField({
-  errorText,
-  label,
-  onChange,
-  value
+function ProjectFormHeader({
+  mode,
+  projectId
 }: {
-  errorText?: string | null;
-  label: string;
-  onChange: (date: string) => void;
-  value: string;
+  mode: "create" | "edit";
+  projectId?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [visibleMonth, setVisibleMonth] = useState(() =>
-    getCalendarMonth(value)
-  );
-  const selectedDate = parseCalendarDate(value);
-  const calendarDays = getCalendarDays(visibleMonth);
-
-  useEffect(() => {
-    if (isOpen) {
-      setVisibleMonth(getCalendarMonth(value));
-    }
-  }, [isOpen, value]);
-
-  const selectDate = (date: Date) => {
-    onChange(toCalendarDateValue(date));
-    setIsOpen(false);
-  };
+  const router = useRouter();
 
   return (
-    <FormField errorText={errorText} label={label}>
-      <Pressable
-        accessibilityLabel={`${label} date picker`}
-        accessibilityRole="button"
-        onPress={() => setIsOpen(true)}
-        style={StyleSheet.flatten([
-          projectFormStyles.datePickerButton,
-          errorText ? projectFormStyles.datePickerButtonError : null,
-          Platform.OS === "web" ? projectFormStyles.webCursor : null
-        ])}
-      >
-        <CalendarIcon
-          color={value ? atomPalette.text : atomPalette.textMuted}
-          size={18}
-        />
-        <AppText tone={value ? "default" : "subtle"} variant="body">
-          {formatDateOnly(value, { fallback: "Select date" })}
-        </AppText>
-      </Pressable>
-
-      <Modal
-        animationType="fade"
-        onRequestClose={() => setIsOpen(false)}
-        transparent
-        visible={isOpen}
-      >
-        <View style={projectFormStyles.calendarBackdrop}>
-          <View style={projectFormStyles.calendarModal}>
-            <View style={projectFormStyles.calendarHeader}>
-              <CalendarIconButton
-                accessibilityLabel="Previous month"
-                icon={ChevronLeftIcon}
-                onPress={() =>
-                  setVisibleMonth(
-                    (current) =>
-                      new Date(current.getFullYear(), current.getMonth() - 1, 1)
-                  )
+    <View style={styles.header}>
+      <Breadcrumb
+        items={[
+          {
+            accessibilityLabel: "Back to projects",
+            label: "Projects",
+            onPress: () => router.replace("/projects" as never)
+          },
+          ...(mode === "edit" && projectId
+            ? [
+                {
+                  accessibilityLabel: "Back to project detail",
+                  label: "Project Detail",
+                  onPress: () =>
+                    router.replace(`/projects/${projectId}` as never)
                 }
-              />
-              <AppHeading variant="section">
-                {formatCalendarMonth(visibleMonth)}
-              </AppHeading>
-              <CalendarIconButton
-                accessibilityLabel="Next month"
-                icon={ChevronRightIcon}
-                onPress={() =>
-                  setVisibleMonth(
-                    (current) =>
-                      new Date(current.getFullYear(), current.getMonth() + 1, 1)
-                  )
-                }
-              />
-            </View>
-
-            <View style={projectFormStyles.calendarWeekdays}>
-              {calendarWeekdayLabels.map((weekday) => (
-                <Text key={weekday} style={projectFormStyles.calendarWeekday}>
-                  {weekday}
-                </Text>
-              ))}
-            </View>
-
-            <View style={projectFormStyles.calendarGrid}>
-              {calendarDays.map((day) => {
-                const isSelected =
-                  selectedDate &&
-                  toCalendarDateValue(selectedDate) ===
-                    toCalendarDateValue(day.date);
-
-                return (
-                  <Pressable
-                    accessibilityLabel={`Select ${formatDateOnly(
-                      toCalendarDateValue(day.date)
-                    )}`}
-                    accessibilityRole="button"
-                    key={day.key}
-                    onPress={() => selectDate(day.date)}
-                    style={StyleSheet.flatten([
-                      projectFormStyles.calendarDay,
-                      day.isCurrentMonth
-                        ? null
-                        : projectFormStyles.calendarDayOutside,
-                      isSelected ? projectFormStyles.calendarDaySelected : null,
-                      Platform.OS === "web" ? projectFormStyles.webCursor : null
-                    ])}
-                  >
-                    <Text
-                      style={StyleSheet.flatten([
-                        projectFormStyles.calendarDayText,
-                        day.isCurrentMonth
-                          ? null
-                          : projectFormStyles.calendarDayTextOutside,
-                        isSelected
-                          ? projectFormStyles.calendarDayTextSelected
-                          : null
-                      ])}
-                    >
-                      {day.date.getDate()}
-                    </Text>
-                  </Pressable>
-                );
-              })}
-            </View>
-
-            <View style={projectFormStyles.calendarActions}>
-              <AppButton
-                color="neutral"
-                fullWidth={false}
-                onPress={() => {
-                  onChange("");
-                  setIsOpen(false);
-                }}
-                size="sm"
-                variant="bordered"
-              >
-                Clear
-              </AppButton>
-              <AppButton
-                fullWidth={false}
-                onPress={() => setIsOpen(false)}
-                size="sm"
-              >
-                Done
-              </AppButton>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </FormField>
-  );
-}
-
-function CalendarIconButton({
-  accessibilityLabel,
-  icon: Icon,
-  onPress
-}: {
-  accessibilityLabel: string;
-  icon: typeof ChevronLeftIcon;
-  onPress: (event: GestureResponderEvent) => void;
-}) {
-  return (
-    <Pressable
-      accessibilityLabel={accessibilityLabel}
-      accessibilityRole="button"
-      onPress={onPress}
-      style={StyleSheet.flatten([
-        projectFormStyles.calendarIconButton,
-        Platform.OS === "web" ? projectFormStyles.webCursor : null
-      ])}
-    >
-      <Icon color={atomPalette.text} size={20} />
-    </Pressable>
-  );
-}
-
-function CoverPicker({
-  currentUrl,
-  onChange,
-  value
-}: {
-  currentUrl: string | null;
-  onChange: (asset: ProjectFormValues["coverAsset"]) => void;
-  value: ProjectFormValues["coverAsset"];
-}) {
-  const previewUri = value?.uri ?? currentUrl;
-  const [pickerError, setPickerError] = useState<string | null>(null);
-
-  const pickImage = async () => {
-    setPickerError(null);
-
-    try {
-      const permission =
-        await ImagePicker.requestMediaLibraryPermissionsAsync();
-
-      if (!permission.granted) {
-        setPickerError(
-          permission.canAskAgain
-            ? "Photo access is required to choose a project cover. Allow access and try again."
-            : "Photo access is disabled. Enable it in your device settings, then try again."
-        );
-        return;
-      }
-
-      const result = await ImagePicker.launchImageLibraryAsync({
-        allowsEditing: true,
-        mediaTypes: ImagePicker.MediaTypeOptions.Images,
-        quality: 0.82
-      });
-
-      if (result.canceled || !result.assets[0]) {
-        return;
-      }
-
-      const asset = result.assets[0];
-      onChange({
-        fileName: asset.fileName,
-        mimeType: asset.mimeType,
-        uri: asset.uri
-      });
-    } catch (error) {
-      setPickerError(
-        getUserFacingErrorMessage(
-          error,
-          "We couldn't open your photo library. Try again."
-        )
-      );
-    }
-  };
-
-  return (
-    <View style={{ gap: atomSpacing[3] }}>
-      <FieldLabel>Cover Image</FieldLabel>
-      <Pressable
-        accessibilityLabel="Choose project cover image"
-        accessibilityRole="button"
-        onPress={() => {
-          void pickImage();
-        }}
-        style={StyleSheet.flatten([
-          projectFormStyles.coverPicker,
-          Platform.OS === "web" ? projectFormStyles.webCursor : null
-        ])}
-      >
-        {previewUri ? (
-          <Image
-            contentFit="cover"
-            source={{ uri: previewUri }}
-            style={{ height: "100%", width: "100%" }}
-          />
-        ) : (
-          <View style={{ alignItems: "center", gap: atomSpacing[2] }}>
-            <ImagePlusIcon color={atomPalette.textMuted} size={24} />
-            <AppText tone="muted">Choose a cover image</AppText>
-          </View>
-        )}
-      </Pressable>
-      {pickerError ? (
-        <FieldMessage tone="error">{pickerError}</FieldMessage>
-      ) : null}
+              ]
+            : []),
+          { label: mode === "create" ? "New" : "Edit" }
+        ]}
+      />
+      <AppHeading variant="hero">
+        {mode === "create"
+          ? "Create a project."
+          : "Update project details."}
+      </AppHeading>
+      <AppText tone="muted">
+        Projects anchor site tasks, uploads, location, and future client-facing
+        work.
+      </AppText>
     </View>
   );
 }
 
-const calendarWeekdayLabels = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-const calendarMonthLabels = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
-
-function getCalendarMonth(value: string) {
-  const parsed = parseCalendarDate(value);
-  const today = new Date();
-  const source = parsed ?? today;
-
-  return new Date(source.getFullYear(), source.getMonth(), 1);
+function ProjectFormLoading() {
+  return (
+    <Screen>
+      <View style={styles.loading}>
+        <SkeletonBlock height={36} width="50%" />
+        <SkeletonBlock height={220} />
+        <SkeletonBlock height={320} />
+      </View>
+    </Screen>
+  );
 }
 
-function getCalendarDays(visibleMonth: Date) {
-  const year = visibleMonth.getFullYear();
-  const month = visibleMonth.getMonth();
-  const firstDay = new Date(year, month, 1);
-  const firstWeekday = firstDay.getDay();
-  const days: Array<{ date: Date; isCurrentMonth: boolean; key: string }> = [];
+function ProjectFormLoadError({
+  error,
+  onBack,
+  onRetry
+}: {
+  error: Error;
+  onBack: () => void;
+  onRetry: () => void;
+}) {
+  return (
+    <Screen centered>
+      <AppCard padding="lg">
+        <View style={styles.feedbackCard}>
+          <AppHeading variant="section">Project unavailable</AppHeading>
+          <AppText tone="muted">
+            {getUserFacingErrorMessage(
+              error,
+              "We couldn't load this project for editing. Check your connection and try again."
+            )}
+          </AppText>
+          <View style={styles.feedbackActions}>
+            <AppButton icon={RefreshIcon} onPress={onRetry}>
+              Retry
+            </AppButton>
+            <AppButton color="neutral" onPress={onBack} variant="bordered">
+              Back to projects
+            </AppButton>
+          </View>
+        </View>
+      </AppCard>
+    </Screen>
+  );
+}
 
-  for (let offset = 0; offset < 42; offset += 1) {
-    const date = new Date(year, month, offset - firstWeekday + 1);
+function ProjectFormNotFound({ onBack }: { onBack: () => void }) {
+  return (
+    <Screen centered>
+      <AppCard padding="lg">
+        <View style={styles.feedbackCard}>
+          <AppHeading variant="section">Project not found</AppHeading>
+          <AppText tone="muted">
+            This project may have been removed or you may not have access.
+          </AppText>
+          <AppButton onPress={onBack}>Back to projects</AppButton>
+        </View>
+      </AppCard>
+    </Screen>
+  );
+}
 
-    days.push({
-      date,
-      isCurrentMonth: date.getMonth() === month,
-      key: toCalendarDateValue(date)
+function showProjectSaveToast({
+  appToast,
+  mode,
+  outcome
+}: {
+  appToast: ReturnType<typeof useAppToast>;
+  mode: "create" | "edit";
+  outcome: ProjectSaveOutcome;
+}) {
+  const action = mode === "create" ? "created" : "updated";
+
+  if (outcome.coverStatus === "failed") {
+    appToast.show({
+      description: `${outcome.project.name} was ${action}, but its cover couldn't be uploaded. You can add it later by editing the project.`,
+      title: `Project ${action}`,
+      tone: "warning"
     });
+    return;
   }
 
-  return days;
+  appToast.show({
+    description: `${outcome.project.name} was ${action} successfully.`,
+    title: `Project ${action}`,
+    tone: "success"
+  });
 }
-
-function parseCalendarDate(value: string) {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
-
-  if (!match) {
-    return null;
-  }
-
-  const year = Number(match[1]);
-  const month = Number(match[2]);
-  const day = Number(match[3]);
-  const date = new Date(year, month - 1, day);
-
-  if (
-    date.getFullYear() !== year ||
-    date.getMonth() !== month - 1 ||
-    date.getDate() !== day
-  ) {
-    return null;
-  }
-
-  return date;
-}
-
-function formatCalendarMonth(date: Date) {
-  return `${calendarMonthLabels[date.getMonth()]} ${date.getFullYear()}`;
-}
-
-function toCalendarDateValue(date: Date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
-}
-
-const projectFormStyles = StyleSheet.create({
-  calendarActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3],
-    justifyContent: "flex-end"
-  },
-  calendarBackdrop: {
-    alignItems: "center",
-    backgroundColor: "rgba(18, 18, 18, 0.28)",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[5]
-  },
-  calendarDay: {
-    alignItems: "center",
-    aspectRatio: 1,
-    borderRadius: 999,
-    justifyContent: "center",
-    width: `${100 / 7}%`
-  },
-  calendarDayOutside: {
-    opacity: 0.42
-  },
-  calendarDaySelected: {
-    backgroundColor: atomPalette.accent
-  },
-  calendarDayText: {
-    color: atomPalette.text,
-    fontSize: 14,
-    fontWeight: "700",
-    lineHeight: 18
-  },
-  calendarDayTextOutside: {
-    color: atomPalette.textMuted
-  },
-  calendarDayTextSelected: {
-    color: atomPalette.accentText
-  },
-  calendarGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap"
-  },
-  calendarHeader: {
-    alignItems: "center",
-    flexDirection: "row",
-    justifyContent: "space-between"
-  },
-  calendarIconButton: {
-    alignItems: "center",
-    backgroundColor: atomPalette.surfaceLow,
-    borderColor: atomPalette.borderSubtle,
-    borderRadius: 14,
-    borderWidth: 1,
-    height: 40,
-    justifyContent: "center",
-    width: 40
-  },
-  calendarModal: {
-    backgroundColor: atomPalette.surface,
-    borderColor: atomPalette.border,
-    borderRadius: 20,
-    borderWidth: 1,
-    gap: atomSpacing[5],
-    maxWidth: 360,
-    padding: atomSpacing[5],
-    width: "100%"
-  },
-  calendarWeekday: {
-    color: atomPalette.textMuted,
-    flex: 1,
-    fontSize: 11,
-    fontWeight: "800",
-    lineHeight: 16,
-    textAlign: "center",
-    textTransform: "uppercase"
-  },
-  calendarWeekdays: {
-    flexDirection: "row"
-  },
-  coverPicker: {
-    alignItems: "center",
-    backgroundColor: atomPalette.surfaceLow,
-    borderColor: atomPalette.borderSubtle,
-    borderRadius: 14,
-    borderWidth: 1,
-    height: 132,
-    justifyContent: "center",
-    overflow: "hidden"
-  },
-  datePickerButton: {
-    alignItems: "center",
-    backgroundColor: atomPalette.surface,
-    borderColor: atomPalette.border,
-    borderRadius: atomControlRadius,
-    borderWidth: 1,
-    flexDirection: "row",
-    gap: atomSpacing[3],
-    minHeight: atomControlHeights.lg,
-    paddingHorizontal: atomSpacing[4]
-  },
-  datePickerButtonError: {
-    borderColor: atomPalette.error
-  },
-  dateGrid: {
-    gap: atomSpacing[4]
-  },
-  dateGridWide: {
-    flexDirection: "row",
-    flexWrap: "wrap"
-  },
-  fieldGroup: {
-    gap: atomSpacing[5]
-  },
-  fieldGroupWide: {
-    flexDirection: "row"
-  },
-  fieldHalf: {
-    flexBasis: 0,
-    flexGrow: 1,
-    minWidth: 260
-  },
-  formAction: {
-    flex: 1,
-    maxWidth: 220
-  },
-  formActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3]
-  },
-  formActionsWide: {
-    justifyContent: "flex-end"
-  },
-  formCardExpanded: {
-    alignSelf: "center",
-    width: "100%"
-  },
-  page: {
-    gap: atomSpacing[6],
-    width: "100%"
-  },
-  pageExpanded: {
-    alignSelf: "center",
-    maxWidth: 1120
-  },
-  webCursor: {
-    cursor: "pointer"
-  } as ViewStyle
-});
 
 function getValuesFromProject(project: Project): ProjectFormValues {
   return {
@@ -1211,3 +379,33 @@ function getValuesFromProject(project: Project): ProjectFormValues {
     status: project.status
   };
 }
+
+const styles = StyleSheet.create({
+  feedbackActions: {
+    gap: atomSpacing[3]
+  },
+  feedbackCard: {
+    gap: atomSpacing[4]
+  },
+  formCardExpanded: {
+    alignSelf: "center",
+    width: "100%"
+  },
+  formContent: {
+    gap: atomSpacing[5]
+  },
+  header: {
+    gap: atomSpacing[3]
+  },
+  loading: {
+    gap: atomSpacing[5]
+  },
+  page: {
+    gap: atomSpacing[6],
+    width: "100%"
+  },
+  pageExpanded: {
+    alignSelf: "center",
+    maxWidth: 1120
+  }
+});

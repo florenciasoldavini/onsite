@@ -1,3 +1,4 @@
+import type { UserRole } from "@/features/auth/types/auth.types";
 import type {
   CreateProjectPhotoInput,
   ProjectPhoto,
@@ -49,7 +50,7 @@ export async function listProjectPhotoRows({
   filters?: ProjectPhotoFilters;
   projectId: string;
   userId: string;
-  userRole: "admin" | "user";
+  userRole: UserRole;
 } & OffsetPageRequest) {
   const client = requireSupabase();
   const range = getOffsetPageRange({ offset, pageSize });

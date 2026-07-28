@@ -12,6 +12,10 @@ import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
+import {
+  DestructiveConfirmationDialog,
+  useDestructiveConfirmation
+} from "@/shared/ui/components/destructive-confirmation-dialog";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { Screen } from "@/shared/ui/components/screen";
@@ -36,7 +40,7 @@ import type { AppIconComponent } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useState } from "react";
-import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
+import { Linking, Pressable, StyleSheet, View } from "react-native";
 
 export default function WorkerDetailScreen() {
   const router = useRouter();
@@ -105,16 +109,15 @@ function WorkerDetailContent({
   const { isCompact, isExpanded } = useLayoutMode();
   const toast = useAppToast();
   const deleteMutation = useSoftDeleteWorker();
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const deleteConfirmation = useDestructiveConfirmation();
   const [contactError, setContactError] = useState<string | null>(null);
   const displayName = getWorkerDisplayName(worker);
 
   const deleteWorker = async () => {
-    setDeleteError(null);
+    deleteConfirmation.clearError();
     try {
       await deleteMutation.mutateAsync(worker.id);
-      setDeleteOpen(false);
+      deleteConfirmation.close();
       toast.show({
         description: `${displayName} was removed from your worker catalog.`,
         title: "Worker deleted",
@@ -122,7 +125,7 @@ function WorkerDetailContent({
       });
       router.replace("/directory?section=workers" as never);
     } catch (error) {
-      setDeleteError(
+      deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
           "We couldn't delete this worker. Try again."
@@ -198,10 +201,7 @@ function WorkerDetailContent({
                 fullWidth={isCompact}
                 icon={TrashIcon}
                 iconAfter={false}
-                onPress={() => {
-                  setDeleteError(null);
-                  setDeleteOpen(true);
-                }}
+                onPress={deleteConfirmation.open}
                 size="sm"
                 variant="bordered"
               >
@@ -306,58 +306,15 @@ function WorkerDetailContent({
         </View>
       </View>
 
-      <Modal
-        animationType="fade"
-        onRequestClose={() => {
-          if (!deleteMutation.isPending) setDeleteOpen(false);
-        }}
-        transparent
-        visible={deleteOpen}
-      >
-        <View style={styles.modalRoot}>
-          <Pressable
-            accessibilityLabel="Cancel deleting worker"
-            onPress={() => {
-              if (!deleteMutation.isPending) setDeleteOpen(false);
-            }}
-            style={StyleSheet.absoluteFill}
-          />
-          <View pointerEvents="none" style={styles.backdrop} />
-          <AppCard padding="lg" style={styles.modalCard}>
-            <View style={{ gap: atomSpacing[5] }}>
-              <AppHeading variant="section">Delete {displayName}?</AppHeading>
-              <AppText tone="muted">
-                This removes the worker from your active catalog. This action
-                cannot be undone.
-              </AppText>
-              {deleteError ? (
-                <AppText selectable tone="danger">
-                  {deleteError}
-                </AppText>
-              ) : null}
-              <View style={styles.modalActions}>
-                <AppButton
-                  color="neutral"
-                  fullWidth={false}
-                  isDisabled={deleteMutation.isPending}
-                  onPress={() => setDeleteOpen(false)}
-                  variant="bordered"
-                >
-                  Cancel
-                </AppButton>
-                <AppButton
-                  color="danger"
-                  fullWidth={false}
-                  loading={deleteMutation.isPending}
-                  onPress={() => void deleteWorker()}
-                >
-                  Delete worker
-                </AppButton>
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </Modal>
+      <DestructiveConfirmationDialog
+        accessibilityLabel="Cancel deleting worker"
+        confirmLabel="Delete worker"
+        controller={deleteConfirmation}
+        description="This removes the worker from your active catalog. This action cannot be undone."
+        isPending={deleteMutation.isPending}
+        onConfirm={deleteWorker}
+        title={`Delete ${displayName}?`}
+      />
     </Screen>
   );
 }
@@ -415,10 +372,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     width: 64
   },
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(17, 24, 39, 0.42)"
-  },
   detailGrid: {
     gap: atomSpacing[5]
   },
@@ -453,21 +406,6 @@ const styles = StyleSheet.create({
   identityLayoutCompact: {
     alignItems: "stretch",
     flexDirection: "column"
-  },
-  modalActions: {
-    flexDirection: "row",
-    gap: atomSpacing[3],
-    justifyContent: "flex-end"
-  },
-  modalCard: {
-    maxWidth: 520,
-    width: "100%"
-  },
-  modalRoot: {
-    alignItems: "center",
-    flex: 1,
-    justifyContent: "center",
-    padding: atomSpacing[4]
   },
   page: {
     alignSelf: "center",
