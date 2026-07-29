@@ -44,8 +44,8 @@ export async function listProjectPhotoRows({
   offset,
   pageSize,
   projectId,
-  userId,
-  userRole
+  userId: _userId,
+  userRole: _userRole
 }: {
   filters?: ProjectPhotoFilters;
   projectId: string;
@@ -59,10 +59,6 @@ export async function listProjectPhotoRows({
     .select(PROJECT_PHOTO_COLUMNS)
     .eq("project_id", projectId)
     .is("deleted_at", null);
-
-  if (userRole !== "admin") {
-    query = query.eq("owner_id", userId);
-  }
 
   if (filters?.kind && filters.kind !== "all") {
     query = query.eq("kind", filters.kind);
@@ -81,10 +77,7 @@ export async function listProjectPhotoRows({
     throw toRepositoryError(error);
   }
 
-  return toPaginatedResult(
-    (data ?? []) as unknown as ProjectPhoto[],
-    range
-  );
+  return toPaginatedResult((data ?? []) as unknown as ProjectPhoto[], range);
 }
 
 export async function getProjectPhotoRow(photoId: string) {

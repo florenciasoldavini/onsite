@@ -4,6 +4,7 @@ import {
   useSoftDeleteProject
 } from "@/features/projects/hooks/use-projects";
 import ProjectDetailScreen from "@/features/projects/screens/project-detail-screen";
+import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import type { Project } from "@/features/projects/types/project.types";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { useAppToast } from "@/shared/ui/components/toast";
@@ -29,6 +30,10 @@ jest.mock("expo-router", () => ({
 jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn(),
   useSoftDeleteProject: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectAccess: jest.fn()
 }));
 
 jest.mock("@/features/clients/hooks/use-clients", () => ({
@@ -70,6 +75,16 @@ const project: Project = {
 
 describe("ProjectDetailScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectAccess).mockReturnValue({
+      can: () => true,
+      data: {
+        permissions: [
+          "project.delete",
+          "project.members.read",
+          "project.update"
+        ]
+      }
+    } as never);
     jest.mocked(useLayoutMode).mockReturnValue({
       height: 844,
       isCompact: true,

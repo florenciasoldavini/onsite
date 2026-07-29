@@ -10,6 +10,7 @@ import type {
   ProjectPhotoKind
 } from "@/features/photos/types/photo";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { EmptyState } from "@/shared/ui/components/empty-state";
@@ -19,10 +20,7 @@ import { SelectField } from "@/shared/ui/components/select-field";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { SegmentedTabs } from "@/shared/ui/components/tabs";
 import { AppText } from "@/shared/ui/components/text";
-import {
-  atomLayout,
-  atomSpacing
-} from "@/shared/ui/components/theme";
+import { atomLayout, atomSpacing } from "@/shared/ui/components/theme";
 import {
   AlertIcon,
   CameraIcon,
@@ -56,6 +54,10 @@ export default function ProjectPhotosScreen() {
   const [marketing, setMarketing] =
     useState<ProjectPhotoFilters["marketing"]>("all");
   const projectQuery = useProject(projectId);
+  const writePermission = useProjectPermission(
+    projectId,
+    "project.photos.write"
+  );
   const photosQuery = useProjectPhotos(projectId, { kind, marketing });
   const photos = useMemo(
     () => photosQuery.data?.pages.flatMap((page) => page.items) ?? [],
@@ -74,10 +76,8 @@ export default function ProjectPhotosScreen() {
         ? atomLayout.marginTablet
         : atomLayout.marginMobile;
   const usableWidth =
-    Math.min(width, atomLayout.maxWidthContent) -
-    horizontalPadding * 2;
-  const cardWidth =
-    (usableWidth - atomSpacing[4] * (columns - 1)) / columns;
+    Math.min(width, atomLayout.maxWidthContent) - horizontalPadding * 2;
+  const cardWidth = (usableWidth - atomSpacing[4] * (columns - 1)) / columns;
 
   if (projectQuery.isError) {
     return (
@@ -107,10 +107,7 @@ export default function ProjectPhotosScreen() {
   }
 
   return (
-    <Screen
-      contentStyle={{ flex: 1 }}
-      scrollable={false}
-    >
+    <Screen contentStyle={{ flex: 1 }} scrollable={false}>
       <View style={{ flex: 1, gap: atomSpacing[5] }}>
         <Breadcrumb
           items={[
@@ -120,8 +117,7 @@ export default function ProjectPhotosScreen() {
             },
             {
               label: projectQuery.data?.name ?? "Project",
-              onPress: () =>
-                router.push(`/projects/${projectId}` as never)
+              onPress: () => router.push(`/projects/${projectId}` as never)
             },
             { label: "Photos" }
           ]}
@@ -144,15 +140,17 @@ export default function ProjectPhotosScreen() {
               {projectQuery.data?.name ?? "Photos"}
             </AppHeading>
           </View>
-          <AppButton
-            fullWidth={false}
-            icon={CirclePlusIcon}
-            onPress={() =>
-              router.push(`/projects/${projectId}/photos/new` as never)
-            }
-          >
-            Add photos
-          </AppButton>
+          {writePermission.allowed ? (
+            <AppButton
+              fullWidth={false}
+              icon={CirclePlusIcon}
+              onPress={() =>
+                router.push(`/projects/${projectId}/photos/new` as never)
+              }
+            >
+              Add photos
+            </AppButton>
+          ) : null}
         </View>
 
         <View style={{ gap: atomSpacing[4] }}>
@@ -173,7 +171,13 @@ export default function ProjectPhotosScreen() {
         </View>
 
         {photosQuery.isLoading ? (
-          <View style={{ flexDirection: "row", flexWrap: "wrap", gap: atomSpacing[4] }}>
+          <View
+            style={{
+              flexDirection: "row",
+              flexWrap: "wrap",
+              gap: atomSpacing[4]
+            }}
+          >
             {Array.from({ length: columns * 2 }).map((_, index) => (
               <SkeletonBlock
                 height={cardWidth * 1.05}

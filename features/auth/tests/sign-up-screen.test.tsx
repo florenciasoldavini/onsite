@@ -108,7 +108,10 @@ describe("SignUpScreen", () => {
 
     await user.press(view.getByLabelText("Continue with Apple"));
 
-    expect(mockOAuthSignIn).toHaveBeenCalledWith("apple");
+    expect(mockOAuthSignIn).toHaveBeenCalledWith({
+      next: undefined,
+      provider: "apple"
+    });
     expect(
       await view.findByText(
         "We couldn't start that sign-up method. Try again."

@@ -14,10 +14,7 @@ import {
 } from "@/features/projects/constants/project.constants";
 import type { ProjectFormValues } from "@/features/projects/types/project.types";
 import { AppButton } from "@/shared/ui/components/button";
-import {
-  NumericField,
-  TextField
-} from "@/shared/ui/components/input";
+import { NumericField, TextField } from "@/shared/ui/components/input";
 import { SelectField } from "@/shared/ui/components/select-field";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { TextAreaField } from "@/shared/ui/components/textarea";
@@ -55,11 +52,13 @@ type ProjectFormSectionProps = {
 };
 
 export const ProjectCoverSection = memo(function ProjectCoverSection({
+  canWrite = true,
   control,
   currentUrl,
   onInteraction,
   setValue
 }: ProjectFormSectionProps & {
+  canWrite?: boolean;
   currentUrl: string | null;
   setValue: UseFormSetValue<ProjectFormValues>;
 }) {
@@ -68,6 +67,7 @@ export const ProjectCoverSection = memo(function ProjectCoverSection({
   return (
     <ProjectCoverPicker
       currentUrl={currentUrl}
+      disabled={!canWrite}
       onChange={(asset) => {
         setValue("coverAsset", asset, {
           shouldDirty: true,
@@ -81,10 +81,12 @@ export const ProjectCoverSection = memo(function ProjectCoverSection({
 });
 
 export const ProjectIdentitySection = memo(function ProjectIdentitySection({
+  canChangeClient = true,
   control,
   onInteraction,
   ownerId
 }: ProjectFormSectionProps & {
+  canChangeClient?: boolean;
   ownerId?: string;
 }) {
   return (
@@ -131,6 +133,7 @@ export const ProjectIdentitySection = memo(function ProjectIdentitySection({
         name="client_id"
         render={({ field }) => (
           <ClientPickerField
+            disabled={!canChangeClient}
             onChange={(clientId) => {
               field.onChange(clientId);
               onInteraction();
@@ -395,7 +398,9 @@ function FieldColumn({
   children: ReactNode;
   isCompact: boolean;
 }) {
-  return <View style={!isCompact ? styles.fieldHalf : undefined}>{children}</View>;
+  return (
+    <View style={!isCompact ? styles.fieldHalf : undefined}>{children}</View>
+  );
 }
 
 function ProjectDateController({

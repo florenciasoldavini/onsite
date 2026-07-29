@@ -1,4 +1,5 @@
 import { ClientFormFields } from "@/features/clients/components/client-form-fields";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
   clientFormSchema,
   getClientDisplayName,
@@ -44,6 +45,7 @@ export default function ClientFormScreen({
 }) {
   const router = useRouter();
   const toast = useAppToast();
+  const { user } = useAuth();
   const clientQuery = useClient(mode === "edit" ? clientId : undefined);
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient(clientId ?? "");
@@ -137,6 +139,30 @@ export default function ClientFormScreen({
           description="This client may have been removed or you may not have access."
           icon={UserIcon}
           title="Client not found"
+        />
+      </Screen>
+    );
+  }
+
+  const existingClient = clientQuery.data;
+
+  if (
+    mode === "edit" &&
+    existingClient &&
+    user?.role !== "admin" &&
+    user?.id !== existingClient.owner_id
+  ) {
+    return (
+      <Screen centered>
+        <EmptyState
+          action={{
+            label: "Back to client",
+            onPress: () =>
+              router.replace(`/clients/${existingClient.id}` as never)
+          }}
+          description="You don't have permission to edit this client."
+          icon={UserIcon}
+          title="Client editing unavailable"
         />
       </Screen>
     );

@@ -208,6 +208,17 @@ Last reviewed: 2026-07-21
 - photo rows are soft-deleted before Storage cleanup; active row references are required for Storage reads
 - the complete product, privacy, processing, and deferred-scope contract lives in [docs/project-photos.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-photos.md:1)
 
+### Project Collaboration
+
+- project roles, capabilities, and role-to-capability mappings are database catalogs changed through tracked migrations
+- `owner` is derived from `projects.owner_id`; assignable roles are memberships using validated stable string codes
+- every project RLS policy and collaboration mutation must authorize through the central database capability engine
+- application UI must use `useProjectAccess(projectId).can(permission)` and must not branch on project role names
+- global admins receive every project capability without acquiring membership
+- invitation tokens are stored only as SHA-256 hashes, expire after seven days, and use URL fragments in email links
+- project cover and photo signed URLs expire after five minutes
+- the complete authorization and invitation contract lives in [docs/project-collaboration.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-collaboration.md:1)
+
 ## User Model Decisions
 
 - `users.id`: UUID from Supabase Auth

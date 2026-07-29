@@ -5,18 +5,18 @@ import {
   PROJECT_PHOTO_KINDS
 } from "@/features/photos/constants/photo.constants";
 import { useUploadProjectPhotos } from "@/features/photos/hooks/use-project-photos";
-import {
-  projectPhotoBatchFormSchema
-} from "@/features/photos/schemas/photo.schema";
+import { projectPhotoBatchFormSchema } from "@/features/photos/schemas/photo.schema";
 import type { ProjectPhotoDraft } from "@/features/photos/types/photo";
 import type { ProjectPhotoUploadStage } from "@/features/photos/services/photos.service";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
 import { EmptyState } from "@/shared/ui/components/empty-state";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { Screen } from "@/shared/ui/components/screen";
+import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { SelectField } from "@/shared/ui/components/select-field";
 import { AppText } from "@/shared/ui/components/text";
 import { useAppToast } from "@/shared/ui/components/toast";
@@ -33,10 +33,7 @@ import * as Crypto from "expo-crypto";
 import * as ImagePicker from "expo-image-picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import {
-  Platform,
-  View
-} from "react-native";
+import { Platform, View } from "react-native";
 import {
   useFieldArray,
   useForm,
@@ -57,6 +54,10 @@ export default function ProjectPhotoUploadScreen() {
   const params = useLocalSearchParams<{ projectId: string }>();
   const projectId = firstParam(params.projectId) ?? "";
   const projectQuery = useProject(projectId);
+  const writePermission = useProjectPermission(
+    projectId,
+    "project.photos.write"
+  );
   const uploadMutation = useUploadProjectPhotos(projectId);
   const [pickerError, setPickerError] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
@@ -68,9 +69,7 @@ export default function ProjectPhotoUploadScreen() {
   const [itemErrors, setItemErrors] = useState<Record<string, string>>({});
   const form = useForm<FormValues>({
     defaultValues: { photos: [] },
-    resolver: zodResolver(
-      projectPhotoBatchFormSchema
-    ) as Resolver<FormValues>
+    resolver: zodResolver(projectPhotoBatchFormSchema) as Resolver<FormValues>
   });
   const photos = useWatch({ control: form.control, name: "photos" }) ?? [];
   const fieldArray = useFieldArray({
@@ -110,7 +109,32 @@ export default function ProjectPhotoUploadScreen() {
     );
   }
 
-  if (!projectQuery.isLoading && !projectQuery.data) {
+  if (projectQuery.isLoading || writePermission.isLoading) {
+    return (
+      <Screen>
+        <SkeletonBlock height={420} />
+      </Screen>
+    );
+  }
+
+  if (writePermission.isError || !writePermission.allowed) {
+    return (
+      <Screen centered>
+        <EmptyState
+          action={{
+            label: "Back to photos",
+            onPress: () =>
+              router.replace(`/projects/${projectId}/photos` as never)
+          }}
+          description="Your project access does not allow adding photos."
+          icon={AlertIcon}
+          title="Photo upload unavailable"
+        />
+      </Screen>
+    );
+  }
+
+  if (!projectQuery.data) {
     return (
       <Screen centered>
         <EmptyState

@@ -3,7 +3,7 @@
 Purpose: define how Onzait classifies, records, and presents failures
 Source of truth for: user-visible error copy, provider-error translation, retry states, and permission-denial behavior
 Update when: error types, monitoring boundaries, provider integrations, or critical async flows change
-Last reviewed: 2026-07-18
+Last reviewed: 2026-07-28
 
 ## Product rule
 
@@ -47,6 +47,27 @@ Every user-critical query must distinguish:
 - request failure
 
 A request failure must not be presented as an empty or not-found result. Provide a dedicated error state with a retry action when retrying is safe. Mutation errors must remain visible near the action or form until the user retries or changes the relevant input.
+
+Loading UI must correspond to active work that can settle. A missing or invalid
+required route parameter is an invalid-route state, not a loading state. It must
+render finite, actionable feedback and a safe navigation action; it must never
+leave the user on an indefinite spinner or skeleton.
+
+## Record routes and authorization
+
+- Validate required route parameters before starting record queries or
+  permission-dependent workflows.
+- When RLS intentionally makes a missing record and an inaccessible record
+  indistinguishable, show the shared privacy-preserving “not found or you may
+  not have access” result.
+- When the application can safely read a record but the current user lacks the
+  capability required by the requested route, show an explicit unavailable or
+  unauthorized state instead of rendering controls that will fail on submit.
+- Apply UI authorization to direct navigation as well as links and buttons.
+  Hiding a navigation action is not sufficient because users can enter or
+  modify URLs manually.
+- Database authorization remains authoritative. UI route guards improve
+  feedback and must never replace RLS or capability assertions.
 
 ## Permission denial
 

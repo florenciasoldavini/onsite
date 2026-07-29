@@ -18,6 +18,7 @@ import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 
 export function CatalogPickerField<TItem extends CatalogContactItem>({
+  disabled = false,
   entityName,
   entityNamePlural,
   footer,
@@ -38,6 +39,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
   selectedItemFallback,
   value
 }: {
+  disabled?: boolean;
   entityName: string;
   entityNamePlural: string;
   footer?: ReactNode;
@@ -81,6 +83,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
 
       {selectedItem ? (
         <SelectedCatalogItem
+          disabled={disabled}
           entityName={entityName}
           getDisplayName={getDisplayName}
           icon={Icon}
@@ -89,14 +92,16 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
         />
       ) : null}
 
-      <SearchField
-        onChangeText={onQueryChange}
-        placeholder={searchPlaceholder}
-        size="md"
-        value={query}
-      />
+      {!disabled ? (
+        <SearchField
+          onChangeText={onQueryChange}
+          placeholder={searchPlaceholder}
+          size="md"
+          value={query}
+        />
+      ) : null}
 
-      <AppCard padding="sm" tone="muted">
+      {!disabled ? <AppCard padding="sm" tone="muted">
         <View style={styles.options}>
           {isLoading ? (
             <AppText tone="muted">Loading {entityNamePlural}…</AppText>
@@ -146,20 +151,22 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
             </AppButton>
           ) : null}
         </View>
-      </AppCard>
+      </AppCard> : null}
 
-      {footer}
+      {!disabled ? footer : null}
     </View>
   );
 }
 
 function SelectedCatalogItem<TItem extends CatalogContactItem>({
+  disabled,
   entityName,
   getDisplayName,
   icon: Icon,
   item,
   onClear
 }: {
+  disabled: boolean;
   entityName: string;
   getDisplayName: (item: TItem) => string;
   icon: AppIconComponent;
@@ -180,6 +187,7 @@ function SelectedCatalogItem<TItem extends CatalogContactItem>({
           accessibilityLabel={`Clear selected ${entityName}`}
           color="neutral"
           fullWidth={false}
+          isDisabled={disabled}
           onPress={onClear}
           size="sm"
           variant="ghost"

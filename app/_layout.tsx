@@ -72,6 +72,7 @@ function RootNavigator() {
           <Stack.Protected guard={!session}>
             <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           </Stack.Protected>
+          <Stack.Screen name="invitations/accept" />
         </Stack>
       ) : null}
       {!splashDone ? (

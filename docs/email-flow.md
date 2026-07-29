@@ -3,7 +3,7 @@
 Purpose: test and document the first non-auth email path
 Source of truth for: product email boundaries, Edge Function secrets, and the current welcome-email example
 Update when: product email providers, function names, secrets, or invocation rules change
-Last reviewed: 2026-07-21
+Last reviewed: 2026-07-28
 
 ## Current Example
 
@@ -20,6 +20,19 @@ Flow:
 
 The client does not send a recipient email address. The function chooses the recipient from the authenticated user's `public.users` row.
 The client also does not write the sent marker; that belongs to the Edge Function so repeated app launches cannot repeatedly send the same product email.
+
+## Project Invitation Email
+
+`project-collaboration` sends project invitation emails through the same Resend
+configuration. The database first creates or rotates a hash-only invitation and
+returns its delivery version. The Edge Function then sends with an idempotency
+key containing the invitation ID and delivery version and records `sent` or
+`failed` without deleting a failed invitation.
+
+Invitation links use `/invitations/accept#token=…`; the raw token is never
+stored and is not placed in an HTTP path or query string. Resends rotate the
+token, restart the seven-day expiry, enforce a 60-second cooldown, and share a
+20-email rolling 24-hour actor cap with new invitations.
 
 ## Failure Contract
 
@@ -43,6 +56,8 @@ The email is intentionally not sent at raw signup time because email/password us
 - `supabase/functions/welcome-to-onzait/index.ts`
 - `supabase/functions/welcome-to-onzait/errors.ts`
 - `supabase/functions/_shared/email/welcome-to-onzait.tsx`
+- `supabase/functions/project-collaboration/index.ts`
+- `supabase/functions/_shared/email/project-invitation.tsx`
 - `supabase/functions/_shared/cors.ts`
 
 ## Template Development

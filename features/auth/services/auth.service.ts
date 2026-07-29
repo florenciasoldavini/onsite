@@ -62,9 +62,11 @@ export type EmailSignUpResult =
 
 export async function signUpWithEmail({
   email,
+  next,
   password
 }: {
   email: string;
+  next?: string;
   password: string;
 }): Promise<EmailSignUpResult> {
   const normalizedEmail = normalizeEmail(email);
@@ -72,6 +74,7 @@ export async function signUpWithEmail({
   try {
     const { session } = await signUpWithEmailPassword({
       email: normalizedEmail,
+      next,
       password
     });
 
@@ -93,8 +96,14 @@ export async function signUpWithEmail({
   }
 }
 
-export function signInWithOAuth(provider: SupportedOAuthProvider) {
-  return beginOAuthSignIn(provider);
+export function signInWithOAuth({
+  next,
+  provider
+}: {
+  next?: string;
+  provider: SupportedOAuthProvider;
+}) {
+  return beginOAuthSignIn(provider, next);
 }
 
 export function sendPasswordReset(email: string) {
@@ -105,9 +114,18 @@ export function updateAccountPassword(password: string) {
   return changePassword(password);
 }
 
-export async function resendEmailVerification(email: string) {
+export async function resendEmailVerification(
+  input: string | { email: string; next?: string }
+) {
+  const email = typeof input === "string" ? input : input.email;
+  const next = typeof input === "string" ? undefined : input.next;
   try {
-    await resendVerificationEmail(normalizeEmail(email));
+    const normalizedEmail = normalizeEmail(email);
+    if (next) {
+      await resendVerificationEmail(normalizedEmail, next);
+    } else {
+      await resendVerificationEmail(normalizedEmail);
+    }
     return { status: "sent" } as const;
   } catch (error) {
     if (

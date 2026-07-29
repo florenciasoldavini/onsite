@@ -28,6 +28,7 @@ import {
   useProject,
   useSoftDeleteProject
 } from "@/features/projects/hooks/use-projects";
+import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import type { Project } from "@/features/projects/types/project.types";
 import {
   AlertIcon,
@@ -40,7 +41,8 @@ import {
   PencilIcon,
   PhoneIcon,
   RefreshIcon,
-  TrashIcon
+  TrashIcon,
+  UserIcon
 } from "@/shared/ui/icons";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
@@ -73,22 +75,29 @@ const projectActions = [
   },
   {
     accent: false,
-    icon: AlertIcon,
+    icon: UserIcon,
     index: "03",
+    label: "TEAM",
+    target: "team"
+  },
+  {
+    accent: false,
+    icon: AlertIcon,
+    index: "04",
     label: "INCIDENT_LOG",
     target: null
   },
   {
     accent: false,
     icon: ListChecksIcon,
-    index: "04",
+    index: "05",
     label: "TO_DO_LIST",
     target: null
   },
   {
     accent: true,
     icon: CirclePlusIcon,
-    index: "05",
+    index: "06",
     label: "DAILY_REPORT",
     target: null
   }
@@ -102,6 +111,7 @@ export default function ProjectDetailScreen() {
     ? params.projectId[0]
     : params.projectId;
   const projectQuery = useProject(projectId);
+  const accessQuery = useProjectAccess(projectId);
   const clientQuery = useClient(projectQuery.data?.client_id ?? undefined);
 
   if (projectQuery.isError) {
@@ -189,10 +199,12 @@ export default function ProjectDetailScreen() {
                 expanded={isExpanded}
                 key={action.index}
                 onPress={
-                  action.target === "photos"
+                  action.target &&
+                  (action.target !== "team" ||
+                    accessQuery.can("project.members.read"))
                     ? () =>
                         router.push(
-                          `/projects/${projectId}/photos` as never
+                          `/projects/${projectId}/${action.target}` as never
                         )
                     : undefined
                 }
@@ -255,9 +267,7 @@ function ProjectClientCard({
           <AppText tone="accent" variant="eyebrow">
             CLIENT
           </AppText>
-          <AppHeading variant="card">
-            {getClientDisplayName(client)}
-          </AppHeading>
+          <AppHeading variant="card">{getClientDisplayName(client)}</AppHeading>
           <View
             style={{
               flexDirection: "row",
@@ -351,13 +361,16 @@ function ProjectActionsMenu({
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const triggerRef = useRef<View>(null);
   const deleteMutation = useSoftDeleteProject();
+  const accessQuery = useProjectAccess(projectId);
+  const canEdit = accessQuery.can("project.update");
+  const canDelete = accessQuery.can("project.delete");
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const deleteConfirmation = useDestructiveConfirmation();
   const [triggerLayout, setTriggerLayout] = useState<LayoutRectangle | null>(
     null
   );
   const menuWidth = 184;
-  const menuHeight = 100;
+  const menuHeight = (Number(canEdit) + Number(canDelete)) * 50;
   const menuLeft = clamp(
     (triggerLayout?.x ?? windowWidth - menuWidth - atomSpacing[4]) +
       (triggerLayout?.width ?? 0) -
@@ -407,6 +420,10 @@ function ProjectActionsMenu({
     }
   };
 
+  if (!canEdit && !canDelete) {
+    return null;
+  }
+
   return (
     <>
       <View collapsable={false} ref={triggerRef}>
@@ -441,23 +458,27 @@ function ProjectActionsMenu({
               { left: menuLeft, top: menuTop, width: menuWidth }
             ]}
           >
-            <ActionMenuItem
-              icon={PencilIcon}
-              label="Edit"
-              onPress={() => {
-                setIsMenuOpen(false);
-                router.push(`/projects/${projectId}/edit` as never);
-              }}
-            />
-            <ActionMenuItem
-              danger
-              icon={TrashIcon}
-              label="Delete"
-              onPress={() => {
-                setIsMenuOpen(false);
-                deleteConfirmation.open();
-              }}
-            />
+            {canEdit ? (
+              <ActionMenuItem
+                icon={PencilIcon}
+                label="Edit"
+                onPress={() => {
+                  setIsMenuOpen(false);
+                  router.push(`/projects/${projectId}/edit` as never);
+                }}
+              />
+            ) : null}
+            {canDelete ? (
+              <ActionMenuItem
+                danger
+                icon={TrashIcon}
+                label="Delete"
+                onPress={() => {
+                  setIsMenuOpen(false);
+                  deleteConfirmation.open();
+                }}
+              />
+            ) : null}
           </View>
         </View>
       </Modal>

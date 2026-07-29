@@ -1,6 +1,7 @@
 import { useUploadProjectPhotos } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotoUploadScreen from "@/features/photos/screens/project-photo-upload-screen";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
@@ -36,6 +37,10 @@ jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn()
 }));
 
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
+}));
+
 jest.mock("@/shared/ui/components/toast", () => ({
   useAppToast: jest.fn()
 }));
@@ -52,6 +57,11 @@ jest.mock("@/features/photos/components/project-photo-draft-card", () => {
 
 describe("ProjectPhotoUploadScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isError: false,
+      isLoading: false
+    } as never);
     jest
       .mocked(Crypto.randomUUID)
       .mockReturnValue("11111111-1111-4111-8111-111111111111");

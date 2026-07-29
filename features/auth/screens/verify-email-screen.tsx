@@ -14,6 +14,7 @@ import {
 } from "@/features/auth/components/auth-shell";
 import { useEmailVerificationResend } from "@/features/auth/hooks/use-auth-mutations";
 import { emailSchema } from "@/features/auth/schemas/field.schemas";
+import { getSafePostAuthRedirectPath } from "@/features/auth/utils/auth-callback";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
@@ -31,12 +32,19 @@ function getEmailParam(email: string | string[] | undefined) {
 
 export default function VerifyEmailScreen() {
   const verificationResend = useEmailVerificationResend();
-  const { email: emailParam, notice: noticeParam } = useLocalSearchParams<{
+  const {
+    email: emailParam,
+    next: nextParam,
+    notice: noticeParam
+  } = useLocalSearchParams<{
     email?: string | string[];
+    next?: string | string[];
     notice?: string | string[];
   }>();
   const email = getEmailParam(emailParam).trim().toLowerCase();
   const notice = getEmailParam(noticeParam);
+  const next = getSafePostAuthRedirectPath(nextParam);
+  const hasNext = next !== "/";
   const isRateLimited = notice === "rate-limited";
   const isInitialEmailSent = notice === "sent";
   const [cooldownSeconds, setCooldownSeconds] = useState(
@@ -77,7 +85,10 @@ export default function VerifyEmailScreen() {
     setIsResending(true);
 
     try {
-      const result = await verificationResend.mutateAsync(email);
+      const result = await verificationResend.mutateAsync({
+        email,
+        next: hasNext ? next : undefined
+      });
 
       setSuccessMessage(
         result.status === "sent"
@@ -162,7 +173,15 @@ export default function VerifyEmailScreen() {
           <AppText style={{ textAlign: "center" }} tone="muted">
             Already verified it?
           </AppText>
-          <AppLink href="/sign-in">Sign In</AppLink>
+          <AppLink
+            href={
+              hasNext
+                ? (`/sign-in?next=${encodeURIComponent(next)}` as never)
+                : "/sign-in"
+            }
+          >
+            Sign In
+          </AppLink>
         </View>
       </View>
     </AuthShell>

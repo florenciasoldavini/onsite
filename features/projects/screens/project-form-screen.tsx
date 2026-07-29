@@ -11,6 +11,7 @@ import {
   useProject,
   useUpdateProject
 } from "@/features/projects/hooks/use-projects";
+import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import {
   projectFormSchema,
   toCreateProjectInput,
@@ -70,19 +71,20 @@ export function ProjectFormScreen({
   const { isCompact, isExpanded } = useLayoutMode();
   const [formError, setFormError] = useState<string | null>(null);
   const projectQuery = useProject(mode === "edit" ? projectId : undefined);
+  const accessQuery = useProjectAccess(mode === "edit" ? projectId : undefined);
+  const canEdit = mode === "create" || accessQuery.can("project.update");
+  const canChangeClient =
+    mode === "create" || accessQuery.can("project.change_client");
+  const canWriteCover =
+    mode === "create" || accessQuery.can("project.cover.write");
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject(projectId ?? "");
-  const {
-    control,
-    handleSubmit,
-    reset,
-    setValue,
-    trigger
-  } = useForm<ProjectFormValues>({
-    defaultValues,
-    mode: "onChange",
-    resolver: zodResolver(projectFormSchema)
-  });
+  const { control, handleSubmit, reset, setValue, trigger } =
+    useForm<ProjectFormValues>({
+      defaultValues,
+      mode: "onChange",
+      resolver: zodResolver(projectFormSchema)
+    });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
   const clearFormError = useCallback(() => setFormError(null), []);
 
@@ -147,14 +149,14 @@ export function ProjectFormScreen({
     }
   });
 
-  if (mode === "edit" && projectQuery.isLoading) {
+  if (mode === "edit" && (projectQuery.isLoading || accessQuery.isLoading)) {
     return <ProjectFormLoading />;
   }
 
-  if (mode === "edit" && projectQuery.isError) {
+  if (mode === "edit" && (projectQuery.isError || accessQuery.isError)) {
     return (
       <ProjectFormLoadError
-        error={projectQuery.error}
+        error={(projectQuery.error ?? accessQuery.error)!}
         onBack={() => router.replace("/projects" as never)}
         onRetry={() => void projectQuery.refetch()}
       />
@@ -165,6 +167,14 @@ export function ProjectFormScreen({
     return (
       <ProjectFormNotFound
         onBack={() => router.replace("/projects" as never)}
+      />
+    );
+  }
+
+  if (mode === "edit" && !canEdit) {
+    return (
+      <ProjectFormNotFound
+        onBack={() => router.replace(`/projects/${projectId}` as never)}
       />
     );
   }
@@ -180,12 +190,14 @@ export function ProjectFormScreen({
         >
           <View style={styles.formContent}>
             <ProjectCoverSection
+              canWrite={canWriteCover}
               control={control}
               currentUrl={projectQuery.data?.cover_image_url ?? null}
               onInteraction={clearFormError}
               setValue={setValue}
             />
             <ProjectIdentitySection
+              canChangeClient={canChangeClient}
               control={control}
               onInteraction={clearFormError}
               ownerId={projectQuery.data?.owner_id}
@@ -255,9 +267,7 @@ function ProjectFormHeader({
         ]}
       />
       <AppHeading variant="hero">
-        {mode === "create"
-          ? "Create a project."
-          : "Update project details."}
+        {mode === "create" ? "Create a project." : "Update project details."}
       </AppHeading>
       <AppText tone="muted">
         Projects anchor site tasks, uploads, location, and future client-facing

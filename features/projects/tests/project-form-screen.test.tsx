@@ -4,6 +4,7 @@ import {
   useUpdateProject
 } from "@/features/projects/hooks/use-projects";
 import { ProjectFormScreen } from "@/features/projects/screens/project-form-screen";
+import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import type { ProjectSaveOutcome } from "@/features/projects/types/project.types";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { useAppToast } from "@/shared/ui/components/toast";
@@ -26,6 +27,10 @@ jest.mock("@/features/projects/hooks/use-projects", () => ({
   useCreateProject: jest.fn(),
   useProject: jest.fn(),
   useUpdateProject: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectAccess: jest.fn()
 }));
 
 jest.mock("@/shared/hooks/use-layout-mode", () => ({
@@ -102,6 +107,18 @@ const outcome: ProjectSaveOutcome = {
 
 describe("ProjectFormScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectAccess).mockReturnValue({
+      can: () => true,
+      data: {
+        permissions: [
+          "project.change_client",
+          "project.cover.write",
+          "project.update"
+        ]
+      },
+      isError: false,
+      isLoading: false
+    } as never);
     jest.mocked(useLayoutMode).mockReturnValue({
       height: 844,
       isCompact: true,

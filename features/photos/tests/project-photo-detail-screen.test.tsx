@@ -5,6 +5,7 @@ import {
 } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotoDetailScreen from "@/features/photos/screens/project-photo-detail-screen";
 import type { ProjectPhoto } from "@/features/photos/types/photo";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
@@ -27,6 +28,10 @@ jest.mock("@/features/photos/hooks/use-project-photos", () => ({
   useProjectPhoto: jest.fn(),
   useSoftDeleteProjectPhoto: jest.fn(),
   useUpdateProjectPhoto: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
 }));
 
 jest.mock("@/shared/ui/components/toast", () => ({
@@ -60,6 +65,10 @@ const photo: ProjectPhoto = {
 
 describe("ProjectPhotoDetailScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isLoading: false
+    } as never);
     jest.mocked(useProjectPhoto).mockReturnValue({
       data: photo,
       error: null,

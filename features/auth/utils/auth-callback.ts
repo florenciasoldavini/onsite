@@ -44,12 +44,16 @@ export function getAuthCallbackIntent(
   return { kind: "sign-in" };
 }
 
-function getSafePostAuthRedirectPath(nextPath: string | null) {
-  if (!nextPath || !nextPath.startsWith("/") || nextPath.startsWith("//")) {
+export function getSafePostAuthRedirectPath(
+  nextPath: string | string[] | null | undefined
+) {
+  const candidate = Array.isArray(nextPath) ? nextPath[0] : nextPath;
+
+  if (!candidate || !candidate.startsWith("/") || candidate.startsWith("//")) {
     return "/";
   }
 
-  return nextPath;
+  return candidate;
 }
 
 export function getPostAuthRedirectPath(

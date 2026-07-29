@@ -7,6 +7,7 @@ import {
   useClientProjectCount,
   useSoftDeleteClient
 } from "@/features/clients/hooks/use-clients";
+import { useAuth } from "@/features/auth/hooks/use-auth";
 import { ProjectCard } from "@/features/projects/components/project-card";
 import { useProjects } from "@/features/projects/hooks/use-projects";
 import { AppButton } from "@/shared/ui/components/button";
@@ -101,6 +102,7 @@ function ClientDetailContent({
   client: NonNullable<ReturnType<typeof useClient>["data"]>;
 }) {
   const router = useRouter();
+  const { user } = useAuth();
   const { isCompact, isExpanded } = useLayoutMode();
   const toast = useAppToast();
   const projectsQuery = useProjects({
@@ -115,6 +117,8 @@ function ClientDetailContent({
     [projectsQuery.data]
   );
   const displayName = getClientDisplayName(client);
+  const canManageClient =
+    user?.role === "admin" || user?.id === client.owner_id;
 
   const deleteClient = async () => {
     deleteConfirmation.clearError();
@@ -159,36 +163,38 @@ function ClientDetailContent({
               isCompact ? detailStyles.identityLayoutCompact : null
             ]}
           >
-            <View
-              style={[
-                detailStyles.identityContent,
-                isCompact ? detailStyles.identityContentCompact : null
-              ]}
-            >
+            {canManageClient ? (
               <View
                 style={[
-                  detailStyles.avatar,
-                  isCompact ? detailStyles.avatarCompact : null
+                  detailStyles.identityContent,
+                  isCompact ? detailStyles.identityContentCompact : null
                 ]}
               >
-                <AppText
-                  style={isCompact ? detailStyles.avatarTextCompact : null}
-                  tone="accent"
-                  variant="label"
+                <View
+                  style={[
+                    detailStyles.avatar,
+                    isCompact ? detailStyles.avatarCompact : null
+                  ]}
                 >
-                  {getClientInitials(client)}
-                </AppText>
+                  <AppText
+                    style={isCompact ? detailStyles.avatarTextCompact : null}
+                    tone="accent"
+                    variant="label"
+                  >
+                    {getClientInitials(client)}
+                  </AppText>
+                </View>
+                <View style={detailStyles.identityCopy}>
+                  <AppText tone="accent" variant="eyebrow">
+                    CLIENT PROFILE
+                  </AppText>
+                  <AppHeading variant="hero">{displayName}</AppHeading>
+                  <AppText tone="muted">
+                    Contact record for your project catalog
+                  </AppText>
+                </View>
               </View>
-              <View style={detailStyles.identityCopy}>
-                <AppText tone="accent" variant="eyebrow">
-                  CLIENT PROFILE
-                </AppText>
-                <AppHeading variant="hero">{displayName}</AppHeading>
-                <AppText tone="muted">
-                  Contact record for your project catalog
-                </AppText>
-              </View>
-            </View>
+            ) : null}
 
             <View
               style={[
@@ -266,8 +272,7 @@ function ClientDetailContent({
                     Projects using this client contact
                   </AppText>
                 </View>
-                {!projectCountQuery.isLoading &&
-                !projectCountQuery.isError ? (
+                {!projectCountQuery.isLoading && !projectCountQuery.isError ? (
                   <View style={detailStyles.countBadge}>
                     <AppText tone="accent" variant="label">
                       {projectCountQuery.data ?? 0}
@@ -294,15 +299,10 @@ function ClientDetailContent({
               ) : projects.length === 0 ? (
                 <View style={detailStyles.projectsEmpty}>
                   <View style={detailStyles.projectsEmptyIcon}>
-                    <ProjectsIcon
-                      color={atomPalette.textMuted}
-                      size="lg"
-                    />
+                    <ProjectsIcon color={atomPalette.textMuted} size="lg" />
                   </View>
                   <View style={{ gap: atomSpacing[1] }}>
-                    <AppHeading variant="card">
-                      No linked projects
-                    </AppHeading>
+                    <AppHeading variant="card">No linked projects</AppHeading>
                     <AppText
                       style={detailStyles.projectsEmptyCopy}
                       tone="muted"

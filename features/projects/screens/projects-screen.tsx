@@ -44,6 +44,7 @@ import type {
 import {
   FilterIcon,
   FolderPlusIcon,
+  MailIcon,
   RefreshIcon,
   SortIcon
 } from "@/shared/ui/icons";
@@ -187,17 +188,29 @@ export default function ProjectsScreen() {
     <View style={styles.listHeader}>
       <NavScreenHeader
         action={
-          !isCompact ? (
+          <View style={{ flexDirection: "row", gap: atomSpacing[2] }}>
             <AppButton
+              accessibilityLabel="Project invitations"
+              color="neutral"
               fullWidth={false}
-              icon={FolderPlusIcon}
-              iconAfter={false}
-              onPress={() => router.push("/projects/new" as never)}
+              icon={MailIcon}
+              layout="icon"
+              onPress={() => router.push("/invitations" as never)}
               size="sm"
-            >
-              New project
-            </AppButton>
-          ) : null
+              variant="bordered"
+            />
+            {!isCompact ? (
+              <AppButton
+                fullWidth={false}
+                icon={FolderPlusIcon}
+                iconAfter={false}
+                onPress={() => router.push("/projects/new" as never)}
+                size="sm"
+              >
+                New project
+              </AppButton>
+            ) : null}
+          </View>
         }
         title="Projects"
       />

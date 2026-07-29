@@ -27,8 +27,9 @@ import {
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { useRouter } from "expo-router";
-import { useState } from "react";
+import { getSafePostAuthRedirectPath } from "@/features/auth/utils/auth-callback";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 
@@ -37,7 +38,10 @@ const appleLogo = require("@/assets/images/auth/apple-logo.png");
 
 export default function SignInScreen() {
   const router = useRouter();
-  const { authError } = useAuth();
+  const params = useLocalSearchParams<{ next?: string | string[] }>();
+  const next = getSafePostAuthRedirectPath(params.next);
+  const hasNext = next !== "/";
+  const { authError, session } = useAuth();
   const emailSignIn = useEmailSignIn();
   const oauthSignIn = useOAuthSignIn();
   const [formError, setFormError] = useState<string | null>(null);
@@ -61,6 +65,12 @@ export default function SignInScreen() {
   } = form;
   const isBusy = loadingAction !== null;
 
+  useEffect(() => {
+    if (hasNext && session) {
+      router.replace(next as never);
+    }
+  }, [hasNext, next, router, session]);
+
   const revealEmailSignInValidation = () => {
     void trigger();
   };
@@ -74,7 +84,9 @@ export default function SignInScreen() {
 
       if (result.status === "email-unverified") {
         router.replace(
-          `/verify-email?email=${encodeURIComponent(result.email)}`
+          `/verify-email?email=${encodeURIComponent(result.email)}${
+            hasNext ? `&next=${encodeURIComponent(next)}` : ""
+          }`
         );
       }
     } catch (error) {
@@ -93,7 +105,10 @@ export default function SignInScreen() {
     try {
       setLoadingAction(provider);
       setFormError(null);
-      await oauthSignIn.mutateAsync(provider);
+      await oauthSignIn.mutateAsync({
+        next: hasNext ? next : undefined,
+        provider
+      });
     } catch (error) {
       setFormError(
         getUserFacingErrorMessage(
@@ -239,7 +254,11 @@ export default function SignInScreen() {
 
         <AuthFooterLink
           actionLabel="Create an Account"
-          href="/sign-up"
+          href={
+            hasNext
+              ? (`/sign-up?next=${encodeURIComponent(next)}` as never)
+              : "/sign-up"
+          }
           prompt="New to the platform?"
         />
       </View>

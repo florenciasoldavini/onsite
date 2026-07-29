@@ -13,6 +13,7 @@ import {
   toProjectPhotoUpdateInput
 } from "@/features/photos/schemas/photo.schema";
 import type { ProjectPhotoKind } from "@/features/photos/types/photo";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { AppBadge } from "@/shared/ui/components/badge";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppButton } from "@/shared/ui/components/button";
@@ -29,15 +30,8 @@ import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { AppText } from "@/shared/ui/components/text";
 import { TextAreaField } from "@/shared/ui/components/textarea";
 import { useAppToast } from "@/shared/ui/components/toast";
-import {
-  atomPalette,
-  atomSpacing
-} from "@/shared/ui/components/theme";
-import {
-  AlertIcon,
-  RefreshIcon,
-  TrashIcon
-} from "@/shared/ui/icons";
+import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
+import { AlertIcon, RefreshIcon, TrashIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
@@ -64,6 +58,11 @@ export default function ProjectPhotoDetailScreen() {
   const photoId = firstParam(params.photoId) ?? "";
   const projectId = firstParam(params.projectId) ?? "";
   const photoQuery = useProjectPhoto(photoId);
+  const writePermission = useProjectPermission(
+    projectId,
+    "project.photos.write"
+  );
+  const canWrite = writePermission.allowed;
   const updateMutation = useUpdateProjectPhoto(photoId);
   const deleteMutation = useSoftDeleteProjectPhoto();
   const deleteConfirmation = useDestructiveConfirmation();
@@ -86,7 +85,7 @@ export default function ProjectPhotoDetailScreen() {
     }
   }, [form, photoQuery.data]);
 
-  if (photoQuery.isLoading) {
+  if (photoQuery.isLoading || writePermission.isLoading) {
     return (
       <Screen>
         <View style={{ gap: atomSpacing[5] }}>
@@ -248,7 +247,7 @@ export default function ProjectPhotoDetailScreen() {
               name="kind"
               render={({ field }) => (
                 <SelectField<ProjectPhotoKind>
-                  disabled={updateMutation.isPending}
+                  disabled={!canWrite || updateMutation.isPending}
                   errorText={form.formState.errors.kind?.message}
                   label="Category"
                   onChange={field.onChange}
@@ -262,7 +261,7 @@ export default function ProjectPhotoDetailScreen() {
               name="caption"
               render={({ field }) => (
                 <TextAreaField
-                  editable={!updateMutation.isPending}
+                  editable={canWrite && !updateMutation.isPending}
                   errorText={form.formState.errors.caption?.message}
                   helperText="Add context that will help the team understand the photo."
                   label="Caption (optional)"
@@ -278,7 +277,7 @@ export default function ProjectPhotoDetailScreen() {
               name="is_marketing"
               render={({ field }) => (
                 <PhotoMarketingField
-                  disabled={updateMutation.isPending}
+                  disabled={!canWrite || updateMutation.isPending}
                   onChange={field.onChange}
                   value={field.value}
                 />
@@ -292,43 +291,47 @@ export default function ProjectPhotoDetailScreen() {
                 )}
               </AppText>
             ) : null}
-            <View
-              style={{
-                flexDirection: "row",
-                flexWrap: "wrap",
-                gap: atomSpacing[3]
-              }}
-            >
-              <AppButton
-                fullWidth={false}
-                isDisabled={!form.formState.isDirty}
-                loading={updateMutation.isPending}
-                onPress={() => void save()}
+            {canWrite ? (
+              <View
+                style={{
+                  flexDirection: "row",
+                  flexWrap: "wrap",
+                  gap: atomSpacing[3]
+                }}
               >
-                Save changes
-              </AppButton>
-              <AppButton
-                color="danger"
-                fullWidth={false}
-                icon={TrashIcon}
-                onPress={deleteConfirmation.open}
-                variant="bordered"
-              >
-                Delete photo
-              </AppButton>
-            </View>
+                <AppButton
+                  fullWidth={false}
+                  isDisabled={!form.formState.isDirty}
+                  loading={updateMutation.isPending}
+                  onPress={() => void save()}
+                >
+                  Save changes
+                </AppButton>
+                <AppButton
+                  color="danger"
+                  fullWidth={false}
+                  icon={TrashIcon}
+                  onPress={deleteConfirmation.open}
+                  variant="bordered"
+                >
+                  Delete photo
+                </AppButton>
+              </View>
+            ) : null}
           </View>
         </AppCard>
       </View>
 
-      <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting photo"
-        controller={deleteConfirmation}
-        description="This photo will be removed from the project gallery. This action cannot currently be undone in the app."
-        isPending={deleteMutation.isPending}
-        onConfirm={deletePhoto}
-        title="Delete photo?"
-      />
+      {canWrite ? (
+        <DestructiveConfirmationDialog
+          accessibilityLabel="Cancel deleting photo"
+          controller={deleteConfirmation}
+          description="This photo will be removed from the project gallery. This action cannot currently be undone in the app."
+          isPending={deleteMutation.isPending}
+          onConfirm={deletePhoto}
+          title="Delete photo?"
+        />
+      ) : null}
     </Screen>
   );
 }

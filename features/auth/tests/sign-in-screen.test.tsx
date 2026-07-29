@@ -126,7 +126,10 @@ describe("SignInScreen", () => {
     await user.press(view.getByLabelText("Continue with Google"));
 
     await waitFor(() => {
-      expect(mockOAuthSignIn).toHaveBeenCalledWith("google");
+      expect(mockOAuthSignIn).toHaveBeenCalledWith({
+        next: undefined,
+        provider: "google"
+      });
     });
   });
 });

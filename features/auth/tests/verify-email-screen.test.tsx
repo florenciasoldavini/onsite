@@ -3,7 +3,7 @@ import VerifyEmailScreen from "@/features/auth/screens/verify-email-screen";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { userEvent, waitFor } from "@testing-library/react-native";
 
-let mockParams: { email?: string; notice?: string } = {};
+let mockParams: { email?: string; next?: string; notice?: string } = {};
 const mockResend = jest.fn();
 
 jest.mock("expo-router", () => {
@@ -38,7 +38,10 @@ describe("VerifyEmailScreen", () => {
     );
 
     await waitFor(() => {
-      expect(mockResend).toHaveBeenCalledWith("builder@example.com");
+      expect(mockResend).toHaveBeenCalledWith({
+        email: "builder@example.com",
+        next: undefined
+      });
     });
     expect(
       view.getByText(

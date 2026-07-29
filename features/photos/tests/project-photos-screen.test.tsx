@@ -2,6 +2,7 @@ import { useProjectPhotos } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotosScreen from "@/features/photos/screens/project-photos-screen";
 import type { ProjectPhoto } from "@/features/photos/types/photo";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import type { Project } from "@/features/projects/types/project.types";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { userEvent } from "@testing-library/react-native";
@@ -22,6 +23,10 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
 }));
 
 jest.mock("@/features/photos/hooks/use-project-photos", () => ({
@@ -128,6 +133,10 @@ function mockPhotosQuery(
 
 describe("ProjectPhotosScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isLoading: false
+    } as never);
     mockProjectQuery();
     mockPhotosQuery();
   });
