@@ -3,7 +3,7 @@
 Purpose: architecture snapshot, product decisions, and implementation guardrails for contributors and agents
 Source of truth for: current auth architecture, platform decisions, naming rules, and high-level project constraints
 Update when: auth flow, platform ownership, schema strategy, CI expectations, or product naming decisions change
-Last reviewed: 2026-07-21
+Last reviewed: 2026-07-29
 
 ## Project Snapshot
 
@@ -48,6 +48,12 @@ Last reviewed: 2026-07-21
 - Native builds support portrait and landscape rather than locking orientation. Tablet landscape and iPad multitasking layouts are required product surfaces, and installed web apps must not request a fixed orientation.
 - Compact-height landscape layouts must keep primary content and actions reachable. Screens that can overflow vertically must remain scrollable before, during, and after keyboard interaction.
 - The approved responsive-to-adaptive UI direction, including compact, medium, and expanded layout classes, lives in [docs/adaptive-layout-strategy.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/adaptive-layout-strategy.md:1).
+
+## Internationalization
+
+- The approved Spanish and English localization contract lives in [docs/internationalization.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/internationalization.md:1).
+- The contract is planned under GitHub issue #58 and must not be described as active until the runtime integration and translated application surfaces land.
+- Persisted catalog values remain language-neutral; localized labels, descriptions, validation, feedback, formatting, and accessibility copy belong in the presentation layer.
 
 ## Auth Architecture
 

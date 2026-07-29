@@ -1,0 +1,4 @@
+interface:
+  display_name: "Onzait Localize App"
+  short_description: "Implement and audit Onzait localization safely"
+  default_prompt: "Use $onzait-localize-app to implement or audit localization changes across Onzait."

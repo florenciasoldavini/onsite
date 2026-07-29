@@ -3,7 +3,7 @@
 Purpose: lightweight rules for keeping project documentation current
 Source of truth for: documentation ownership, update triggers, and doc review workflow
 Update when: doc ownership changes, PR process changes, or new documentation categories are introduced
-Last reviewed: 2026-07-16
+Last reviewed: 2026-07-29
 
 ## Core rule
 
@@ -46,6 +46,10 @@ When a new project rule is added, scan existing code, docs, env config, and test
   - Automated test layers and ownership
   - Test-file naming and design rules
   - Change-based coverage expectations and testing gaps
+- `docs/internationalization.md`
+  - Supported application languages and locale-selection policy
+  - i18next architecture, translation ownership, authoring, and verification rules
+  - Current versus deferred localization scope
 
 ## Update triggers
 
@@ -96,6 +100,14 @@ Update `docs/testing-strategy.md` when:
 - a test layer is introduced, removed, or materially redefined
 - CI test enforcement or coverage thresholds change
 - automated or manual platform-verification expectations change
+
+Update `docs/internationalization.md` when:
+
+- supported languages or fallback behavior changes
+- locale detection or preference persistence changes
+- resource loading, namespace ownership, or translation tooling changes
+- formatting, authoring, security, or localization verification rules change
+- a planned localization capability becomes active or its deferred scope changes
 
 Update `docs/CONTRIBUTING.md` when:
 
