@@ -1,4 +1,4 @@
--- Central project collaboration roles, capabilities, invitations, and RLS.
+-- Centralized project collaboration roles, capabilities, invitations, and RLS.
 
 create schema if not exists private;
 revoke all on schema private from public, anon;
@@ -470,7 +470,7 @@ drop policy if exists "clients_select_owner_or_admin" on public.clients;
 create policy "clients_select_owner_admin_or_project_participant"
 on public.clients for select to authenticated
 using (
-  deleted_at is null
+  (select auth.uid()) is not null
   and (
     owner_id = (select auth.uid())
     or (select public.is_current_user_admin())
