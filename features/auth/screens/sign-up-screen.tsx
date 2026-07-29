@@ -27,16 +27,21 @@ import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
 
-export default function SignUpScreen() {
+export default function SignUpScreen({
+  nextPath = "/"
+}: {
+  nextPath?: string;
+}) {
   const router = useRouter();
-  const { authError } = useAuth();
+  const hasNext = nextPath !== "/";
+  const { authError, session } = useAuth();
   const emailSignUp = useEmailSignUp();
   const oauthSignIn = useOAuthSignIn();
   const [formError, setFormError] = useState<string | null>(null);
@@ -60,6 +65,12 @@ export default function SignUpScreen() {
   } = form;
   const isBusy = loadingAction !== null;
 
+  useEffect(() => {
+    if (hasNext && session) {
+      router.replace(nextPath as never);
+    }
+  }, [hasNext, nextPath, router, session]);
+
   const revealEmailSignUpValidation = () => {
     void trigger();
   };
@@ -69,15 +80,23 @@ export default function SignUpScreen() {
     setFormError(null);
 
     try {
-      const result = await emailSignUp.mutateAsync({ email, password });
+      const result = await emailSignUp.mutateAsync({
+        email,
+        next: hasNext ? nextPath : undefined,
+        password
+      });
 
       if (result.status === "verification-rate-limited") {
         router.replace(
-          `/verify-email?email=${encodeURIComponent(result.email)}&notice=rate-limited`
+          `/verify-email?email=${encodeURIComponent(result.email)}&notice=rate-limited${
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
+          }`
         );
       } else if (result.status === "verification-sent") {
         router.replace(
-          `/verify-email?email=${encodeURIComponent(result.email)}&notice=sent`
+          `/verify-email?email=${encodeURIComponent(result.email)}&notice=sent${
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
+          }`
         );
       }
     } catch (error) {
@@ -96,7 +115,10 @@ export default function SignUpScreen() {
     try {
       setLoadingAction(provider);
       setFormError(null);
-      await oauthSignIn.mutateAsync(provider);
+      await oauthSignIn.mutateAsync({
+        next: hasNext ? nextPath : undefined,
+        provider
+      });
     } catch (error) {
       setFormError(
         getUserFacingErrorMessage(
@@ -244,7 +266,11 @@ export default function SignUpScreen() {
 
         <AuthFooterLink
           actionLabel="Sign In"
-          href="/sign-in"
+          href={
+            hasNext
+              ? (`/sign-in?next=${encodeURIComponent(nextPath)}` as never)
+              : "/sign-in"
+          }
           prompt="Already have an account?"
         />
       </View>

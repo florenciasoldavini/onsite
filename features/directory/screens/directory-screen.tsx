@@ -9,7 +9,7 @@ import { SelectMenu } from "@/shared/ui/components/select-menu";
 import { SegmentedTabs } from "@/shared/ui/components/tabs";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { PlusIcon } from "@/shared/ui/icons";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { View } from "react-native";
 
 type DirectorySection = "clients" | "contractors" | "suppliers" | "workers";
@@ -56,13 +56,13 @@ const directorySectionOptions = directorySections.map(({ label, value }) => ({
   value
 }));
 
-export default function DirectoryScreen() {
+export default function DirectoryScreen({
+  requestedSection
+}: {
+  requestedSection?: string;
+}) {
   const router = useRouter();
   const { isCompact, isExpanded } = useLayoutMode();
-  const params = useLocalSearchParams<{ section?: string | string[] }>();
-  const requestedSection = Array.isArray(params.section)
-    ? params.section[0]
-    : params.section;
   const selectedConfig =
     directorySections.find(({ value }) => value === requestedSection) ??
     directorySections[0];

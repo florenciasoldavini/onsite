@@ -28,16 +28,21 @@ import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
 
-export default function SignInScreen() {
+export default function SignInScreen({
+  nextPath = "/"
+}: {
+  nextPath?: string;
+}) {
   const router = useRouter();
-  const { authError } = useAuth();
+  const hasNext = nextPath !== "/";
+  const { authError, session } = useAuth();
   const emailSignIn = useEmailSignIn();
   const oauthSignIn = useOAuthSignIn();
   const [formError, setFormError] = useState<string | null>(null);
@@ -61,6 +66,12 @@ export default function SignInScreen() {
   } = form;
   const isBusy = loadingAction !== null;
 
+  useEffect(() => {
+    if (hasNext && session) {
+      router.replace(nextPath as never);
+    }
+  }, [hasNext, nextPath, router, session]);
+
   const revealEmailSignInValidation = () => {
     void trigger();
   };
@@ -74,7 +85,9 @@ export default function SignInScreen() {
 
       if (result.status === "email-unverified") {
         router.replace(
-          `/verify-email?email=${encodeURIComponent(result.email)}`
+          `/verify-email?email=${encodeURIComponent(result.email)}${
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
+          }`
         );
       }
     } catch (error) {
@@ -93,7 +106,10 @@ export default function SignInScreen() {
     try {
       setLoadingAction(provider);
       setFormError(null);
-      await oauthSignIn.mutateAsync(provider);
+      await oauthSignIn.mutateAsync({
+        next: hasNext ? nextPath : undefined,
+        provider
+      });
     } catch (error) {
       setFormError(
         getUserFacingErrorMessage(
@@ -239,7 +255,11 @@ export default function SignInScreen() {
 
         <AuthFooterLink
           actionLabel="Create an Account"
-          href="/sign-up"
+          href={
+            hasNext
+              ? (`/sign-up?next=${encodeURIComponent(nextPath)}` as never)
+              : "/sign-up"
+          }
           prompt="New to the platform?"
         />
       </View>

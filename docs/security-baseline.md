@@ -3,7 +3,7 @@
 Purpose: practical security rules for upcoming MVP feature work
 Source of truth for: security expectations around auth, authorization, RLS, uploads, validation, secrets, and release review
 Update when: auth architecture, storage strategy, client data-access scope, trusted server boundaries, dependency automation, or MVP entity model changes
-Last reviewed: 2026-07-27
+Last reviewed: 2026-07-28
 
 ## Scope
 
@@ -72,12 +72,13 @@ Unless a feature documents a more specific participant model:
 
 ### Projects
 
-Current v1 direction:
+Current direction:
 
-- use an owner-based model
-- admins can see and manage all non-deleted projects
-- normal users can see and manage only projects where they are `owner_id`
-- participant-based collaboration is deferred until membership flows are built
+- project roles and capabilities are database catalogs
+- owners are derived from `projects.owner_id`; other access comes from active memberships
+- admins receive every project capability without a membership
+- RLS and database mutations call the central project capability engine
+- application UI consumes the safe access result through `can(permission)`
 
 Baseline rules:
 
@@ -103,7 +104,10 @@ Baseline rules:
 - the client must not be able to add itself to any arbitrary project
 - the client must not be able to promote itself to a stronger participant role
 
-If project invitations or membership management are added later, they should be reviewed as a separate high-risk flow.
+The implemented invitation and membership security contract lives in
+`docs/project-collaboration.md`. Tokens are hash-only at rest, acceptance
+requires a matching verified email, and role assignment is restricted to active
+assignable catalog rows.
 
 ## Upload and storage security
 
@@ -124,6 +128,7 @@ Baseline rules:
 - use an expected-current-reference check when replacing avatars or project files so concurrent uploads cannot silently overwrite each other
 - report cleanup failures without rolling back a database reference that already points to a valid new object
 - keep user avatars in a private bucket, store stable object paths in profile rows, and resolve short-lived signed URLs at display time
+- expire project cover and project photo signed URLs after five minutes
 - allow authenticated users to view avatars without granting cross-user object listing; keep avatar writes and deletes owner-scoped
 
 Recommended path structure:

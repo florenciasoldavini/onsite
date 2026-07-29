@@ -89,10 +89,6 @@ values
 on conflict (id) do update
 set deleted_at = null;
 
-update public.projects
-set deleted_at = current_timestamp
-where id = '10000000-0000-4000-8000-000000000013';
-
 set local role authenticated;
 select set_config(
   'request.jwt.claim.sub',
@@ -100,6 +96,10 @@ select set_config(
   true
 );
 select set_config('request.jwt.claim.role', 'authenticated', true);
+
+update public.projects
+set deleted_at = current_timestamp
+where id = '10000000-0000-4000-8000-000000000013';
 
 select lives_ok(
   $$

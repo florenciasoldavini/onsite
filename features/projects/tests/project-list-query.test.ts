@@ -1,7 +1,7 @@
 import { buildProjectListQueryPlan } from "@/features/projects/repositories/project-list-query";
 
 describe("project list query", () => {
-  it("adds active and owner filtering for normal users", () => {
+  it("relies on RLS for owner and shared-project filtering", () => {
     const plan = buildProjectListQueryPlan({
       filters: { status: "in_progress" },
       userId: "user-id",
@@ -13,11 +13,9 @@ describe("project list query", () => {
       operator: "is",
       value: null
     });
-    expect(plan.filters).toContainEqual({
-      column: "owner_id",
-      operator: "eq",
-      value: "user-id"
-    });
+    expect(plan.filters).not.toContainEqual(
+      expect.objectContaining({ column: "owner_id" })
+    );
   });
 
   it("filters linked projects by client", () => {

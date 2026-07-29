@@ -2,6 +2,7 @@ import { useProjectPhotos } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotosScreen from "@/features/photos/screens/project-photos-screen";
 import type { ProjectPhoto } from "@/features/photos/types/photo";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import type { Project } from "@/features/projects/types/project.types";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { userEvent } from "@testing-library/react-native";
@@ -11,9 +12,10 @@ const mockReplace = jest.fn();
 const mockProjectRefetch = jest.fn();
 const mockPhotosRefetch = jest.fn();
 const mockFetchNextPage = jest.fn();
+const mockProjectId = "10000000-0000-4000-8000-000000000001";
+const mockPhotoId = "20000000-0000-4000-8000-000000000001";
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({ projectId: "project-1" }),
   useRouter: () => ({
     push: mockPush,
     replace: mockReplace
@@ -22,6 +24,10 @@ jest.mock("expo-router", () => ({
 
 jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
 }));
 
 jest.mock("@/features/photos/hooks/use-project-photos", () => ({
@@ -60,7 +66,7 @@ const project: Project = {
   estimated_end_date: null,
   estimated_start_date: null,
   google_place_id: "place-1",
-  id: "project-1",
+  id: mockProjectId,
   latitude: -34.6,
   longitude: -58.4,
   name: "River House",
@@ -81,7 +87,7 @@ const photo: ProjectPhoto = {
   file_size_bytes: 1024,
   full_path: "owner-1/project-1/photo-1/full.jpg",
   height: 1200,
-  id: "photo-1",
+  id: mockPhotoId,
   is_marketing: false,
   kind: "progress",
   latitude: null,
@@ -90,7 +96,7 @@ const photo: ProjectPhoto = {
   longitude: null,
   mime_type: "image/jpeg",
   owner_id: "owner-1",
-  project_id: "project-1",
+  project_id: mockProjectId,
   thumbnail_path: "owner-1/project-1/photo-1/thumb.jpg",
   updated_at: null,
   uploaded_by: "owner-1",
@@ -128,6 +134,10 @@ function mockPhotosQuery(
 
 describe("ProjectPhotosScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isLoading: false
+    } as never);
     mockProjectQuery();
     mockPhotosQuery();
   });
@@ -139,9 +149,11 @@ describe("ProjectPhotosScreen", () => {
       error: new Error("provider details"),
       isError: true
     });
-    const view = await renderWithAppProviders(<ProjectPhotosScreen />);
+    const view = await renderWithAppProviders(
+      <ProjectPhotosScreen projectId={mockProjectId} />
+    );
 
-    expect(view.getByText("Photos unavailable")).toBeOnTheScreen();
+    expect(view.getByText("Project unavailable")).toBeOnTheScreen();
     await user.press(view.getByRole("button", { name: "Retry" }));
 
     expect(mockProjectRefetch).toHaveBeenCalledTimes(1);
@@ -150,7 +162,9 @@ describe("ProjectPhotosScreen", () => {
   it("routes back when the project no longer exists", async () => {
     const user = userEvent.setup();
     mockProjectQuery({ data: undefined });
-    const view = await renderWithAppProviders(<ProjectPhotosScreen />);
+    const view = await renderWithAppProviders(
+      <ProjectPhotosScreen projectId={mockProjectId} />
+    );
 
     expect(view.getByText("Project not found")).toBeOnTheScreen();
     await user.press(view.getByRole("button", { name: "Back to projects" }));
@@ -160,26 +174,28 @@ describe("ProjectPhotosScreen", () => {
 
   it("shows an actionable empty state and opens photo creation", async () => {
     const user = userEvent.setup();
-    const view = await renderWithAppProviders(<ProjectPhotosScreen />);
-
-    expect(view.getByText("No project photos yet")).toBeOnTheScreen();
-    await user.press(
-      view.getByRole("button", { name: "Add project photos" })
+    const view = await renderWithAppProviders(
+      <ProjectPhotosScreen projectId={mockProjectId} />
     );
 
+    expect(view.getByText("No project photos yet")).toBeOnTheScreen();
+    await user.press(view.getByRole("button", { name: "Add project photos" }));
+
     expect(mockPush).toHaveBeenCalledWith(
-      "/projects/project-1/photos/new"
+      `/projects/${mockProjectId}/photos/new`
     );
   });
 
   it("shows filtered-empty feedback after selecting marketing photos", async () => {
     const user = userEvent.setup();
-    const view = await renderWithAppProviders(<ProjectPhotosScreen />);
+    const view = await renderWithAppProviders(
+      <ProjectPhotosScreen projectId={mockProjectId} />
+    );
 
     await user.press(view.getByRole("button", { name: "Marketing" }));
 
     expect(view.getByText("No matching photos")).toBeOnTheScreen();
-    expect(useProjectPhotos).toHaveBeenLastCalledWith("project-1", {
+    expect(useProjectPhotos).toHaveBeenLastCalledWith(mockProjectId, {
       kind: "all",
       marketing: "marketing"
     });
@@ -193,12 +209,16 @@ describe("ProjectPhotosScreen", () => {
         pages: [{ items: [photo], nextOffset: null }]
       }
     });
-    const view = await renderWithAppProviders(<ProjectPhotosScreen />);
+    const view = await renderWithAppProviders(
+      <ProjectPhotosScreen projectId={mockProjectId} />
+    );
 
-    await user.press(view.getByRole("button", { name: "photo-photo-1" }));
+    await user.press(
+      view.getByRole("button", { name: `photo-${mockPhotoId}` })
+    );
 
     expect(mockPush).toHaveBeenCalledWith(
-      "/projects/project-1/photos/photo-1"
+      `/projects/${mockProjectId}/photos/${mockPhotoId}`
     );
   });
 });

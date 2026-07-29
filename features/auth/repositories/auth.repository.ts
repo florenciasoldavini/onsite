@@ -74,9 +74,11 @@ export async function signInWithEmailPassword({
 
 export async function signUpWithEmailPassword({
   email,
+  next,
   password
 }: {
   email: string;
+  next?: string;
   password: string;
 }) {
   return runAuthRequest(async () => {
@@ -84,7 +86,10 @@ export async function signUpWithEmailPassword({
       email,
       password,
       options: {
-        emailRedirectTo: getAuthRedirectUrl("callback")
+        emailRedirectTo: getAuthRedirectUrl(
+          "callback",
+          next ? { next } : undefined
+        )
       }
     });
 
@@ -96,16 +101,23 @@ export async function signUpWithEmailPassword({
   });
 }
 
-export function beginOAuthSignIn(provider: SupportedOAuthProvider) {
-  return runAuthRequest(() => startOAuthSignIn(provider));
+export function beginOAuthSignIn(
+  provider: SupportedOAuthProvider,
+  next?: string
+) {
+  return runAuthRequest(() => startOAuthSignIn(provider, next));
 }
 
 export function requestPasswordReset(email: string) {
   return runAuthRequest(() => sendPasswordResetEmail(email));
 }
 
-export function resendVerificationEmail(email: string) {
-  return runAuthRequest(() => resendSignUpConfirmationEmail(email));
+export function resendVerificationEmail(email: string, next?: string) {
+  return runAuthRequest(() =>
+    next
+      ? resendSignUpConfirmationEmail(email, next)
+      : resendSignUpConfirmationEmail(email)
+  );
 }
 
 export function changePassword(password: string) {

@@ -35,10 +35,12 @@ const quickClientDefaults: ClientFormValues = {
 };
 
 export function ClientPickerField({
+  disabled = false,
   onChange,
   ownerId,
   value
 }: {
+  disabled?: boolean;
   onChange: (clientId: string | null) => void;
   ownerId?: string;
   value: string | null;
@@ -58,6 +60,7 @@ export function ClientPickerField({
   return (
     <>
       <CatalogPickerField
+        disabled={disabled}
         entityName="client"
         entityNamePlural="clients"
         footer={

@@ -1,425 +1,61 @@
-import { getContractorDisplayName } from "@/features/contractors/schemas/contractor.schema";
-import { getTradeCategoryLabel } from "@/features/trade-categories/constants/trade-category-labels";
-import {
-  useSoftDeleteWorker,
-  useWorker
-} from "@/features/workers/hooks/use-workers";
-import {
-  getWorkerDisplayName,
-  getWorkerInitials
-} from "@/features/workers/schemas/worker.schema";
-import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
-import { AppButton } from "@/shared/ui/components/button";
-import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
-import { AppCard } from "@/shared/ui/components/card";
-import {
-  DestructiveConfirmationDialog,
-  useDestructiveConfirmation
-} from "@/shared/ui/components/destructive-confirmation-dialog";
-import { EmptyState } from "@/shared/ui/components/empty-state";
-import { AppHeading } from "@/shared/ui/components/heading";
+import { WorkerDetailContent } from "@/features/workers/components/worker-detail/worker-detail-content";
+import { useWorker } from "@/features/workers/hooks/use-workers";
+import { RouteStateBoundary } from "@/shared/ui/components/route-feedback";
 import { Screen } from "@/shared/ui/components/screen";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
-import { AppText } from "@/shared/ui/components/text";
-import { useAppToast } from "@/shared/ui/components/toast";
-import {
-  atomPalette,
-  atomRadii,
-  atomSpacing
-} from "@/shared/ui/components/theme";
-import {
-  HardHatIcon,
-  MailIcon,
-  PencilIcon,
-  PhoneIcon,
-  RefreshIcon,
-  TrashIcon,
-  UserIcon
-} from "@/shared/ui/icons";
-import type { AppIconComponent } from "@/shared/ui/icons";
+import { atomSpacing } from "@/shared/ui/components/theme";
+import { RefreshIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import { useState } from "react";
-import { Linking, Pressable, StyleSheet, View } from "react-native";
+import { useRouter } from "expo-router";
+import { View } from "react-native";
 
-export default function WorkerDetailScreen() {
+export default function WorkerDetailScreen({
+  workerId
+}: {
+  workerId?: string;
+}) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ workerId: string }>();
-  const workerId = Array.isArray(params.workerId)
-    ? params.workerId[0]
-    : params.workerId;
   const workerQuery = useWorker(workerId);
+  const backToDirectory = {
+    label: "Back to directory",
+    onPress: () => router.replace("/directory?section=workers" as never)
+  };
 
-  if (workerQuery.isLoading) {
-    return (
-      <Screen>
-        <View style={{ gap: atomSpacing[5] }}>
-          <SkeletonBlock height={48} width="55%" />
-          <SkeletonBlock height={320} />
-        </View>
-      </Screen>
-    );
-  }
-
-  if (workerQuery.isError) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
+  return (
+    <RouteStateBoundary
+      feedback={{
+        invalidParams: { action: backToDirectory, icon: UserIcon },
+        loadError: {
+          action: {
             icon: RefreshIcon,
             label: "Retry",
             onPress: () => void workerQuery.refetch()
-          }}
-          description={getUserFacingErrorMessage(
+          },
+          description: getUserFacingErrorMessage(
             workerQuery.error,
             "We couldn't load this worker. Try again."
-          )}
-          icon={UserIcon}
-          title="Worker unavailable"
-        />
-      </Screen>
-    );
-  }
-
-  if (!workerQuery.data) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
-            label: "Back to directory",
-            onPress: () => router.replace("/directory?section=workers" as never)
-          }}
-          description="This worker may have been removed or you may not have access."
-          icon={UserIcon}
-          title="Worker not found"
-        />
-      </Screen>
-    );
-  }
-
-  return <WorkerDetailContent worker={workerQuery.data} />;
-}
-
-function WorkerDetailContent({
-  worker
-}: {
-  worker: NonNullable<ReturnType<typeof useWorker>["data"]>;
-}) {
-  const router = useRouter();
-  const { isCompact, isExpanded } = useLayoutMode();
-  const toast = useAppToast();
-  const deleteMutation = useSoftDeleteWorker();
-  const deleteConfirmation = useDestructiveConfirmation();
-  const [contactError, setContactError] = useState<string | null>(null);
-  const displayName = getWorkerDisplayName(worker);
-
-  const deleteWorker = async () => {
-    deleteConfirmation.clearError();
-    try {
-      await deleteMutation.mutateAsync(worker.id);
-      deleteConfirmation.close();
-      toast.show({
-        description: `${displayName} was removed from your worker catalog.`,
-        title: "Worker deleted",
-        tone: "success"
-      });
-      router.replace("/directory?section=workers" as never);
-    } catch (error) {
-      deleteConfirmation.setError(
-        getUserFacingErrorMessage(
-          error,
-          "We couldn't delete this worker. Try again."
-        )
-      );
-    }
-  };
-
-  const openContactAction = async (url: string, fallbackMessage: string) => {
-    setContactError(null);
-    try {
-      await Linking.openURL(url);
-    } catch {
-      setContactError(fallbackMessage);
-    }
-  };
-
-  return (
-    <Screen>
-      <View style={styles.page}>
-        <Breadcrumb
-          items={[
-            {
-              label: "Workers",
-              onPress: () =>
-                router.replace("/directory?section=workers" as never)
-            },
-            { label: "Worker Detail" }
-          ]}
-        />
-
-        <AppCard padding={isCompact ? "md" : "lg"}>
-          <View
-            style={[
-              styles.identityLayout,
-              isCompact ? styles.identityLayoutCompact : null
-            ]}
-          >
-            <View style={styles.identityContent}>
-              <View style={styles.avatar}>
-                <AppText tone="accent" variant="label">
-                  {getWorkerInitials(worker)}
-                </AppText>
-              </View>
-              <View style={{ flex: 1, gap: atomSpacing[1] }}>
-                <AppText tone="accent" variant="eyebrow">
-                  WORKER PROFILE
-                </AppText>
-                <AppHeading variant="hero">{displayName}</AppHeading>
-                <AppText tone="muted">
-                  Contact and trade record for your worker catalog
-                </AppText>
-              </View>
-            </View>
-            <View
-              style={[styles.actions, isCompact ? styles.actionsCompact : null]}
-            >
-              <AppButton
-                color="neutral"
-                fullWidth={isCompact}
-                icon={PencilIcon}
-                iconAfter={false}
-                onPress={() =>
-                  router.push(`/workers/${worker.id}/edit` as never)
-                }
-                size="sm"
-                variant="bordered"
-              >
-                Edit
-              </AppButton>
-              <AppButton
-                color="danger"
-                fullWidth={isCompact}
-                icon={TrashIcon}
-                iconAfter={false}
-                onPress={deleteConfirmation.open}
-                size="sm"
-                variant="bordered"
-              >
-                Delete
-              </AppButton>
-            </View>
+          ),
+          icon: UserIcon
+        },
+        notFound: { action: backToDirectory, icon: UserIcon }
+      }}
+      isError={workerQuery.isError}
+      isInvalid={!workerId}
+      isLoading={workerQuery.isLoading}
+      isNotFound={!workerQuery.data}
+      loadingFallback={
+        <Screen>
+          <View style={{ gap: atomSpacing[5] }}>
+            <SkeletonBlock height={48} width="55%" />
+            <SkeletonBlock height={320} />
           </View>
-        </AppCard>
-
-        <View
-          style={[
-            styles.detailGrid,
-            isExpanded ? styles.detailGridExpanded : null
-          ]}
-        >
-          <AppCard padding="lg" style={{ flex: 1 }}>
-            <View style={{ gap: atomSpacing[4] }}>
-              <AppHeading variant="section">Contact details</AppHeading>
-              <DetailRow
-                action={
-                  worker.phone_number
-                    ? {
-                        label: "Call",
-                        onPress: () =>
-                          void openContactAction(
-                            `tel:${worker.phone_number}`,
-                            "We couldn't open your phone app. Copy the number and try it there."
-                          )
-                      }
-                    : undefined
-                }
-                icon={PhoneIcon}
-                label="Phone"
-                value={worker.phone_number ?? "Not provided"}
-              />
-              <DetailRow
-                action={
-                  worker.email
-                    ? {
-                        label: "Email",
-                        onPress: () =>
-                          void openContactAction(
-                            `mailto:${worker.email}`,
-                            "We couldn't open your email app. Copy the address and try it there."
-                          )
-                      }
-                    : undefined
-                }
-                icon={MailIcon}
-                label="Email"
-                value={worker.email ?? "Not provided"}
-              />
-              {contactError ? (
-                <AppText selectable tone="danger">
-                  {contactError}
-                </AppText>
-              ) : null}
-            </View>
-          </AppCard>
-
-          <AppCard padding="lg" style={{ flex: 1 }}>
-            <View style={{ gap: atomSpacing[4] }}>
-              <AppHeading variant="section">Catalog relationships</AppHeading>
-              <DetailRow
-                action={
-                  worker.contractor
-                    ? {
-                        label: "Open",
-                        onPress: () =>
-                          router.push(
-                            `/contractors/${worker.contractor!.id}` as never
-                          )
-                      }
-                    : undefined
-                }
-                icon={HardHatIcon}
-                label="Contractor"
-                value={
-                  worker.contractor
-                    ? getContractorDisplayName(worker.contractor)
-                    : "Independent worker"
-                }
-              />
-              <View style={{ gap: atomSpacing[2] }}>
-                <AppText tone="subtle" variant="meta">
-                  USUAL TRADES
-                </AppText>
-                {worker.trade_categories.length > 0 ? (
-                  worker.trade_categories.map((category) => (
-                    <View key={category.id} style={styles.tradeChip}>
-                      <AppText tone="accent" variant="bodySm">
-                        {getTradeCategoryLabel(category.code)}
-                      </AppText>
-                    </View>
-                  ))
-                ) : (
-                  <AppText tone="muted">No trade categories selected</AppText>
-                )}
-              </View>
-            </View>
-          </AppCard>
-        </View>
-      </View>
-
-      <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting worker"
-        confirmLabel="Delete worker"
-        controller={deleteConfirmation}
-        description="This removes the worker from your active catalog. This action cannot be undone."
-        isPending={deleteMutation.isPending}
-        onConfirm={deleteWorker}
-        title={`Delete ${displayName}?`}
-      />
-    </Screen>
-  );
-}
-
-function DetailRow({
-  action,
-  icon: Icon,
-  label,
-  value
-}: {
-  action?: { label: string; onPress: () => void };
-  icon: AppIconComponent;
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.detailRow}>
-      <View style={styles.detailIcon}>
-        <Icon color={atomPalette.accent} size="sm" />
-      </View>
-      <View style={{ flex: 1, gap: atomSpacing[1] }}>
-        <AppText tone="subtle" variant="meta">
-          {label.toLocaleUpperCase()}
-        </AppText>
-        <AppText selectable>{value}</AppText>
-      </View>
-      {action ? (
-        <AppButton
-          color="neutral"
-          fullWidth={false}
-          onPress={action.onPress}
-          size="sm"
-          variant="ghost"
-        >
-          {action.label}
-        </AppButton>
+        </Screen>
+      }
+      resourceName="worker"
+    >
+      {workerQuery.data ? (
+        <WorkerDetailContent worker={workerQuery.data} />
       ) : null}
-    </View>
+    </RouteStateBoundary>
   );
 }
-
-const styles = StyleSheet.create({
-  actions: {
-    flexDirection: "row",
-    gap: atomSpacing[3]
-  },
-  actionsCompact: {
-    width: "100%"
-  },
-  avatar: {
-    alignItems: "center",
-    backgroundColor: `${atomPalette.accent}14`,
-    borderRadius: 999,
-    height: 64,
-    justifyContent: "center",
-    width: 64
-  },
-  detailGrid: {
-    gap: atomSpacing[5]
-  },
-  detailGridExpanded: {
-    flexDirection: "row"
-  },
-  detailIcon: {
-    alignItems: "center",
-    backgroundColor: `${atomPalette.accent}10`,
-    borderRadius: atomRadii.md,
-    height: 36,
-    justifyContent: "center",
-    width: 36
-  },
-  detailRow: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: atomSpacing[3]
-  },
-  identityContent: {
-    alignItems: "center",
-    flex: 1,
-    flexDirection: "row",
-    gap: atomSpacing[4]
-  },
-  identityLayout: {
-    alignItems: "center",
-    flexDirection: "row",
-    gap: atomSpacing[5],
-    justifyContent: "space-between"
-  },
-  identityLayoutCompact: {
-    alignItems: "stretch",
-    flexDirection: "column"
-  },
-  page: {
-    alignSelf: "center",
-    gap: atomSpacing[6],
-    maxWidth: 1120,
-    width: "100%"
-  },
-  tradeChip: {
-    alignSelf: "flex-start",
-    backgroundColor: `${atomPalette.accent}10`,
-    borderColor: `${atomPalette.accent}24`,
-    borderRadius: 999,
-    borderWidth: 1,
-    paddingHorizontal: atomSpacing[3],
-    paddingVertical: atomSpacing[2]
-  }
-});

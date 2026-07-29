@@ -4,31 +4,31 @@ import {
   useSoftDeleteProject
 } from "@/features/projects/hooks/use-projects";
 import ProjectDetailScreen from "@/features/projects/screens/project-detail-screen";
+import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import type { Project } from "@/features/projects/types/project.types";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
-import {
-  fireEvent,
-  screen,
-  waitFor
-} from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 const mockRefetch = jest.fn();
 const mockDelete = jest.fn();
 const mockShowToast = jest.fn();
-let mockProjectId: string | string[] = "project-1";
+const projectId = "10000000-0000-4000-8000-000000000001";
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({ projectId: mockProjectId }),
   useRouter: () => ({ push: mockPush, replace: mockReplace })
 }));
 
 jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn(),
   useSoftDeleteProject: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectAccess: jest.fn()
 }));
 
 jest.mock("@/features/clients/hooks/use-clients", () => ({
@@ -55,7 +55,7 @@ const project: Project = {
   estimated_end_date: "2026-12-31",
   estimated_start_date: null,
   google_place_id: "place-1",
-  id: "project-1",
+  id: projectId,
   latitude: -34.6,
   longitude: -58.4,
   name: "River House",
@@ -70,6 +70,16 @@ const project: Project = {
 
 describe("ProjectDetailScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectAccess).mockReturnValue({
+      can: () => true,
+      data: {
+        permissions: [
+          "project.delete",
+          "project.members.read",
+          "project.update"
+        ]
+      }
+    } as never);
     jest.mocked(useLayoutMode).mockReturnValue({
       height: 844,
       isCompact: true,
@@ -99,13 +109,13 @@ describe("ProjectDetailScreen", () => {
   });
 
   it("renders project progress and opens its photo gallery", async () => {
-    await renderWithAppProviders(<ProjectDetailScreen />);
+    await renderWithAppProviders(<ProjectDetailScreen projectId={projectId} />);
 
     expect(screen.getByText("River House")).toBeOnTheScreen();
     expect(screen.getByLabelText("Project progress 25%")).toBeOnTheScreen();
     await fireEvent.press(screen.getByLabelText("photos"));
 
-    expect(mockPush).toHaveBeenCalledWith("/projects/project-1/photos");
+    expect(mockPush).toHaveBeenCalledWith(`/projects/${projectId}/photos`);
   });
 
   it("retries an unavailable project", async () => {
@@ -116,7 +126,7 @@ describe("ProjectDetailScreen", () => {
       isLoading: false,
       refetch: mockRefetch
     } as never);
-    await renderWithAppProviders(<ProjectDetailScreen />);
+    await renderWithAppProviders(<ProjectDetailScreen projectId={projectId} />);
 
     expect(screen.getByText("Project unavailable")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Retry"));
@@ -131,7 +141,7 @@ describe("ProjectDetailScreen", () => {
       isLoading: false,
       refetch: mockRefetch
     } as never);
-    await renderWithAppProviders(<ProjectDetailScreen />);
+    await renderWithAppProviders(<ProjectDetailScreen projectId={projectId} />);
 
     expect(screen.getByText("Project not found")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Back to projects"));
@@ -139,7 +149,7 @@ describe("ProjectDetailScreen", () => {
   });
 
   it("requires confirmation before deleting a project", async () => {
-    await renderWithAppProviders(<ProjectDetailScreen />);
+    await renderWithAppProviders(<ProjectDetailScreen projectId={projectId} />);
 
     await fireEvent.press(
       screen.getByRole("button", { name: "Project actions" })
@@ -150,7 +160,7 @@ describe("ProjectDetailScreen", () => {
     await fireEvent.press(screen.getByRole("button", { name: "Delete" }));
 
     await waitFor(() => {
-      expect(mockDelete).toHaveBeenCalledWith("project-1");
+      expect(mockDelete).toHaveBeenCalledWith(projectId);
       expect(mockReplace).toHaveBeenCalledWith("/projects");
     });
   });

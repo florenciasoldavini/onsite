@@ -4,7 +4,7 @@ import {
   toRepositoryError
 } from "@/infrastructure/supabase/repository";
 
-const PHOTO_SIGNED_URL_SECONDS = 60 * 60;
+const PHOTO_SIGNED_URL_SECONDS = 5 * 60;
 
 export function getProjectPhotoPaths({
   photoId,

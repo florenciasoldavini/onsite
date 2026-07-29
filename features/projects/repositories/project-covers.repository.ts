@@ -4,7 +4,7 @@ import {
   toRepositoryError
 } from "@/infrastructure/supabase/repository";
 
-const COVER_SIGNED_URL_SECONDS = 60 * 60;
+const COVER_SIGNED_URL_SECONDS = 5 * 60;
 
 export async function createProjectCoverSignedUrl(path: string) {
   const client = requireSupabase();

@@ -13,8 +13,8 @@ export interface ProjectListQueryPlan {
 
 export function buildProjectListQueryPlan({
   filters,
-  userId,
-  userRole
+  userId: _userId,
+  userRole: _userRole
 }: {
   filters?: ProjectFilters;
   userId: string;
@@ -24,10 +24,6 @@ export function buildProjectListQueryPlan({
   const queryFilters: ProjectListQueryPlan["filters"] = [
     { column: "deleted_at", operator: "is", value: null }
   ];
-
-  if (userRole !== "admin") {
-    queryFilters.push({ column: "owner_id", operator: "eq", value: userId });
-  }
 
   if (normalized.clientId) {
     queryFilters.push({

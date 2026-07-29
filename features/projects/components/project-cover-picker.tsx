@@ -1,10 +1,7 @@
 import type { ProjectFormValues } from "@/features/projects/types/project.types";
 import { FieldMessage } from "@/shared/ui/components/field-message";
 import { FieldLabel } from "@/shared/ui/components/label";
-import {
-  atomPalette,
-  atomSpacing
-} from "@/shared/ui/components/theme";
+import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { AppText } from "@/shared/ui/components/text";
 import { ImagePlusIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
@@ -21,10 +18,12 @@ import {
 
 export function ProjectCoverPicker({
   currentUrl,
+  disabled = false,
   onChange,
   value
 }: {
   currentUrl: string | null;
+  disabled?: boolean;
   onChange: (asset: ProjectFormValues["coverAsset"]) => void;
   value: ProjectFormValues["coverAsset"];
 }) {
@@ -79,9 +78,12 @@ export function ProjectCoverPicker({
       <Pressable
         accessibilityLabel="Choose project cover image"
         accessibilityRole="button"
+        accessibilityState={{ disabled }}
+        disabled={disabled}
         onPress={() => void pickImage()}
         style={StyleSheet.flatten([
           styles.picker,
+          disabled ? styles.disabled : null,
           Platform.OS === "web" ? styles.webCursor : null
         ])}
       >
@@ -106,6 +108,9 @@ export function ProjectCoverPicker({
 }
 
 const styles = StyleSheet.create({
+  disabled: {
+    opacity: 0.7
+  },
   image: {
     height: "100%",
     width: "100%"

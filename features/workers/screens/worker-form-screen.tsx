@@ -10,12 +10,13 @@ import {
   toWorkerInput,
   workerFormSchema
 } from "@/features/workers/schemas/worker.schema";
-import type { Worker, WorkerFormValues } from "@/features/workers/types/worker";
+import type { WorkerFormValues } from "@/features/workers/types/worker";
+import { getWorkerFormValues } from "@/features/workers/utils/worker-form-values";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
-import { EmptyState } from "@/shared/ui/components/empty-state";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { RouteStateBoundary } from "@/shared/ui/components/route-feedback";
 import { Screen } from "@/shared/ui/components/screen";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { AppText } from "@/shared/ui/components/text";
@@ -68,7 +69,7 @@ export default function WorkerFormScreen({
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
-    if (workerQuery.data) reset(toFormValues(workerQuery.data));
+    if (workerQuery.data) reset(getWorkerFormValues(workerQuery.data));
   }, [reset, workerQuery.data]);
 
   const submit = handleSubmit(async (values) => {
@@ -96,152 +97,131 @@ export default function WorkerFormScreen({
     }
   });
 
-  if (mode === "edit" && workerQuery.isLoading) {
-    return (
-      <Screen>
-        <View style={{ gap: atomSpacing[5] }}>
-          <SkeletonBlock height={44} width="55%" />
-          <SkeletonBlock height={540} />
-        </View>
-      </Screen>
-    );
-  }
+  const backToDirectory = {
+    label: "Back to directory",
+    onPress: () => router.replace("/directory?section=workers" as never)
+  };
 
-  if (mode === "edit" && workerQuery.isError) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
+  return (
+    <RouteStateBoundary
+      feedback={{
+        invalidParams: { action: backToDirectory, icon: UserIcon },
+        loadError: {
+          action: {
             icon: RefreshIcon,
             label: "Retry",
             onPress: () => void workerQuery.refetch()
-          }}
-          description={getUserFacingErrorMessage(
+          },
+          description: getUserFacingErrorMessage(
             workerQuery.error,
             "We couldn't load this worker. Try again."
-          )}
-          icon={UserIcon}
-          title="Worker unavailable"
-        />
-      </Screen>
-    );
-  }
-
-  if (mode === "edit" && !workerQuery.data) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
-            label: "Back to directory",
-            onPress: () => router.replace("/directory?section=workers" as never)
-          }}
-          description="This worker may have been removed or you may not have access."
-          icon={UserIcon}
-          title="Worker not found"
-        />
-      </Screen>
-    );
-  }
-
-  return (
-    <Screen keyboardSafe>
-      <View
-        style={{
-          alignSelf: "center",
-          gap: atomSpacing[6],
-          maxWidth: 760,
-          width: "100%"
-        }}
-      >
-        <Breadcrumb
-          items={
-            mode === "edit" && workerId
-              ? [
-                  {
-                    label: "Workers",
-                    onPress: () =>
-                      router.replace("/directory?section=workers" as never)
-                  },
-                  {
-                    label: "Worker Detail",
-                    onPress: () =>
-                      router.replace(`/workers/${workerId}` as never)
-                  },
-                  { label: "Edit" }
-                ]
-              : [
-                  {
-                    label: "Workers",
-                    onPress: () =>
-                      router.replace("/directory?section=workers" as never)
-                  },
-                  { label: "New" }
-                ]
-          }
-        />
-        <NavScreenHeader
-          description={
-            mode === "create"
-              ? "Add a worker and record their contractor and usual trades."
-              : "Update this worker's contact details and catalog relationships."
-          }
-          title={mode === "create" ? "New worker" : "Edit worker"}
-        />
-        <AppCard padding="lg">
-          <View style={{ gap: atomSpacing[6] }}>
-            <WorkerFormFields
-              control={control}
-              onChange={() => setFormError(null)}
-              ownerId={workerQuery.data?.owner_id ?? user?.id}
-            />
-            {formError ? (
-              <AppText selectable tone="danger">
-                {formError}
-              </AppText>
-            ) : null}
-            <View
-              style={{
-                flexDirection: "row",
-                gap: atomSpacing[3],
-                justifyContent: "flex-end"
-              }}
-            >
-              <AppButton
-                color="neutral"
-                fullWidth={false}
-                isDisabled={isSubmitting}
-                onPress={() => router.back()}
-                variant="bordered"
-              >
-                Cancel
-              </AppButton>
-              <AppButton
-                fullWidth={false}
-                isDisabled={
-                  !isValid ||
-                  firstName.trim().length === 0 ||
-                  (mode === "edit" && !isDirty)
-                }
-                loading={isSubmitting}
-                onPress={() => void submit()}
-              >
-                {mode === "create" ? "Create worker" : "Save changes"}
-              </AppButton>
-            </View>
+          ),
+          icon: UserIcon
+        },
+        notFound: { action: backToDirectory, icon: UserIcon }
+      }}
+      isError={mode === "edit" && workerQuery.isError}
+      isInvalid={mode === "edit" && !workerId}
+      isLoading={mode === "edit" && workerQuery.isLoading}
+      isNotFound={mode === "edit" && !workerQuery.data}
+      loadingFallback={
+        <Screen>
+          <View style={{ gap: atomSpacing[5] }}>
+            <SkeletonBlock height={44} width="55%" />
+            <SkeletonBlock height={540} />
           </View>
-        </AppCard>
-      </View>
-    </Screen>
+        </Screen>
+      }
+      resourceName="worker"
+    >
+      <Screen keyboardSafe>
+        <View
+          style={{
+            alignSelf: "center",
+            gap: atomSpacing[6],
+            maxWidth: 760,
+            width: "100%"
+          }}
+        >
+          <Breadcrumb
+            items={
+              mode === "edit" && workerId
+                ? [
+                    {
+                      label: "Workers",
+                      onPress: () =>
+                        router.replace("/directory?section=workers" as never)
+                    },
+                    {
+                      label: "Worker Detail",
+                      onPress: () =>
+                        router.replace(`/workers/${workerId}` as never)
+                    },
+                    { label: "Edit" }
+                  ]
+                : [
+                    {
+                      label: "Workers",
+                      onPress: () =>
+                        router.replace("/directory?section=workers" as never)
+                    },
+                    { label: "New" }
+                  ]
+            }
+          />
+          <NavScreenHeader
+            description={
+              mode === "create"
+                ? "Add a worker and record their contractor and usual trades."
+                : "Update this worker's contact details and catalog relationships."
+            }
+            title={mode === "create" ? "New worker" : "Edit worker"}
+          />
+          <AppCard padding="lg">
+            <View style={{ gap: atomSpacing[6] }}>
+              <WorkerFormFields
+                control={control}
+                onChange={() => setFormError(null)}
+                ownerId={workerQuery.data?.owner_id ?? user?.id}
+              />
+              {formError ? (
+                <AppText selectable tone="danger">
+                  {formError}
+                </AppText>
+              ) : null}
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: atomSpacing[3],
+                  justifyContent: "flex-end"
+                }}
+              >
+                <AppButton
+                  color="neutral"
+                  fullWidth={false}
+                  isDisabled={isSubmitting}
+                  onPress={() => router.back()}
+                  variant="bordered"
+                >
+                  Cancel
+                </AppButton>
+                <AppButton
+                  fullWidth={false}
+                  isDisabled={
+                    !isValid ||
+                    firstName.trim().length === 0 ||
+                    (mode === "edit" && !isDirty)
+                  }
+                  loading={isSubmitting}
+                  onPress={() => void submit()}
+                >
+                  {mode === "create" ? "Create worker" : "Save changes"}
+                </AppButton>
+              </View>
+            </View>
+          </AppCard>
+        </View>
+      </Screen>
+    </RouteStateBoundary>
   );
-}
-
-function toFormValues(worker: Worker): WorkerFormValues {
-  return {
-    contractor_id: worker.contractor_id,
-    email: worker.email ?? "",
-    first_name: worker.first_name,
-    last_name: worker.last_name ?? "",
-    phone_number: worker.phone_number ?? "",
-    trade_category_ids: worker.trade_categories.map((category) => category.id)
-  };
 }

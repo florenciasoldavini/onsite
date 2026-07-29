@@ -166,8 +166,8 @@ select results_eq(
 
 select is(
   (select count(*)::integer from public.projects where id = '10000000-0000-4000-8000-000000000001'),
-  1,
-  'owner authorization still applies to own soft-deleted project'
+  0,
+  'archived projects are inaccessible even to their owner'
 );
 
 select is(

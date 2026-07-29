@@ -5,21 +5,22 @@ import {
 } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotoDetailScreen from "@/features/photos/screens/project-photo-detail-screen";
 import type { ProjectPhoto } from "@/features/photos/types/photo";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 const mockReplace = jest.fn();
 const mockRefetch = jest.fn();
+const mockPermissionRefetch = jest.fn();
 const mockUpdate = jest.fn();
 const mockDelete = jest.fn();
 const mockShowToast = jest.fn();
+const mockProjectId = "10000000-0000-4000-8000-000000000001";
+const mockOtherProjectId = "10000000-0000-4000-8000-000000000002";
+const mockPhotoId = "20000000-0000-4000-8000-000000000001";
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({
-    photoId: "photo-1",
-    projectId: "project-1"
-  }),
   useRouter: () => ({ replace: mockReplace })
 }));
 
@@ -27,6 +28,10 @@ jest.mock("@/features/photos/hooks/use-project-photos", () => ({
   useProjectPhoto: jest.fn(),
   useSoftDeleteProjectPhoto: jest.fn(),
   useUpdateProjectPhoto: jest.fn()
+}));
+
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
 }));
 
 jest.mock("@/shared/ui/components/toast", () => ({
@@ -42,7 +47,7 @@ const photo: ProjectPhoto = {
   full_path: "owner/project/full.jpg",
   full_url: "https://signed.example/full.jpg",
   height: 800,
-  id: "photo-1",
+  id: mockPhotoId,
   is_marketing: false,
   kind: "progress",
   latitude: null,
@@ -51,7 +56,7 @@ const photo: ProjectPhoto = {
   longitude: null,
   mime_type: "image/jpeg",
   owner_id: "owner-1",
-  project_id: "project-1",
+  project_id: mockProjectId,
   thumbnail_path: "owner/project/thumb.jpg",
   updated_at: null,
   uploaded_by: "owner-1",
@@ -60,6 +65,12 @@ const photo: ProjectPhoto = {
 
 describe("ProjectPhotoDetailScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isError: false,
+      isLoading: false,
+      refetch: mockPermissionRefetch
+    } as never);
     jest.mocked(useProjectPhoto).mockReturnValue({
       data: photo,
       error: null,
@@ -83,7 +94,12 @@ describe("ProjectPhotoDetailScreen", () => {
   });
 
   it("updates changed photo details", async () => {
-    await renderWithAppProviders(<ProjectPhotoDetailScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoDetailScreen
+        photoId={mockPhotoId}
+        projectId={mockProjectId}
+      />
+    );
 
     await waitFor(() => {
       expect(
@@ -110,7 +126,12 @@ describe("ProjectPhotoDetailScreen", () => {
   });
 
   it("requires confirmation before deleting a photo", async () => {
-    await renderWithAppProviders(<ProjectPhotoDetailScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoDetailScreen
+        photoId={mockPhotoId}
+        projectId={mockProjectId}
+      />
+    );
 
     await fireEvent.press(screen.getByText("Delete photo"));
     expect(screen.getByText("Delete photo?")).toBeOnTheScreen();
@@ -119,22 +140,27 @@ describe("ProjectPhotoDetailScreen", () => {
     await fireEvent.press(screen.getByText("Delete"));
 
     await waitFor(() => {
-      expect(mockDelete).toHaveBeenCalledWith("photo-1");
+      expect(mockDelete).toHaveBeenCalledWith(mockPhotoId);
       expect(mockReplace).toHaveBeenCalledWith(
-        "/projects/project-1/photos"
+        `/projects/${mockProjectId}/photos`
       );
     });
   });
 
   it("rejects a photo belonging to another project", async () => {
     jest.mocked(useProjectPhoto).mockReturnValue({
-      data: { ...photo, project_id: "project-2" },
+      data: { ...photo, project_id: mockOtherProjectId },
       error: null,
       isError: false,
       isLoading: false,
       refetch: mockRefetch
     } as never);
-    await renderWithAppProviders(<ProjectPhotoDetailScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoDetailScreen
+        photoId={mockPhotoId}
+        projectId={mockProjectId}
+      />
+    );
 
     expect(screen.getByText("Photo not found")).toBeOnTheScreen();
   });

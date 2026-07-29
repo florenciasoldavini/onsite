@@ -15,28 +15,23 @@ import {
 import { useEmailVerificationResend } from "@/features/auth/hooks/use-auth-mutations";
 import { emailSchema } from "@/features/auth/schemas/field.schemas";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 const resendCooldownSeconds = 60;
 
-function getEmailParam(email: string | string[] | undefined) {
-  if (Array.isArray(email)) {
-    return email[0] ?? "";
-  }
-
-  return email ?? "";
-}
-
-export default function VerifyEmailScreen() {
+export default function VerifyEmailScreen({
+  email: requestedEmail,
+  nextPath = "/",
+  notice
+}: {
+  email?: string;
+  nextPath?: string;
+  notice?: string;
+}) {
   const verificationResend = useEmailVerificationResend();
-  const { email: emailParam, notice: noticeParam } = useLocalSearchParams<{
-    email?: string | string[];
-    notice?: string | string[];
-  }>();
-  const email = getEmailParam(emailParam).trim().toLowerCase();
-  const notice = getEmailParam(noticeParam);
+  const email = (requestedEmail ?? "").trim().toLowerCase();
+  const hasNext = nextPath !== "/";
   const isRateLimited = notice === "rate-limited";
   const isInitialEmailSent = notice === "sent";
   const [cooldownSeconds, setCooldownSeconds] = useState(
@@ -77,7 +72,10 @@ export default function VerifyEmailScreen() {
     setIsResending(true);
 
     try {
-      const result = await verificationResend.mutateAsync(email);
+      const result = await verificationResend.mutateAsync({
+        email,
+        next: hasNext ? nextPath : undefined
+      });
 
       setSuccessMessage(
         result.status === "sent"
@@ -162,7 +160,15 @@ export default function VerifyEmailScreen() {
           <AppText style={{ textAlign: "center" }} tone="muted">
             Already verified it?
           </AppText>
-          <AppLink href="/sign-in">Sign In</AppLink>
+          <AppLink
+            href={
+              hasNext
+                ? (`/sign-in?next=${encodeURIComponent(nextPath)}` as never)
+                : "/sign-in"
+            }
+          >
+            Sign In
+          </AppLink>
         </View>
       </View>
     </AuthShell>

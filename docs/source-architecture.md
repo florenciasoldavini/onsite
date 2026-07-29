@@ -3,7 +3,7 @@
 Purpose: define where product code belongs and which dependency directions are allowed
 Source of truth for: feature ownership, shared code, infrastructure boundaries, and new-feature scaffolding
 Update when: a new source layer is introduced or an ownership boundary changes
-Last reviewed: 2026-07-21
+Last reviewed: 2026-07-29
 
 ## Canonical Structure
 
@@ -67,6 +67,65 @@ app route
 
 ESLint enforces the most important import boundaries in `eslint.config.js`.
 
+## Route Declarations
+
+Every non-layout file under `app/` uses the same explicit wrapper shape:
+
+```tsx
+import ClientDetailScreen from "@/features/clients/screens/client-detail-screen";
+import { parseRequiredUuidRouteParam } from "@/shared/utils/route-params";
+import { useLocalSearchParams } from "expo-router";
+
+export default function ClientDetailRoute() {
+  const params = useLocalSearchParams<{
+    clientId: string | string[];
+  }>();
+  const clientId = parseRequiredUuidRouteParam(params.clientId);
+
+  return <ClientDetailScreen clientId={clientId ?? undefined} />;
+}
+```
+
+- Name the default route component `<Purpose>Route`. Do not directly export a screen or use a default re-export.
+- `app/` owns Expo Router inputs. Read and normalize path parameters, query parameters, and URL fragments in the route, then pass ordinary typed props to the feature screen.
+- Use `firstRouteParam` for a repeated scalar query parameter, `parseRequiredUuidRouteParam` for a required UUID path parameter, and `parseOptionalUuidRouteParam` for an optional UUID query parameter.
+- A missing or malformed required identifier is passed to the screen as `undefined`; the screen's `RouteStateBoundary` then renders finite invalid-route feedback without starting a record query.
+- Feature screens may use navigation actions such as `useRouter`, but must not use `useLocalSearchParams` or parse URL fragments.
+- Route files contain declarations, parameter normalization, route-specific guards, and screen delegation only. Domain behavior and product UI stay in the feature.
+- Deliberate `React.lazy` bundle boundaries are allowed, but the route still follows the same explicit wrapper and parameter ownership rules.
+- Layout files use named `<Purpose>Layout` components. The root layout's monitoring wrapper is the only default-export expression exception.
+
+## Screen Composition
+
+A screen coordinates the lifecycle of an entire page. It owns page-level queries, permissions, navigation outcomes, and the full-page `RouteStateBoundary`, then delegates the successfully loaded presentation to feature components.
+
+For a substantial page, colocate its visual sections under a component family:
+
+```text
+features/projects/
+  screens/
+    project-detail-screen.tsx
+  components/
+    project-detail/
+      project-detail-content.tsx
+      project-detail-header.tsx
+      project-client-card.tsx
+      project-progress-card.tsx
+      project-action-grid.tsx
+      project-detail-skeleton.tsx
+      project-detail.styles.ts
+```
+
+- Keep invalid, loading, load-error, forbidden, not-found, and successful-content precedence visible in the screen.
+- Pass guaranteed successful data to the content component instead of repeating nullable checks throughout the page.
+- Extract a recognizable page section when it has its own interaction state, query or mutation, responsive layout, substantial styles, or independently testable behavior.
+- Screen modules contain one screen component. Secondary React components, pure helper functions, and `StyleSheet.create` definitions belong in the screen's colocated component family or feature utilities.
+- Keep small one-off markup in the screen or its nearest section; do not create components solely to reduce line count.
+- Section components may consume feature hooks when the state belongs to that section. Services still own product workflows, and query hooks still own server/cache behavior.
+- Put screen-family constants and styles beside that component family when they are not reused by the broader feature.
+- Do not replace a large screen with one opaque `use<ScreenName>Controller` hook. The page lifecycle and data dependencies should remain directly readable.
+- Treat roughly 100–250 lines as a review signal for a screen, not a hard limit. A complex form or virtualized collection coordinator may remain longer when it still has one responsibility and extraction would create an opaque prop interface.
+
 ## Model Ownership
 
 Each domain contract belongs to the feature that will implement it. Planned contracts are preserved in their future owner, such as `features/workers/types/` or `features/materials/types/`, instead of a global model directory.
@@ -90,6 +149,6 @@ Use platform-specific files for genuine platform implementation differences, not
 ## Naming
 
 - Directories and non-component modules use kebab-case.
-- React components use named PascalCase exports; route screen files may keep a default export for Expo Router wrappers.
+- React components use named PascalCase exports; Expo Router files default-export an explicit named route or layout component.
 - Services use `.service.ts`, repositories use `.repository.ts`, and runtime schemas use `.schema.ts` or `.schemas.ts`.
 - Avoid generic catch-all directories such as `lib/` and global layer directories such as `screens/`, `services/`, or `types/models/`.

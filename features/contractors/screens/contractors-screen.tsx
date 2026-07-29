@@ -7,6 +7,7 @@ import type {
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { EmptyState } from "@/shared/ui/components/empty-state";
+import { InlineErrorState } from "@/shared/ui/components/inline-error-state";
 import { SearchField } from "@/shared/ui/components/input";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
 import { Screen } from "@/shared/ui/components/screen";
@@ -43,8 +44,7 @@ export default function ContractorsScreen({
   const [sort, setSort] = useState<ContractorSort>("created_desc");
   const contractorsQuery = useContractors({ query, sort });
   const contractors = useMemo(
-    () =>
-      contractorsQuery.data?.pages.flatMap((page) => page.items) ?? [],
+    () => contractorsQuery.data?.pages.flatMap((page) => page.items) ?? [],
     [contractorsQuery.data]
   );
   const columns = isExpanded ? 3 : isCompact ? 1 : 2;
@@ -71,10 +71,7 @@ export default function ContractorsScreen({
     [columns, openContractor]
   );
   const loadMore = useCallback(() => {
-    if (
-      contractorsQuery.hasNextPage &&
-      !contractorsQuery.isFetchingNextPage
-    ) {
+    if (contractorsQuery.hasNextPage && !contractorsQuery.isFetchingNextPage) {
       void contractorsQuery.fetchNextPage();
     }
   }, [contractorsQuery]);
@@ -134,7 +131,7 @@ export default function ContractorsScreen({
       ))}
     </View>
   ) : contractorsQuery.isError ? (
-    <EmptyState
+    <InlineErrorState
       action={{
         icon: RefreshIcon,
         label: "Retry",
@@ -164,9 +161,7 @@ export default function ContractorsScreen({
           : "Add your first contractor to start building your directory."
       }
       icon={HardHatIcon}
-      title={
-        hasSearch ? "No matching contractors" : "No contractors yet"
-      }
+      title={hasSearch ? "No matching contractors" : "No contractors yet"}
     />
   );
 

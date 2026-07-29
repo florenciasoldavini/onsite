@@ -15,6 +15,7 @@ export default function AppLayout() {
           <Stack.Screen name="projects/new/index" />
           <Stack.Screen name="projects/[projectId]/index" />
           <Stack.Screen name="projects/[projectId]/edit" />
+          <Stack.Screen name="projects/[projectId]/team" />
           <Stack.Screen name="projects/[projectId]/photos/index" />
           <Stack.Screen name="projects/[projectId]/photos/new/index" />
           <Stack.Screen name="projects/[projectId]/photos/[photoId]/index" />
@@ -30,6 +31,7 @@ export default function AppLayout() {
           <Stack.Screen name="suppliers/new/index" />
           <Stack.Screen name="suppliers/[supplierId]/index" />
           <Stack.Screen name="suppliers/[supplierId]/edit" />
+          <Stack.Screen name="invitations/index" />
         </Stack>
       </View>
     </View>

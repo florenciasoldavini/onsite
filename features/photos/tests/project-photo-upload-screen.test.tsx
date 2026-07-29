@@ -1,6 +1,7 @@
 import { useUploadProjectPhotos } from "@/features/photos/hooks/use-project-photos";
 import ProjectPhotoUploadScreen from "@/features/photos/screens/project-photo-upload-screen";
 import { useProject } from "@/features/projects/hooks/use-projects";
+import { useProjectPermission } from "@/features/projects/hooks/use-project-collaboration";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { fireEvent, screen, waitFor } from "@testing-library/react-native";
@@ -9,11 +10,12 @@ import * as ImagePicker from "expo-image-picker";
 
 const mockReplace = jest.fn();
 const mockRefetch = jest.fn();
+const mockPermissionRefetch = jest.fn();
 const mockUpload = jest.fn();
 const mockShowToast = jest.fn();
+const mockProjectId = "10000000-0000-4000-8000-000000000001";
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({ projectId: "project-1" }),
   useRouter: () => ({ replace: mockReplace })
 }));
 
@@ -36,6 +38,10 @@ jest.mock("@/features/projects/hooks/use-projects", () => ({
   useProject: jest.fn()
 }));
 
+jest.mock("@/features/projects/hooks/use-project-collaboration", () => ({
+  useProjectPermission: jest.fn()
+}));
+
 jest.mock("@/shared/ui/components/toast", () => ({
   useAppToast: jest.fn()
 }));
@@ -52,11 +58,17 @@ jest.mock("@/features/photos/components/project-photo-draft-card", () => {
 
 describe("ProjectPhotoUploadScreen", () => {
   beforeEach(() => {
+    jest.mocked(useProjectPermission).mockReturnValue({
+      allowed: true,
+      isError: false,
+      isLoading: false,
+      refetch: mockPermissionRefetch
+    } as never);
     jest
       .mocked(Crypto.randomUUID)
       .mockReturnValue("11111111-1111-4111-8111-111111111111");
     jest.mocked(useProject).mockReturnValue({
-      data: { id: "project-1", name: "River House" },
+      data: { id: mockProjectId, name: "River House" },
       error: null,
       isError: false,
       isLoading: false,
@@ -99,14 +111,14 @@ describe("ProjectPhotoUploadScreen", () => {
   });
 
   it("adds a library photo and uploads the reviewed batch", async () => {
-    await renderWithAppProviders(<ProjectPhotoUploadScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoUploadScreen projectId={mockProjectId} />
+    );
 
     expect(screen.getByText("Add photos (0/20)")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Photo library"));
     expect(
-      await screen.findByText(
-        "draft-11111111-1111-4111-8111-111111111111"
-      )
+      await screen.findByText("draft-11111111-1111-4111-8111-111111111111")
     ).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText("Upload photos"));
@@ -122,7 +134,7 @@ describe("ProjectPhotoUploadScreen", () => {
         onStageChange: expect.any(Function)
       });
       expect(mockReplace).toHaveBeenCalledWith(
-        "/projects/project-1/photos"
+        `/projects/${mockProjectId}/photos`
       );
     });
   });
@@ -134,7 +146,9 @@ describe("ProjectPhotoUploadScreen", () => {
       granted: false,
       status: "denied" as never
     });
-    await renderWithAppProviders(<ProjectPhotoUploadScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoUploadScreen projectId={mockProjectId} />
+    );
 
     await fireEvent.press(screen.getByText("Camera"));
 
@@ -153,7 +167,9 @@ describe("ProjectPhotoUploadScreen", () => {
       isLoading: false,
       refetch: mockRefetch
     } as never);
-    await renderWithAppProviders(<ProjectPhotoUploadScreen />);
+    await renderWithAppProviders(
+      <ProjectPhotoUploadScreen projectId={mockProjectId} />
+    );
 
     expect(screen.getByText("Project unavailable")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Retry"));

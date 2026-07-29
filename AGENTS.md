@@ -208,6 +208,17 @@ Last reviewed: 2026-07-21
 - photo rows are soft-deleted before Storage cleanup; active row references are required for Storage reads
 - the complete product, privacy, processing, and deferred-scope contract lives in [docs/project-photos.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-photos.md:1)
 
+### Project Collaboration
+
+- project roles, capabilities, and role-to-capability mappings are database catalogs changed through tracked migrations
+- `owner` is derived from `projects.owner_id`; assignable roles are memberships using validated stable string codes
+- every project RLS policy and collaboration mutation must authorize through the central database capability engine
+- application UI must use `useProjectAccess(projectId).can(permission)` and must not branch on project role names
+- global admins receive every project capability without acquiring membership
+- invitation tokens are stored only as SHA-256 hashes, expire after seven days, and use URL fragments in email links
+- project cover and photo signed URLs expire after five minutes
+- the complete authorization and invitation contract lives in [docs/project-collaboration.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-collaboration.md:1)
+
 ## User Model Decisions
 
 - `users.id`: UUID from Supabase Auth
@@ -273,7 +284,12 @@ Last reviewed: 2026-07-21
 - Every feature must explicitly account for web, iOS, and Android behavior. If the correct implementation differs by platform, use platform-specific files or adapters while keeping the business logic shared.
 - When adding a new project rule or product constraint, scan existing features, docs, env config, and tests for places where the rule already applies. Refactor, document follow-up work, or clearly call out any existing gap instead of applying the rule only to future code.
 - Every async surface must handle loading explicitly with an appropriate spinner, skeleton, disabled state, optimistic state, or other clear indicator.
+- Loading UI must represent active work that can settle. Dynamic record routes validate required UUID parameters with the shared route-parameter utility before enabling queries; missing or malformed identifiers render finite invalid-link feedback and must never leave a spinner or skeleton active indefinitely.
 - Every error visible to a user must use clear, actionable product language. Never render raw provider, database, HTTP, SDK, or exception messages. Branch on stable error codes or structured status fields, preserve the technical cause for trusted diagnostics, use an action-specific fallback for unknown failures, distinguish query failures from empty/not-found results, provide safe retry actions, and explain denied device permissions instead of stopping silently. Follow `docs/error-handling.md`.
+- Dynamic record screens use the shared `RouteStateBoundary` for invalid-params, loading, load-error, not-found, forbidden, and successful-content precedence. Keep fetching and capability hooks outside the boundary, and use child content components when the successful screen requires guaranteed data. UI authorization must guard direct URL navigation as well as links and buttons, while RLS and database capability assertions remain authoritative.
+- Route failures and empty collections are separate concepts and components. `RouteFeedback` replaces an unusable full page and must not compose `EmptyState`; `InlineErrorState` reports a failed subordinate query while the usable page shell remains; `EmptyState` is reserved for an authorized, successfully loaded collection or section with zero rows while relevant controls remain visible.
+- Every non-layout `app/` file default-exports an explicit named `<Purpose>Route` wrapper; direct screen exports and default re-exports are prohibited. Routes own all Expo Router path/query parameter and URL-fragment reading and normalize those values before passing typed props to feature screens. Feature screens may navigate with `useRouter`, but must not call `useLocalSearchParams`. Follow the complete convention in `docs/source-architecture.md`.
+- Screens coordinate the lifecycle of an entire page: page-level queries and permissions, navigation outcomes, the full-page route-state boundary, and composition of successful content. A screen module contains one screen component; secondary components, pure helpers, and style sheets belong in a colocated component family or feature utilities. Keep the page lifecycle visible instead of moving it into an opaque controller hook. Follow `docs/source-architecture.md`.
 - Every request that lists or "gets all" records from an entity must be paginated at the repository/transport boundary. Unbounded collection reads are prohibited, including map, export, admin, and background workflows. Use a bounded default and maximum page size, deterministic ordering with a stable unique tie-breaker, summary-only columns for list screens, and virtualized or progressively rendered collection UI. Single-record lookups are exempt.
 - Every destructive action that deletes persistent project or account data must require an explicit confirmation modal before the mutation runs. The modal must identify what will be deleted, provide distinct Cancel and danger-styled Delete actions, prevent repeat submission while pending, and keep mutation errors visible without closing.
 - Production submit forms must use `react-hook-form` with a Zod schema resolver. Keep form values, validation errors, validity, submission state, and edit dirty-state in the form controller rather than duplicating them with local `useState`.
