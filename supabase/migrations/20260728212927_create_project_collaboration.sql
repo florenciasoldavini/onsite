@@ -15,7 +15,7 @@ create table public.project_roles (
 );
 
 create table public.project_permissions (
-  code text primary key check (code ~ '^project\.[a-z_]+$'),
+  code text primary key check (code ~ '^project(\.[a-z][a-z0-9_]*)+$'),
   description text not null check (char_length(trim(description)) between 2 and 240),
   created_at timestamptz(3) not null default current_timestamp
 );
