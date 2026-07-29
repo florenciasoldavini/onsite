@@ -106,9 +106,7 @@ describe("ProjectTeamScreen", () => {
 
     expect(screen.getByText("Invalid project link")).toBeOnTheScreen();
     expect(
-      screen.getByText(
-        "This project link is incomplete. Return to Projects and open the team again."
-      )
+      screen.getByText("This project link is incomplete or invalid.")
     ).toBeOnTheScreen();
     expect(useProjectAccess).not.toHaveBeenCalled();
     expect(useProjectTeam).not.toHaveBeenCalled();

@@ -3,17 +3,7 @@ import VerifyEmailScreen from "@/features/auth/screens/verify-email-screen";
 import { renderWithAppProviders } from "@/tests/support/render";
 import { userEvent, waitFor } from "@testing-library/react-native";
 
-let mockParams: { email?: string; next?: string; notice?: string } = {};
 const mockResend = jest.fn();
-
-jest.mock("expo-router", () => {
-  const actual = jest.requireActual("expo-router");
-
-  return {
-    ...actual,
-    useLocalSearchParams: () => mockParams
-  };
-});
 
 jest.mock("@/features/auth/hooks/use-auth-mutations", () => ({
   useEmailVerificationResend: jest.fn()
@@ -21,7 +11,6 @@ jest.mock("@/features/auth/hooks/use-auth-mutations", () => ({
 
 describe("VerifyEmailScreen", () => {
   beforeEach(() => {
-    mockParams = { email: " Builder@Example.com " };
     jest.mocked(useEmailVerificationResend).mockReturnValue({
       mutateAsync: mockResend
     } as never);
@@ -30,7 +19,9 @@ describe("VerifyEmailScreen", () => {
 
   it("normalizes the email and resends verification", async () => {
     const user = userEvent.setup();
-    const view = await renderWithAppProviders(<VerifyEmailScreen />);
+    const view = await renderWithAppProviders(
+      <VerifyEmailScreen email=" Builder@Example.com " />
+    );
 
     expect(view.getByText("builder@example.com")).toBeOnTheScreen();
     await user.press(
@@ -52,17 +43,14 @@ describe("VerifyEmailScreen", () => {
   });
 
   it("disables resend during the initial cooldown", async () => {
-    mockParams = {
-      email: "builder@example.com",
-      notice: "rate-limited"
-    };
-    const view = await renderWithAppProviders(<VerifyEmailScreen />);
+    const view = await renderWithAppProviders(
+      <VerifyEmailScreen email="builder@example.com" notice="rate-limited" />
+    );
 
     expect(view.getByRole("button", { name: "Resend in 60s" })).toBeDisabled();
   });
 
   it("does not offer resend without a valid email", async () => {
-    mockParams = {};
     const view = await renderWithAppProviders(<VerifyEmailScreen />);
 
     expect(view.getByText("No email address was provided.")).toBeOnTheScreen();

@@ -10,9 +10,9 @@ import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 const mockReplace = jest.fn();
 const mockDelete = jest.fn();
+const mockContractorId = "30000000-0000-4000-8000-000000000001";
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => ({ contractorId: "contractor-1" }),
   useRouter: () => ({ push: jest.fn(), replace: mockReplace })
 }));
 jest.mock("@/features/contractors/hooks/use-contractors", () => ({
@@ -32,7 +32,7 @@ describe("ContractorDetailScreen", () => {
       data: {
         email: "alex@example.com",
         first_name: "Alex",
-        id: "contractor-1",
+        id: mockContractorId,
         last_name: "Morgan",
         phone_number: null
       },
@@ -51,7 +51,9 @@ describe("ContractorDetailScreen", () => {
   });
 
   it("requires confirmation before deleting a contractor", async () => {
-    await renderWithAppProviders(<ContractorDetailScreen />);
+    await renderWithAppProviders(
+      <ContractorDetailScreen contractorId={mockContractorId} />
+    );
 
     await fireEvent.press(screen.getByRole("button", { name: "Delete" }));
     expect(screen.getByText("Delete Alex Morgan?")).toBeOnTheScreen();
@@ -61,7 +63,7 @@ describe("ContractorDetailScreen", () => {
     );
 
     await waitFor(() => {
-      expect(mockDelete).toHaveBeenCalledWith("contractor-1");
+      expect(mockDelete).toHaveBeenCalledWith(mockContractorId);
       expect(mockReplace).toHaveBeenCalledWith(
         "/directory?section=contractors"
       );

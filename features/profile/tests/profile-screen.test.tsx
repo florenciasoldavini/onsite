@@ -5,11 +5,6 @@ import { userEvent } from "@testing-library/react-native";
 import type { Session } from "@supabase/supabase-js";
 
 const mockLogOut = jest.fn();
-let mockSearchParams: { identity_link_check?: string | string[] } = {};
-
-jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => mockSearchParams
-}));
 
 jest.mock("@/shared/hooks/use-layout-mode", () => ({
   useLayoutMode: jest.fn()
@@ -20,8 +15,7 @@ jest.mock("@/features/profile/components/profile-info-tab", () => {
   const { Text } = jest.requireActual("react-native");
 
   return {
-    ProfileInfoTab: () =>
-      React.createElement(Text, null, "profile-panel")
+    ProfileInfoTab: () => React.createElement(Text, null, "profile-panel")
   };
 });
 
@@ -30,31 +24,27 @@ jest.mock("@/features/profile/components/profile-security-tab", () => {
   const { Text } = jest.requireActual("react-native");
 
   return {
-    ProfileSecurityTab: () =>
-      React.createElement(Text, null, "security-panel")
+    ProfileSecurityTab: () => React.createElement(Text, null, "security-panel")
   };
 });
 
-jest.mock(
-  "@/features/profile/components/profile-identity-methods-tab",
-  () => {
-    const React = jest.requireActual("react");
-    const { Text } = jest.requireActual("react-native");
+jest.mock("@/features/profile/components/profile-identity-methods-tab", () => {
+  const React = jest.requireActual("react");
+  const { Text } = jest.requireActual("react-native");
 
-    return {
-      ProfileIdentityMethodsTab: ({
-        returnedLinkProvider
-      }: {
-        returnedLinkProvider: string | null;
-      }) =>
-        React.createElement(
-          Text,
-          null,
-          `methods-panel-${returnedLinkProvider ?? "none"}`
-        )
-    };
-  }
-);
+  return {
+    ProfileIdentityMethodsTab: ({
+      returnedLinkProvider
+    }: {
+      returnedLinkProvider: string | null;
+    }) =>
+      React.createElement(
+        Text,
+        null,
+        `methods-panel-${returnedLinkProvider ?? "none"}`
+      )
+  };
+});
 
 const session = {
   user: {
@@ -76,7 +66,6 @@ function setLayout(mode: "compact" | "expanded") {
 
 describe("ProfileScreen", () => {
   beforeEach(() => {
-    mockSearchParams = {};
     setLayout("compact");
   });
 
@@ -108,14 +97,14 @@ describe("ProfileScreen", () => {
   });
 
   it("opens sign-in methods after returning from an identity-link callback", async () => {
-    mockSearchParams = { identity_link_check: "google" };
-    const view = await renderWithAppProviders(<ProfileScreen />, {
-      auth: { session }
-    });
+    const view = await renderWithAppProviders(
+      <ProfileScreen returnedLinkProvider="google" />,
+      {
+        auth: { session }
+      }
+    );
 
-    expect(
-      await view.findByRole("button", { name: "Sign-In" })
-    ).toBeSelected();
+    expect(await view.findByRole("button", { name: "Sign-In" })).toBeSelected();
     expect(view.getByText("methods-panel-google")).toBeOnTheScreen();
   });
 });

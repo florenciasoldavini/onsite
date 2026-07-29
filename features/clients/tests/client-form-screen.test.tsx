@@ -8,11 +8,7 @@ import type { User } from "@/features/auth/types/auth.types";
 import type { Client } from "@/features/clients/types/client";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { renderWithAppProviders } from "@/tests/support/render";
-import {
-  fireEvent,
-  screen,
-  waitFor
-} from "@testing-library/react-native";
+import { fireEvent, screen, waitFor } from "@testing-library/react-native";
 
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
@@ -77,12 +73,11 @@ describe("ClientFormScreen", () => {
   it("keeps create disabled until required input is valid and then saves", async () => {
     await renderWithAppProviders(<ClientFormScreen mode="create" />);
 
-    expect(screen.getByRole("button", { name: "Create client" })).toBeDisabled();
+    expect(
+      screen.getByRole("button", { name: "Create client" })
+    ).toBeDisabled();
 
-    await fireEvent.changeText(
-      screen.getByPlaceholderText("Ada"),
-      "  Ada  "
-    );
+    await fireEvent.changeText(screen.getByPlaceholderText("Ada"), "  Ada  ");
 
     await waitFor(() => {
       expect(
@@ -140,9 +135,20 @@ describe("ClientFormScreen", () => {
     expect(screen.getByText("Client not found")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Back to clients"));
 
-    expect(mockReplace).toHaveBeenCalledWith(
-      "/directory?section=clients"
-    );
+    expect(mockReplace).toHaveBeenCalledWith("/directory?section=clients");
+  });
+
+  it("shows finite feedback when an edit route has no client id", async () => {
+    await renderWithAppProviders(<ClientFormScreen mode="edit" />);
+
+    expect(screen.getByText("Invalid client link")).toBeOnTheScreen();
+    expect(
+      screen.queryByRole("button", { name: "Save changes" })
+    ).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText("Back to clients"));
+
+    expect(mockReplace).toHaveBeenCalledWith("/directory?section=clients");
   });
 
   it("requires an edit before saving and submits the changed values", async () => {
@@ -166,19 +172,14 @@ describe("ClientFormScreen", () => {
     });
     expect(screen.getByRole("button", { name: "Save changes" })).toBeDisabled();
 
-    await fireEvent.changeText(
-      screen.getByPlaceholderText("Ada"),
-      "Augusta"
-    );
+    await fireEvent.changeText(screen.getByPlaceholderText("Ada"), "Augusta");
 
     await waitFor(() => {
       expect(
         screen.getByRole("button", { name: "Save changes" })
       ).toBeEnabled();
     });
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Save changes" })
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Save changes" }));
 
     await waitFor(() => {
       expect(mockUpdateClient).toHaveBeenCalledWith({

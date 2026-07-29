@@ -7,18 +7,14 @@ import type {
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { EmptyState } from "@/shared/ui/components/empty-state";
+import { InlineErrorState } from "@/shared/ui/components/inline-error-state";
 import { SearchField } from "@/shared/ui/components/input";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
 import { Screen } from "@/shared/ui/components/screen";
 import { SelectMenu } from "@/shared/ui/components/select-menu";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { atomSpacing } from "@/shared/ui/components/theme";
-import {
-  PlusIcon,
-  RefreshIcon,
-  SortIcon,
-  StoreIcon
-} from "@/shared/ui/icons";
+import { PlusIcon, RefreshIcon, SortIcon, StoreIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
@@ -48,8 +44,7 @@ export default function SuppliersScreen({
   );
   const columns = isExpanded ? 3 : isCompact ? 1 : 2;
   const openSupplier = useCallback(
-    (supplierId: string) =>
-      router.push(`/suppliers/${supplierId}` as never),
+    (supplierId: string) => router.push(`/suppliers/${supplierId}` as never),
     [router]
   );
   const renderSupplier = useCallback(
@@ -61,10 +56,7 @@ export default function SuppliersScreen({
           padding: atomSpacing[2]
         }}
       >
-        <SupplierCard
-          onPress={() => openSupplier(item.id)}
-          supplier={item}
-        />
+        <SupplierCard onPress={() => openSupplier(item.id)} supplier={item} />
       </View>
     ),
     [columns, openSupplier]
@@ -130,7 +122,7 @@ export default function SuppliersScreen({
       ))}
     </View>
   ) : suppliersQuery.isError ? (
-    <EmptyState
+    <InlineErrorState
       action={{
         icon: RefreshIcon,
         label: "Retry",

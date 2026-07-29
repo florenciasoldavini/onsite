@@ -14,37 +14,24 @@ import {
 } from "@/features/auth/components/auth-shell";
 import { useEmailVerificationResend } from "@/features/auth/hooks/use-auth-mutations";
 import { emailSchema } from "@/features/auth/schemas/field.schemas";
-import { getSafePostAuthRedirectPath } from "@/features/auth/utils/auth-callback";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
 
 const resendCooldownSeconds = 60;
 
-function getEmailParam(email: string | string[] | undefined) {
-  if (Array.isArray(email)) {
-    return email[0] ?? "";
-  }
-
-  return email ?? "";
-}
-
-export default function VerifyEmailScreen() {
+export default function VerifyEmailScreen({
+  email: requestedEmail,
+  nextPath = "/",
+  notice
+}: {
+  email?: string;
+  nextPath?: string;
+  notice?: string;
+}) {
   const verificationResend = useEmailVerificationResend();
-  const {
-    email: emailParam,
-    next: nextParam,
-    notice: noticeParam
-  } = useLocalSearchParams<{
-    email?: string | string[];
-    next?: string | string[];
-    notice?: string | string[];
-  }>();
-  const email = getEmailParam(emailParam).trim().toLowerCase();
-  const notice = getEmailParam(noticeParam);
-  const next = getSafePostAuthRedirectPath(nextParam);
-  const hasNext = next !== "/";
+  const email = (requestedEmail ?? "").trim().toLowerCase();
+  const hasNext = nextPath !== "/";
   const isRateLimited = notice === "rate-limited";
   const isInitialEmailSent = notice === "sent";
   const [cooldownSeconds, setCooldownSeconds] = useState(
@@ -87,7 +74,7 @@ export default function VerifyEmailScreen() {
     try {
       const result = await verificationResend.mutateAsync({
         email,
-        next: hasNext ? next : undefined
+        next: hasNext ? nextPath : undefined
       });
 
       setSuccessMessage(
@@ -176,7 +163,7 @@ export default function VerifyEmailScreen() {
           <AppLink
             href={
               hasNext
-                ? (`/sign-in?next=${encodeURIComponent(next)}` as never)
+                ? (`/sign-in?next=${encodeURIComponent(nextPath)}` as never)
                 : "/sign-in"
             }
           >

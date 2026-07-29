@@ -6,10 +6,8 @@ import type { ReactNode } from "react";
 
 const mockPush = jest.fn();
 const mockSetParams = jest.fn();
-let mockSearchParams: { section?: string | string[] } = {};
 
 jest.mock("expo-router", () => ({
-  useLocalSearchParams: () => mockSearchParams,
   useRouter: () => ({
     push: mockPush,
     setParams: mockSetParams
@@ -105,14 +103,14 @@ function setLayout(mode: "compact" | "expanded" | "medium") {
 
 describe("DirectoryScreen", () => {
   beforeEach(() => {
-    mockSearchParams = {};
     setLayout("expanded");
   });
 
   it("renders the requested section and routes its desktop create action", async () => {
     const user = userEvent.setup();
-    mockSearchParams = { section: "workers" };
-    const view = await renderWithAppProviders(<DirectoryScreen />);
+    const view = await renderWithAppProviders(
+      <DirectoryScreen requestedSection="workers" />
+    );
 
     expect(view.getByText("workers-content")).toBeOnTheScreen();
     expect(view.getByRole("button", { name: "Workers" })).toBeSelected();
@@ -132,9 +130,10 @@ describe("DirectoryScreen", () => {
   });
 
   it("uses the compact selector and defaults invalid sections to clients", async () => {
-    mockSearchParams = { section: "invalid" };
     setLayout("compact");
-    const view = await renderWithAppProviders(<DirectoryScreen />);
+    const view = await renderWithAppProviders(
+      <DirectoryScreen requestedSection="invalid" />
+    );
 
     expect(view.getByText("clients-content")).toBeOnTheScreen();
     expect(

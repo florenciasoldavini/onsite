@@ -9,15 +9,13 @@ import {
   getContractorDisplayName,
   toContractorInput
 } from "@/features/contractors/schemas/contractor.schema";
-import type {
-  Contractor,
-  ContractorFormValues
-} from "@/features/contractors/types/contractor";
+import type { ContractorFormValues } from "@/features/contractors/types/contractor";
+import { getContractorFormValues } from "@/features/contractors/utils/contractor-form-values";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
-import { EmptyState } from "@/shared/ui/components/empty-state";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { RouteStateBoundary } from "@/shared/ui/components/route-feedback";
 import { Screen } from "@/shared/ui/components/screen";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { AppText } from "@/shared/ui/components/text";
@@ -70,7 +68,7 @@ export default function ContractorFormScreen({
 
   useEffect(() => {
     if (contractorQuery.data) {
-      reset(toFormValues(contractorQuery.data));
+      reset(getContractorFormValues(contractorQuery.data));
     }
   }, [contractorQuery.data, reset]);
 
@@ -99,161 +97,137 @@ export default function ContractorFormScreen({
     }
   });
 
-  if (mode === "edit" && contractorQuery.isLoading) {
-    return (
-      <Screen>
-        <View style={{ gap: atomSpacing[5] }}>
-          <SkeletonBlock height={44} width="55%" />
-          <SkeletonBlock height={420} />
-        </View>
-      </Screen>
-    );
-  }
+  const backToDirectory = {
+    label: "Back to directory",
+    onPress: () => router.replace("/directory?section=contractors" as never)
+  };
 
-  if (mode === "edit" && contractorQuery.isError) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
+  return (
+    <RouteStateBoundary
+      feedback={{
+        invalidParams: { action: backToDirectory, icon: HardHatIcon },
+        loadError: {
+          action: {
             icon: RefreshIcon,
             label: "Retry",
             onPress: () => void contractorQuery.refetch()
-          }}
-          description={getUserFacingErrorMessage(
+          },
+          description: getUserFacingErrorMessage(
             contractorQuery.error,
             "We couldn't load this contractor. Try again."
-          )}
-          icon={HardHatIcon}
-          title="Contractor unavailable"
-        />
-      </Screen>
-    );
-  }
-
-  if (mode === "edit" && !contractorQuery.data) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
-            label: "Back to directory",
-            onPress: () =>
-              router.replace("/directory?section=contractors" as never)
-          }}
-          description="This contractor may have been removed or you may not have access."
-          icon={HardHatIcon}
-          title="Contractor not found"
-        />
-      </Screen>
-    );
-  }
-
-  return (
-    <Screen keyboardSafe>
-      <View
-        style={{
-          alignSelf: "center",
-          gap: atomSpacing[6],
-          maxWidth: 760,
-          width: "100%"
-        }}
-      >
-        <Breadcrumb
-          items={
-            mode === "edit" && contractorId
-              ? [
-                  {
-                    accessibilityLabel: "Back to contractor directory",
-                    label: "Contractors",
-                    onPress: () =>
-                      router.replace(
-                        "/directory?section=contractors" as never
-                      )
-                  },
-                  {
-                    accessibilityLabel: "Back to contractor detail",
-                    label: "Contractor Detail",
-                    onPress: () =>
-                      router.replace(
-                        `/contractors/${contractorId}` as never
-                      )
-                  },
-                  { label: "Edit" }
-                ]
-              : [
-                  {
-                    accessibilityLabel: "Back to contractor directory",
-                    label: "Contractors",
-                    onPress: () =>
-                      router.replace(
-                        "/directory?section=contractors" as never
-                      )
-                  },
-                  { label: "New" }
-                ]
-          }
-        />
-        <NavScreenHeader
-          description={
-            mode === "create"
-              ? "Add a contractor contact now and assign workers later."
-              : "Update the contact details stored in your contractor catalog."
-          }
-          title={mode === "create" ? "New contractor" : "Edit contractor"}
-        />
-        <AppCard padding="lg">
-          <View style={{ gap: atomSpacing[6] }}>
-            <ContractorFormFields
-              control={control}
-              onChange={() => setFormError(null)}
-            />
-            {formError ? (
-              <AppText selectable tone="danger">
-                {formError}
-              </AppText>
-            ) : null}
-            <View
-              style={{
-                flexDirection: "row",
-                gap: atomSpacing[3],
-                justifyContent: "flex-end"
-              }}
-            >
-              <AppButton
-                color="neutral"
-                fullWidth={false}
-                isDisabled={isSubmitting}
-                onPress={() => router.back()}
-                variant="bordered"
-              >
-                Cancel
-              </AppButton>
-              <AppButton
-                fullWidth={false}
-                isDisabled={
-                  !isValid ||
-                  firstName.trim().length === 0 ||
-                  (mode === "edit" && !isDirty)
-                }
-                loading={isSubmitting}
-                onPress={() => void submit()}
-              >
-                {mode === "create"
-                  ? "Create contractor"
-                  : "Save changes"}
-              </AppButton>
-            </View>
+          ),
+          icon: HardHatIcon
+        },
+        notFound: { action: backToDirectory, icon: HardHatIcon }
+      }}
+      isError={mode === "edit" && contractorQuery.isError}
+      isInvalid={mode === "edit" && !contractorId}
+      isLoading={mode === "edit" && contractorQuery.isLoading}
+      isNotFound={mode === "edit" && !contractorQuery.data}
+      loadingFallback={
+        <Screen>
+          <View style={{ gap: atomSpacing[5] }}>
+            <SkeletonBlock height={44} width="55%" />
+            <SkeletonBlock height={420} />
           </View>
-        </AppCard>
-      </View>
-    </Screen>
+        </Screen>
+      }
+      resourceName="contractor"
+    >
+      <Screen keyboardSafe>
+        <View
+          style={{
+            alignSelf: "center",
+            gap: atomSpacing[6],
+            maxWidth: 760,
+            width: "100%"
+          }}
+        >
+          <Breadcrumb
+            items={
+              mode === "edit" && contractorId
+                ? [
+                    {
+                      accessibilityLabel: "Back to contractor directory",
+                      label: "Contractors",
+                      onPress: () =>
+                        router.replace(
+                          "/directory?section=contractors" as never
+                        )
+                    },
+                    {
+                      accessibilityLabel: "Back to contractor detail",
+                      label: "Contractor Detail",
+                      onPress: () =>
+                        router.replace(`/contractors/${contractorId}` as never)
+                    },
+                    { label: "Edit" }
+                  ]
+                : [
+                    {
+                      accessibilityLabel: "Back to contractor directory",
+                      label: "Contractors",
+                      onPress: () =>
+                        router.replace(
+                          "/directory?section=contractors" as never
+                        )
+                    },
+                    { label: "New" }
+                  ]
+            }
+          />
+          <NavScreenHeader
+            description={
+              mode === "create"
+                ? "Add a contractor contact now and assign workers later."
+                : "Update the contact details stored in your contractor catalog."
+            }
+            title={mode === "create" ? "New contractor" : "Edit contractor"}
+          />
+          <AppCard padding="lg">
+            <View style={{ gap: atomSpacing[6] }}>
+              <ContractorFormFields
+                control={control}
+                onChange={() => setFormError(null)}
+              />
+              {formError ? (
+                <AppText selectable tone="danger">
+                  {formError}
+                </AppText>
+              ) : null}
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: atomSpacing[3],
+                  justifyContent: "flex-end"
+                }}
+              >
+                <AppButton
+                  color="neutral"
+                  fullWidth={false}
+                  isDisabled={isSubmitting}
+                  onPress={() => router.back()}
+                  variant="bordered"
+                >
+                  Cancel
+                </AppButton>
+                <AppButton
+                  fullWidth={false}
+                  isDisabled={
+                    !isValid ||
+                    firstName.trim().length === 0 ||
+                    (mode === "edit" && !isDirty)
+                  }
+                  loading={isSubmitting}
+                  onPress={() => void submit()}
+                >
+                  {mode === "create" ? "Create contractor" : "Save changes"}
+                </AppButton>
+              </View>
+            </View>
+          </AppCard>
+        </View>
+      </Screen>
+    </RouteStateBoundary>
   );
-}
-
-function toFormValues(contractor: Contractor): ContractorFormValues {
-  return {
-    email: contractor.email ?? "",
-    first_name: contractor.first_name,
-    last_name: contractor.last_name ?? "",
-    phone_number: contractor.phone_number ?? ""
-  };
 }

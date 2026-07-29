@@ -8,15 +8,13 @@ import {
   supplierFormSchema,
   toSupplierInput
 } from "@/features/suppliers/schemas/supplier.schema";
-import type {
-  Supplier,
-  SupplierFormValues
-} from "@/features/suppliers/types/supplier";
+import type { SupplierFormValues } from "@/features/suppliers/types/supplier";
+import { getSupplierFormValues } from "@/features/suppliers/utils/supplier-form-values";
 import { AppButton } from "@/shared/ui/components/button";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppCard } from "@/shared/ui/components/card";
-import { EmptyState } from "@/shared/ui/components/empty-state";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
+import { RouteStateBoundary } from "@/shared/ui/components/route-feedback";
 import { Screen } from "@/shared/ui/components/screen";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { AppText } from "@/shared/ui/components/text";
@@ -49,9 +47,7 @@ export default function SupplierFormScreen({
 }) {
   const router = useRouter();
   const toast = useAppToast();
-  const supplierQuery = useSupplier(
-    mode === "edit" ? supplierId : undefined
-  );
+  const supplierQuery = useSupplier(mode === "edit" ? supplierId : undefined);
   const createMutation = useCreateSupplier();
   const updateMutation = useUpdateSupplier(supplierId ?? "");
   const [formError, setFormError] = useState<string | null>(null);
@@ -71,7 +67,7 @@ export default function SupplierFormScreen({
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
-    if (supplierQuery.data) reset(toFormValues(supplierQuery.data));
+    if (supplierQuery.data) reset(getSupplierFormValues(supplierQuery.data));
   }, [reset, supplierQuery.data]);
 
   const submit = handleSubmit(async (values) => {
@@ -99,171 +95,131 @@ export default function SupplierFormScreen({
     }
   });
 
-  if (mode === "edit" && supplierQuery.isLoading) {
-    return (
-      <Screen>
-        <View style={{ gap: atomSpacing[5] }}>
-          <SkeletonBlock height={44} width="55%" />
-          <SkeletonBlock height={560} />
-        </View>
-      </Screen>
-    );
-  }
+  const backToDirectory = {
+    label: "Back to directory",
+    onPress: () => router.replace("/directory?section=suppliers" as never)
+  };
 
-  if (mode === "edit" && supplierQuery.isError) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
+  return (
+    <RouteStateBoundary
+      feedback={{
+        invalidParams: { action: backToDirectory, icon: StoreIcon },
+        loadError: {
+          action: {
             icon: RefreshIcon,
             label: "Retry",
             onPress: () => void supplierQuery.refetch()
-          }}
-          description={getUserFacingErrorMessage(
+          },
+          description: getUserFacingErrorMessage(
             supplierQuery.error,
             "We couldn't load this supplier. Try again."
-          )}
-          icon={StoreIcon}
-          title="Supplier unavailable"
-        />
-      </Screen>
-    );
-  }
-
-  if (mode === "edit" && !supplierQuery.data) {
-    return (
-      <Screen centered>
-        <EmptyState
-          action={{
-            label: "Back to directory",
-            onPress: () =>
-              router.replace("/directory?section=suppliers" as never)
-          }}
-          description="This supplier may have been removed or you may not have access."
-          icon={StoreIcon}
-          title="Supplier not found"
-        />
-      </Screen>
-    );
-  }
-
-  return (
-    <Screen keyboardSafe>
-      <View
-        style={{
-          alignSelf: "center",
-          gap: atomSpacing[6],
-          maxWidth: 760,
-          width: "100%"
-        }}
-      >
-        <Breadcrumb
-          items={
-            mode === "edit" && supplierId
-              ? [
-                  {
-                    label: "Suppliers",
-                    onPress: () =>
-                      router.replace(
-                        "/directory?section=suppliers" as never
-                      )
-                  },
-                  {
-                    label: "Supplier Detail",
-                    onPress: () =>
-                      router.replace(`/suppliers/${supplierId}` as never)
-                  },
-                  { label: "Edit" }
-                ]
-              : [
-                  {
-                    label: "Suppliers",
-                    onPress: () =>
-                      router.replace(
-                        "/directory?section=suppliers" as never
-                      )
-                  },
-                  { label: "New" }
-                ]
-          }
-        />
-        <NavScreenHeader
-          description={
-            mode === "create"
-              ? "Add a supplier's contact, website, and location details."
-              : "Update the supplier information stored in your directory."
-          }
-          showBreadcrumb={false}
-          title={mode === "create" ? "New supplier" : "Edit supplier"}
-        />
-        <AppCard padding="lg">
-          <View style={{ gap: atomSpacing[6] }}>
-            <SupplierFormFields
-              control={control}
-              onChange={() => setFormError(null)}
-            />
-            {formError ? (
-              <AppText selectable tone="danger">
-                {formError}
-              </AppText>
-            ) : null}
-            <View
-              style={{
-                flexDirection: "row",
-                gap: atomSpacing[3],
-                justifyContent: "flex-end"
-              }}
-            >
-              <AppButton
-                color="neutral"
-                fullWidth={false}
-                isDisabled={isSubmitting}
-                onPress={() => router.back()}
-                variant="bordered"
-              >
-                Cancel
-              </AppButton>
-              <AppButton
-                fullWidth={false}
-                isDisabled={
-                  !isValid ||
-                  name.trim().length < 2 ||
-                  (mode === "edit" && !isDirty)
-                }
-                loading={isSubmitting}
-                onPress={() => void submit()}
-              >
-                {mode === "create" ? "Create supplier" : "Save changes"}
-              </AppButton>
-            </View>
+          ),
+          icon: StoreIcon
+        },
+        notFound: { action: backToDirectory, icon: StoreIcon }
+      }}
+      isError={mode === "edit" && supplierQuery.isError}
+      isInvalid={mode === "edit" && !supplierId}
+      isLoading={mode === "edit" && supplierQuery.isLoading}
+      isNotFound={mode === "edit" && !supplierQuery.data}
+      loadingFallback={
+        <Screen>
+          <View style={{ gap: atomSpacing[5] }}>
+            <SkeletonBlock height={44} width="55%" />
+            <SkeletonBlock height={560} />
           </View>
-        </AppCard>
-      </View>
-    </Screen>
+        </Screen>
+      }
+      resourceName="supplier"
+    >
+      <Screen keyboardSafe>
+        <View
+          style={{
+            alignSelf: "center",
+            gap: atomSpacing[6],
+            maxWidth: 760,
+            width: "100%"
+          }}
+        >
+          <Breadcrumb
+            items={
+              mode === "edit" && supplierId
+                ? [
+                    {
+                      label: "Suppliers",
+                      onPress: () =>
+                        router.replace("/directory?section=suppliers" as never)
+                    },
+                    {
+                      label: "Supplier Detail",
+                      onPress: () =>
+                        router.replace(`/suppliers/${supplierId}` as never)
+                    },
+                    { label: "Edit" }
+                  ]
+                : [
+                    {
+                      label: "Suppliers",
+                      onPress: () =>
+                        router.replace("/directory?section=suppliers" as never)
+                    },
+                    { label: "New" }
+                  ]
+            }
+          />
+          <NavScreenHeader
+            description={
+              mode === "create"
+                ? "Add a supplier's contact, website, and location details."
+                : "Update the supplier information stored in your directory."
+            }
+            showBreadcrumb={false}
+            title={mode === "create" ? "New supplier" : "Edit supplier"}
+          />
+          <AppCard padding="lg">
+            <View style={{ gap: atomSpacing[6] }}>
+              <SupplierFormFields
+                control={control}
+                onChange={() => setFormError(null)}
+              />
+              {formError ? (
+                <AppText selectable tone="danger">
+                  {formError}
+                </AppText>
+              ) : null}
+              <View
+                style={{
+                  flexDirection: "row",
+                  gap: atomSpacing[3],
+                  justifyContent: "flex-end"
+                }}
+              >
+                <AppButton
+                  color="neutral"
+                  fullWidth={false}
+                  isDisabled={isSubmitting}
+                  onPress={() => router.back()}
+                  variant="bordered"
+                >
+                  Cancel
+                </AppButton>
+                <AppButton
+                  fullWidth={false}
+                  isDisabled={
+                    !isValid ||
+                    name.trim().length < 2 ||
+                    (mode === "edit" && !isDirty)
+                  }
+                  loading={isSubmitting}
+                  onPress={() => void submit()}
+                >
+                  {mode === "create" ? "Create supplier" : "Save changes"}
+                </AppButton>
+              </View>
+            </View>
+          </AppCard>
+        </View>
+      </Screen>
+    </RouteStateBoundary>
   );
-}
-
-function toFormValues(supplier: Supplier): SupplierFormValues {
-  const hasAddress =
-    supplier.address &&
-    supplier.google_place_id &&
-    supplier.latitude !== null &&
-    supplier.longitude !== null;
-
-  return {
-    address: hasAddress
-      ? {
-          address: supplier.address!,
-          latitude: supplier.latitude!,
-          longitude: supplier.longitude!,
-          placeId: supplier.google_place_id!
-        }
-      : null,
-    contact_name: supplier.contact_name ?? "",
-    email: supplier.email ?? "",
-    name: supplier.name,
-    notes: supplier.notes ?? "",
-    phone_number: supplier.phone_number ?? "",
-    website_url: supplier.website_url ?? ""
-  };
 }

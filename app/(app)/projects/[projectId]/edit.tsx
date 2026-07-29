@@ -1,4 +1,5 @@
 import { RouteLoadingScreen } from "@/shared/route-loading-screen";
+import { parseRequiredUuidRouteParam } from "@/shared/utils/route-params";
 import { useLocalSearchParams } from "expo-router";
 import { lazy, Suspense } from "react";
 
@@ -10,14 +11,12 @@ const ProjectFormScreen = lazy(async () => {
 });
 
 export default function EditProjectRoute() {
-  const params = useLocalSearchParams<{ projectId: string }>();
-  const projectId = Array.isArray(params.projectId)
-    ? params.projectId[0]
-    : params.projectId;
+  const params = useLocalSearchParams<{ projectId: string | string[] }>();
+  const projectId = parseRequiredUuidRouteParam(params.projectId);
 
   return (
     <Suspense fallback={<RouteLoadingScreen />}>
-      <ProjectFormScreen mode="edit" projectId={projectId} />
+      <ProjectFormScreen mode="edit" projectId={projectId ?? undefined} />
     </Suspense>
   );
 }

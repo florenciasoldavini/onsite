@@ -11,6 +11,7 @@ import type {
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { AppButton } from "@/shared/ui/components/button";
 import { EmptyState } from "@/shared/ui/components/empty-state";
+import { InlineErrorState } from "@/shared/ui/components/inline-error-state";
 import { SearchField } from "@/shared/ui/components/input";
 import { MultiSelectField } from "@/shared/ui/components/multi-select-field";
 import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
@@ -201,7 +202,7 @@ export default function WorkersScreen({
       ))}
     </View>
   ) : workersQuery.isError ? (
-    <EmptyState
+    <InlineErrorState
       action={{
         icon: RefreshIcon,
         label: "Retry",

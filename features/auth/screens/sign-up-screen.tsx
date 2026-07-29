@@ -26,8 +26,7 @@ import {
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { getSafePostAuthRedirectPath } from "@/features/auth/utils/auth-callback";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
@@ -35,11 +34,13 @@ import { View } from "react-native";
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
 
-export default function SignUpScreen() {
+export default function SignUpScreen({
+  nextPath = "/"
+}: {
+  nextPath?: string;
+}) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ next?: string | string[] }>();
-  const next = getSafePostAuthRedirectPath(params.next);
-  const hasNext = next !== "/";
+  const hasNext = nextPath !== "/";
   const { authError, session } = useAuth();
   const emailSignUp = useEmailSignUp();
   const oauthSignIn = useOAuthSignIn();
@@ -66,9 +67,9 @@ export default function SignUpScreen() {
 
   useEffect(() => {
     if (hasNext && session) {
-      router.replace(next as never);
+      router.replace(nextPath as never);
     }
-  }, [hasNext, next, router, session]);
+  }, [hasNext, nextPath, router, session]);
 
   const revealEmailSignUpValidation = () => {
     void trigger();
@@ -81,20 +82,20 @@ export default function SignUpScreen() {
     try {
       const result = await emailSignUp.mutateAsync({
         email,
-        next: hasNext ? next : undefined,
+        next: hasNext ? nextPath : undefined,
         password
       });
 
       if (result.status === "verification-rate-limited") {
         router.replace(
           `/verify-email?email=${encodeURIComponent(result.email)}&notice=rate-limited${
-            hasNext ? `&next=${encodeURIComponent(next)}` : ""
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
           }`
         );
       } else if (result.status === "verification-sent") {
         router.replace(
           `/verify-email?email=${encodeURIComponent(result.email)}&notice=sent${
-            hasNext ? `&next=${encodeURIComponent(next)}` : ""
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
           }`
         );
       }
@@ -115,7 +116,7 @@ export default function SignUpScreen() {
       setLoadingAction(provider);
       setFormError(null);
       await oauthSignIn.mutateAsync({
-        next: hasNext ? next : undefined,
+        next: hasNext ? nextPath : undefined,
         provider
       });
     } catch (error) {
@@ -267,7 +268,7 @@ export default function SignUpScreen() {
           actionLabel="Sign In"
           href={
             hasNext
-              ? (`/sign-in?next=${encodeURIComponent(next)}` as never)
+              ? (`/sign-in?next=${encodeURIComponent(nextPath)}` as never)
               : "/sign-in"
           }
           prompt="Already have an account?"

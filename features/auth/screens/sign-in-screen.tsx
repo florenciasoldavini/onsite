@@ -27,8 +27,7 @@ import {
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { getSafePostAuthRedirectPath } from "@/features/auth/utils/auth-callback";
-import { useLocalSearchParams, useRouter } from "expo-router";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
@@ -36,11 +35,13 @@ import { View } from "react-native";
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
 
-export default function SignInScreen() {
+export default function SignInScreen({
+  nextPath = "/"
+}: {
+  nextPath?: string;
+}) {
   const router = useRouter();
-  const params = useLocalSearchParams<{ next?: string | string[] }>();
-  const next = getSafePostAuthRedirectPath(params.next);
-  const hasNext = next !== "/";
+  const hasNext = nextPath !== "/";
   const { authError, session } = useAuth();
   const emailSignIn = useEmailSignIn();
   const oauthSignIn = useOAuthSignIn();
@@ -67,9 +68,9 @@ export default function SignInScreen() {
 
   useEffect(() => {
     if (hasNext && session) {
-      router.replace(next as never);
+      router.replace(nextPath as never);
     }
-  }, [hasNext, next, router, session]);
+  }, [hasNext, nextPath, router, session]);
 
   const revealEmailSignInValidation = () => {
     void trigger();
@@ -85,7 +86,7 @@ export default function SignInScreen() {
       if (result.status === "email-unverified") {
         router.replace(
           `/verify-email?email=${encodeURIComponent(result.email)}${
-            hasNext ? `&next=${encodeURIComponent(next)}` : ""
+            hasNext ? `&next=${encodeURIComponent(nextPath)}` : ""
           }`
         );
       }
@@ -106,7 +107,7 @@ export default function SignInScreen() {
       setLoadingAction(provider);
       setFormError(null);
       await oauthSignIn.mutateAsync({
-        next: hasNext ? next : undefined,
+        next: hasNext ? nextPath : undefined,
         provider
       });
     } catch (error) {
@@ -256,7 +257,7 @@ export default function SignInScreen() {
           actionLabel="Create an Account"
           href={
             hasNext
-              ? (`/sign-up?next=${encodeURIComponent(next)}` as never)
+              ? (`/sign-up?next=${encodeURIComponent(nextPath)}` as never)
               : "/sign-up"
           }
           prompt="New to the platform?"

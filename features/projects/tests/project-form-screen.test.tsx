@@ -46,7 +46,11 @@ jest.mock("@/features/projects/components/project-address-field", () => {
   const { Pressable, Text } = jest.requireActual("react-native");
 
   return {
-    ProjectAddressField: ({ onChange }: { onChange: (value: unknown) => void }) =>
+    ProjectAddressField: ({
+      onChange
+    }: {
+      onChange: (value: unknown) => void;
+    }) =>
       React.createElement(
         Pressable,
         {
@@ -117,7 +121,8 @@ describe("ProjectFormScreen", () => {
         ]
       },
       isError: false,
-      isLoading: false
+      isLoading: false,
+      refetch: jest.fn()
     } as never);
     jest.mocked(useLayoutMode).mockReturnValue({
       height: 844,
@@ -154,9 +159,7 @@ describe("ProjectFormScreen", () => {
       "River House"
     );
     await fireEvent.press(screen.getByLabelText("Choose test address"));
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Create" })
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Create" }));
 
     expect(
       await screen.findByText("You must be signed in to save projects.")
@@ -174,9 +177,7 @@ describe("ProjectFormScreen", () => {
       "River House"
     );
     await fireEvent.press(screen.getByLabelText("Choose test address"));
-    await fireEvent.press(
-      screen.getByRole("button", { name: "Create" })
-    );
+    await fireEvent.press(screen.getByRole("button", { name: "Create" }));
 
     await waitFor(() => {
       expect(mockCreate).toHaveBeenCalledWith({
@@ -210,5 +211,39 @@ describe("ProjectFormScreen", () => {
     expect(screen.getByText("Project unavailable")).toBeOnTheScreen();
     await fireEvent.press(screen.getByText("Retry"));
     expect(mockRefetch).toHaveBeenCalledTimes(1);
+  });
+
+  it("blocks direct edit navigation when the project is readable but editing is forbidden", async () => {
+    jest.mocked(useProject).mockReturnValue({
+      data: outcome.project,
+      error: null,
+      isError: false,
+      isLoading: false,
+      refetch: mockRefetch
+    } as never);
+    jest.mocked(useProjectAccess).mockReturnValue({
+      can: () => false,
+      data: { permissions: ["project.read"] },
+      isError: false,
+      isLoading: false,
+      refetch: jest.fn()
+    } as never);
+
+    await renderWithAppProviders(
+      <ProjectFormScreen mode="edit" projectId="project-1" />
+    );
+
+    expect(screen.getByText("Project editing unavailable")).toBeOnTheScreen();
+    expect(
+      screen.getByText("You don't have permission to edit this project.")
+    ).toBeOnTheScreen();
+    expect(
+      screen.queryByPlaceholderText("Foundation Package")
+    ).not.toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByText("Back to project"));
+
+    expect(mockReplace).toHaveBeenCalledWith("/projects/project-1");
+    expect(mockUpdate).not.toHaveBeenCalled();
   });
 });

@@ -5,7 +5,7 @@ const ProjectsScreen = lazy(
   () => import("@/features/projects/screens/projects-screen")
 );
 
-export default function Projects() {
+export default function ProjectsRoute() {
   return (
     <Suspense fallback={<RouteLoadingScreen />}>
       <ProjectsScreen />
