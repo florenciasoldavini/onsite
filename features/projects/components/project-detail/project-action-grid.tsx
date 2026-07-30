@@ -20,7 +20,7 @@ const projectActions = [
     icon: FolderOpenIcon,
     index: "01",
     label: "documentation",
-    target: null
+    target: "documents"
   },
   {
     accent: false,

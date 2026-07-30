@@ -9,7 +9,7 @@ Last reviewed: 2026-07-28
 
 Project authorization is database-owned. `project_roles`, `project_permissions`, and `project_role_permissions` are the canonical catalogs. The initial assignable roles are `manager`, `contributor`, and `viewer`; `owner` is derived from `projects.owner_id` and is never persisted as a membership.
 
-`private.current_user_has_project_permission(project_id, permission_code)` is the authorization engine used by project, client, task, photo, and Storage RLS as well as collaboration mutations. It rejects archived projects and removed memberships. Global admins receive every cataloged capability. `public.get_project_access` exposes only the effective role and capability list required by the application.
+`private.current_user_has_project_permission(project_id, permission_code)` is the authorization engine used by project, client, task, photo, document, and Storage RLS as well as collaboration mutations. It rejects archived projects and removed memberships. Global admins receive every cataloged capability. `public.get_project_access` exposes only the effective role and capability list required by the application.
 
 The client consumes access through `useProjectAccess(projectId).can(permission)`. UI code must not branch on project role names. UI checks improve clarity, while RLS and database workflows remain authoritative.
 
@@ -26,6 +26,7 @@ Role codes are validated stable strings rather than a closed application enum. A
 | `project.cover.write`    |   Yes |     Yes |          No |     No |
 | `project.tasks.write`    |   Yes |     Yes |         Yes |     No |
 | `project.photos.write`   |   Yes |     Yes |         Yes |     No |
+| `project.documents.write` |   Yes |     Yes |          No |     No |
 | `project.members.read`   |   Yes |     Yes |         Yes |    Yes |
 | `project.members.manage` |   Yes |      No |          No |     No |
 
@@ -54,10 +55,10 @@ codes; database English display labels are not email copy.
 
 ## Data Access Effects
 
-- Project, linked-client, task, project-photo, cover, and photo-object access uses the central capability engine.
-- Project and photo repositories rely on RLS for owner/member/admin scope and do not add owner-only filters.
+- Project, linked-client, task, project-photo, project-document, cover, photo-object, and document-object access uses the central capability engine.
+- Project, photo, and document repositories rely on RLS for owner/member/admin scope and do not add owner-only filters.
 - Product get/list queries continue to exclude soft-deleted rows.
-- Project cover and photo signed URLs expire after five minutes to bound stale access after revocation.
+- Project cover, photo, and document signed URLs expire after five minutes to bound stale access after revocation.
 
 ## Verification
 

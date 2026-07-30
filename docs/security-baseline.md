@@ -12,7 +12,7 @@ This baseline is for the next product phase:
 - projects
 - project detail views
 - tasks CRUD
-- project uploads and photos
+- project uploads, photos, and documents
 
 It is intentionally practical. The goal is to prevent the most likely and most damaging mistakes while the product surface is expanding.
 
@@ -128,7 +128,7 @@ Baseline rules:
 - use an expected-current-reference check when replacing avatars or project files so concurrent uploads cannot silently overwrite each other
 - report cleanup failures without rolling back a database reference that already points to a valid new object
 - keep user avatars in a private bucket, store stable object paths in profile rows, and resolve short-lived signed URLs at display time
-- expire project cover and project photo signed URLs after five minutes
+- expire project cover, project photo, and project document signed URLs after five minutes
 - allow authenticated users to view avatars without granting cross-user object listing; keep avatar writes and deletes owner-scoped
 
 Recommended path structure:
@@ -136,7 +136,7 @@ Recommended path structure:
 - `projects/{project_id}/cover/{generated_file_name}`
 - `projects/{project_id}/photos/{photo_id}/full.jpg`
 - `projects/{project_id}/photos/{photo_id}/thumbnail.jpg`
-- `projects/{project_id}/documents/{generated_file_name}`
+- `projects/{project_id}/documents/{document_id}/file.{pdf|jpg|png}`
 
 Project photo rules:
 
@@ -148,6 +148,15 @@ Project photo rules:
 - strip EXIF from generated files; retain optional capture time and GPS only in the RLS-protected row
 - do not request device location for photo upload in the current version
 - treat `is_marketing` as organization only, never as publication consent or a visibility change
+
+Project document rules:
+
+- accept only PDF, JPEG, and PNG files up to 25 MiB, with client signature validation and repeated bucket/database constraints
+- grant reads through five-minute signed URLs only when `project.read` and a matching active document row both exist
+- grant upload and delete only through `project.documents.write`; do not grant Storage update, upsert, or bucket listing
+- derive `uploaded_by` from `auth.uid()` and prevent client changes to project, uploader, and file metadata
+- use one immutable object per document and compensate a failed row insert by removing the staged object
+- soft-delete the row before Storage cleanup so cleanup failure cannot restore access
 
 Before shipping other upload categories, decide:
 

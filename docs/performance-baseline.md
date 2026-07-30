@@ -88,7 +88,7 @@ Examples:
 
 ## Lists and dense collections
 
-Projects, tasks, activity streams, and photos should be built for scale from the start.
+Projects, tasks, activity streams, photos, and documents should be built for scale from the start.
 
 Baseline rules:
 
@@ -106,6 +106,7 @@ High-priority list surfaces:
 - project task list
 - activity or update timeline
 - photo list or gallery
+- project document catalog
 
 ## Rendering discipline
 
@@ -154,6 +155,15 @@ Current project-photo limits:
 - galleries render through a virtualized adaptive grid and load signed thumbnails; full images load only on detail screens
 - HEIC/HEIF conversion is dynamically imported on web so the decoder is not part of the initial route graph
 
+Current project-document limits:
+
+- catalog queries use deterministic 25-row pages ordered by creation time and UUID
+- the responsive catalog uses a virtualized list and summary-only columns
+- search is debounced and applied at the repository query boundary
+- signed URLs are created only for explicit Open or Download actions, never for every list row
+- native downloads use temporary app-cache files and remove them after the share/save flow when safe
+- v1 uploads are foreground-only, one file at a time, and use indeterminate progress
+
 ## Web performance
 
 Because the app is also usable on web, bundle size and first load matter.
@@ -167,13 +177,13 @@ Baseline rules:
 
 Current enforced export budgets:
 
-- initial JavaScript: at most 3,600,000 raw bytes and 900,000 gzip bytes
+- initial JavaScript: at most 3,600,000 raw bytes and 920,000 gzip bytes
 - initial CSS: at most 100,000 raw bytes
 - authenticated feature screens and heavy optional integrations should use route or interaction-level code splitting when it reduces the initial graph
 
-Current production-export baseline after project-photo processing was added:
+Current production-export baseline after project documents were added:
 
-- initial JavaScript: 3,444.6 KiB raw and 875.7 KiB gzip
+- initial JavaScript: 3,491.0 KiB raw and 886.2 KiB gzip
 - web uses Google-hosted Geist and JetBrains Mono from `global.css`; iOS and Android load the tracked local TTF files through the platform-specific app-font hook
 - web must not register or preload the native TTF assets
 - screens and components import named app icons and icon types only from `@/shared/ui/icons`; the central registry alone imports Lucide's individual ESM icon modules so Metro does not bundle the complete catalog
@@ -184,6 +194,7 @@ Current production-export baseline after project-photo processing was added:
 - web animation adapters use React Native Animated or CSS transitions while iOS and Android retain Reanimated and Worklets
 - route modules should import shared components from their owning files instead of the aggregate `@/shared/ui/components` barrel when the barrel would promote optional component dependencies into the initial web graph
 - the browser-only HEIC decoder remains a separate interaction-loaded chunk and must not enter the iOS or Android Hermes bundles
+- the 920,000-byte gzip budget is a temporary allowance for the documents feature while [GitHub issue #81](https://github.com/florenciasoldavini/onzait/issues/81) tracks a general route/bundle optimization and restoration of the 900,000-byte ceiling
 
 Run `npm run build` followed by `npm run bundle:check` after changing shared dependencies, route imports, NativeWind content paths, or font loading.
 

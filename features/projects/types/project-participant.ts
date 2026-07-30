@@ -2,6 +2,7 @@ export const PROJECT_PERMISSION_CODES = [
   "project.change_client",
   "project.cover.write",
   "project.delete",
+  "project.documents.write",
   "project.members.manage",
   "project.members.read",
   "project.photos.write",

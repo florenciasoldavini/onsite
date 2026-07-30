@@ -133,6 +133,7 @@ Last reviewed: 2026-07-29
 - [20260727181533_create_suppliers_catalog.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727181533_create_suppliers_catalog.sql:1)
 - [20260727191057_allow_directory_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727191057_allow_directory_soft_delete_updates.sql:1)
 - [20260727213244_create_project_photos_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727213244_create_project_photos_feature.sql:1)
+- [20260730151708_create_project_documents_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260730151708_create_project_documents_feature.sql:1)
 
 ### RLS Baseline
 
@@ -215,6 +216,14 @@ Last reviewed: 2026-07-29
 - photo rows are soft-deleted before Storage cleanup; active row references are required for Storage reads
 - the complete product, privacy, processing, and deferred-scope contract lives in [docs/project-photos.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-photos.md:1)
 
+### Project Documents
+
+- project documents are private, project-scoped records containing one immutable PDF, JPEG, or PNG file up to 25 MiB
+- all active participants may list, open, and download active documents; only owners, managers, and global admins receive `project.documents.write`
+- document object paths are immutable, signed URLs expire after five minutes, bucket listing is denied, and Storage reads require a matching active row
+- editing changes only display name and category; deletion soft-deletes the row before Storage cleanup
+- the complete product, authorization, upload, download, and deferred-scope contract lives in [docs/project-documents.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-documents.md:1)
+
 ### Project Collaboration
 
 - project roles, capabilities, and role-to-capability mappings are database catalogs changed through tracked migrations
@@ -223,7 +232,7 @@ Last reviewed: 2026-07-29
 - application UI must use `useProjectAccess(projectId).can(permission)` and must not branch on project role names
 - global admins receive every project capability without acquiring membership
 - invitation tokens are stored only as SHA-256 hashes, expire after seven days, and use URL fragments in email links
-- project cover and photo signed URLs expire after five minutes
+- project cover, photo, and document signed URLs expire after five minutes
 - the complete authorization and invitation contract lives in [docs/project-collaboration.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-collaboration.md:1)
 
 ## User Model Decisions

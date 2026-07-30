@@ -8,6 +8,8 @@ import contractorsEn from "@/features/contractors/i18n/en";
 import contractorsEs from "@/features/contractors/i18n/es";
 import directoryEn from "@/features/directory/i18n/en";
 import directoryEs from "@/features/directory/i18n/es";
+import documentsEn from "@/features/documents/i18n/en";
+import documentsEs from "@/features/documents/i18n/es";
 import locationsEn from "@/features/locations/i18n/en";
 import locationsEs from "@/features/locations/i18n/es";
 import projectsEn from "@/features/projects/i18n/en";
@@ -33,6 +35,7 @@ export const localizationResources = {
     "features/clients": clientsEn,
     "features/contractors": contractorsEn,
     "features/directory": directoryEn,
+    "features/documents": documentsEn,
     "features/localization": localizationEn,
     "features/locations": locationsEn,
     "features/projects": projectsEn,
@@ -49,6 +52,7 @@ export const localizationResources = {
     "features/clients": clientsEs,
     "features/contractors": contractorsEs,
     "features/directory": directoryEs,
+    "features/documents": documentsEs,
     "features/localization": localizationEs,
     "features/locations": locationsEs,
     "features/projects": projectsEs,
