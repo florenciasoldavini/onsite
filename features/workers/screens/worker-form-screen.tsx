@@ -7,8 +7,8 @@ import {
 } from "@/features/workers/hooks/use-workers";
 import {
   getWorkerDisplayName,
+  createWorkerFormSchema,
   toWorkerInput,
-  workerFormSchema
 } from "@/features/workers/schemas/worker.schema";
 import type { WorkerFormValues } from "@/features/workers/types/worker";
 import { getWorkerFormValues } from "@/features/workers/utils/worker-form-values";
@@ -26,8 +26,9 @@ import { RefreshIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 const defaultValues: WorkerFormValues = {
@@ -47,16 +48,22 @@ export default function WorkerFormScreen({
   workerId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/workers");
+  const { i18n, t: tShared } = useTranslation("shared");
   const toast = useAppToast();
   const { user } = useAuth();
   const workerQuery = useWorker(mode === "edit" ? workerId : undefined);
   const createMutation = useCreateWorker();
   const updateMutation = useUpdateWorker(workerId ?? "");
   const [formError, setFormError] = useState<string | null>(null);
+  const formSchema = useMemo(
+    () => createWorkerFormSchema(tShared),
+    [i18n.resolvedLanguage, tShared]
+  );
   const form = useForm<WorkerFormValues>({
     defaultValues,
     mode: "onChange",
-    resolver: zodResolver(workerFormSchema)
+    resolver: zodResolver(formSchema)
   });
   const {
     control,
@@ -80,10 +87,18 @@ export default function WorkerFormScreen({
           ? await createMutation.mutateAsync(toWorkerInput(values))
           : await updateMutation.mutateAsync(toWorkerInput(values));
       toast.show({
-        description: `${getWorkerDisplayName(saved)} was ${
-          mode === "create" ? "created" : "updated"
-        } successfully.`,
-        title: `Worker ${mode === "create" ? "created" : "updated"}`,
+        description:
+          mode === "create"
+            ? t(($) => $["features/workers"].toast.createdDescription, {
+                name: getWorkerDisplayName(saved)
+              })
+            : t(($) => $["features/workers"].toast.updatedDescription, {
+                name: getWorkerDisplayName(saved)
+              }),
+        title:
+          mode === "create"
+            ? t(($) => $["features/workers"].toast.createdTitle)
+            : t(($) => $["features/workers"].toast.updatedTitle),
         tone: "success"
       });
       router.replace(`/workers/${saved.id}` as never);
@@ -91,14 +106,14 @@ export default function WorkerFormScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't save this worker. Check your connection and try again."
+          t(($) => $["features/workers"].errors.save)
         )
       );
     }
   });
 
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/workers"].accessibility.backToDirectory),
     onPress: () => router.replace("/directory?section=workers" as never)
   };
 
@@ -109,12 +124,12 @@ export default function WorkerFormScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void workerQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             workerQuery.error,
-            "We couldn't load this worker. Try again."
+            t(($) => $["features/workers"].errors.load)
           ),
           icon: UserIcon
         },
@@ -132,7 +147,7 @@ export default function WorkerFormScreen({
           </View>
         </Screen>
       }
-      resourceName="worker"
+      resourceName={t(($) => $["features/workers"].fields.worker)}
     >
       <Screen keyboardSafe>
         <View
@@ -148,34 +163,38 @@ export default function WorkerFormScreen({
               mode === "edit" && workerId
                 ? [
                     {
-                      label: "Workers",
+                      label: t(($) => $["features/workers"].breadcrumbs.workers),
                       onPress: () =>
                         router.replace("/directory?section=workers" as never)
                     },
                     {
-                      label: "Worker Detail",
+                      label: t(($) => $["features/workers"].breadcrumbs.detail),
                       onPress: () =>
                         router.replace(`/workers/${workerId}` as never)
                     },
-                    { label: "Edit" }
+                    { label: t(($) => $["features/workers"].breadcrumbs.edit) }
                   ]
                 : [
                     {
-                      label: "Workers",
+                      label: t(($) => $["features/workers"].breadcrumbs.workers),
                       onPress: () =>
                         router.replace("/directory?section=workers" as never)
                     },
-                    { label: "New" }
+                    { label: t(($) => $["features/workers"].breadcrumbs.new) }
                   ]
             }
           />
           <NavScreenHeader
             description={
               mode === "create"
-                ? "Add a worker and record their contractor and usual trades."
-                : "Update this worker's contact details and catalog relationships."
+                ? t(($) => $["features/workers"].form.createDescription)
+                : t(($) => $["features/workers"].form.editDescription)
             }
-            title={mode === "create" ? "New worker" : "Edit worker"}
+            title={
+              mode === "create"
+                ? t(($) => $["features/workers"].form.createTitle)
+                : t(($) => $["features/workers"].form.editTitle)
+            }
           />
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[6] }}>
@@ -203,7 +222,7 @@ export default function WorkerFormScreen({
                   onPress={() => router.back()}
                   variant="bordered"
                 >
-                  Cancel
+                  {tShared(($) => $.shared.actions.cancel)}
                 </AppButton>
                 <AppButton
                   fullWidth={false}
@@ -215,7 +234,9 @@ export default function WorkerFormScreen({
                   loading={isSubmitting}
                   onPress={() => void submit()}
                 >
-                  {mode === "create" ? "Create worker" : "Save changes"}
+                  {mode === "create"
+                    ? t(($) => $["features/workers"].actions.create)
+                    : t(($) => $["features/workers"].actions.save)}
                 </AppButton>
               </View>
             </View>

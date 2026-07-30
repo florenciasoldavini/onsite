@@ -16,8 +16,8 @@ import {
   usePasswordUpdate
 } from "@/features/auth/hooks/use-auth-mutations";
 import {
-  forgotPasswordSchema,
-  resetPasswordSchema,
+  createForgotPasswordSchema,
+  createResetPasswordSchema,
   type ForgotPasswordInput,
   type ResetPasswordInput
 } from "@/features/auth/schemas/auth.schemas";
@@ -26,14 +26,16 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type ResetMode = "request" | "update";
 
 export default function ResetPasswordScreen() {
   const router = useRouter();
+  const { i18n, t } = useTranslation("features/auth");
   const linkingUrl = Linking.useURL();
   const { mutateAsync: preparePasswordRecovery } =
     usePasswordRecoveryPreparation();
@@ -44,6 +46,14 @@ export default function ResetPasswordScreen() {
   const [mode, setMode] = useState<ResetMode>("request");
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const [passwordVisible, setPasswordVisible] = useState(false);
+  const forgotPasswordSchema = useMemo(
+    () => createForgotPasswordSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
+  const resetPasswordSchema = useMemo(
+    () => createResetPasswordSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const requestForm = useForm<ForgotPasswordInput>({
     defaultValues: {
       email: ""
@@ -102,7 +112,7 @@ export default function ResetPasswordScreen() {
         setFormError(
           getUserFacingErrorMessage(
             error,
-            "We couldn't open this password recovery link. Request a new link and try again."
+            t(($) => $["features/auth"].reset.invalidLink)
           )
         );
       } finally {
@@ -130,7 +140,7 @@ export default function ResetPasswordScreen() {
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't send the password reset email. Try again."
+          t(($) => $["features/auth"].reset.requestError)
         )
       );
     } finally {
@@ -149,7 +159,7 @@ export default function ResetPasswordScreen() {
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't update your password. Try again."
+          t(($) => $["features/auth"].reset.updateError)
         )
       );
     } finally {
@@ -161,11 +171,19 @@ export default function ResetPasswordScreen() {
     <AuthShell
       description={
         mode === "update"
-          ? "Set a new password for your account."
-          : "Request a secure reset link."
+          ? t(($) => $["features/auth"].reset.descriptionUpdate)
+          : t(($) => $["features/auth"].reset.descriptionRequest)
       }
-      panelTag={mode === "update" ? "Recovery / Update" : "Recovery / Request"}
-      title={mode === "update" ? "Update Your Password" : "Reset Your Password"}
+      panelTag={
+        mode === "update"
+          ? t(($) => $["features/auth"].reset.panelUpdate)
+          : t(($) => $["features/auth"].reset.panelRequest)
+      }
+      title={
+        mode === "update"
+          ? t(($) => $["features/auth"].reset.titleUpdate)
+          : t(($) => $["features/auth"].reset.titleRequest)
+      }
     >
       <View style={{ gap: atomSpacing[6] }}>
         <View style={{ gap: atomSpacing[4] }}>
@@ -180,11 +198,11 @@ export default function ResetPasswordScreen() {
                   errorText={fieldState.error?.message}
                   helperText={
                     !fieldState.error
-                      ? "Enter the email tied to your account."
+                      ? t(($) => $["features/auth"].reset.emailHint)
                       : null
                   }
                   keyboardType="email-address"
-                  label="Email"
+                  label={t(($) => $["features/auth"].common.email)}
                   leftIcon={AtSignIcon}
                   onBlur={field.onBlur}
                   onChangeText={(value) => {
@@ -211,10 +229,10 @@ export default function ResetPasswordScreen() {
                     errorText={fieldState.error?.message}
                     helperText={
                       !fieldState.error
-                        ? "Use 8+ chars with uppercase, number, and symbol."
+                        ? t(($) => $["features/auth"].common.passwordHint)
                         : null
                     }
-                    label="New Password"
+                    label={t(($) => $["features/auth"].reset.newPassword)}
                     leftIcon={LockIcon}
                     onBlur={field.onBlur}
                     onChangeText={(value) => {
@@ -245,7 +263,9 @@ export default function ResetPasswordScreen() {
                     autoCapitalize="none"
                     autoComplete="new-password"
                     errorText={fieldState.error?.message}
-                    label="Confirm Password"
+                    label={t(
+                      ($) => $["features/auth"].reset.confirmPassword
+                    )}
                     leftIcon={LockIcon}
                     onBlur={field.onBlur}
                     onChangeText={(value) => {
@@ -294,7 +314,9 @@ export default function ResetPasswordScreen() {
             }}
             size={authFieldSize}
           >
-            {mode === "update" ? "Update Password" : "Send Reset Link"}
+            {mode === "update"
+              ? t(($) => $["features/auth"].reset.updateAction)
+              : t(($) => $["features/auth"].reset.requestAction)}
           </AppButton>
           {formError ? (
             <FieldMessage tone="error">{formError}</FieldMessage>
@@ -302,9 +324,9 @@ export default function ResetPasswordScreen() {
         </View>
 
         <AuthFooterLink
-          actionLabel="Return to Sign In"
+          actionLabel={t(($) => $["features/auth"].reset.returnSignIn)}
           href="/sign-in"
-          prompt="Remembered your password?"
+          prompt={t(($) => $["features/auth"].reset.prompt)}
         />
       </View>
     </AuthShell>

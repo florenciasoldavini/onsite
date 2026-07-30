@@ -1,6 +1,7 @@
 import { ContractorPickerField } from "@/features/contractors/components/contractor-picker-field";
 import { getTradeCategoryLabel } from "@/features/trade-categories/constants/trade-category-labels";
 import { useTradeCategories } from "@/features/trade-categories/hooks/use-trade-categories";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type { WorkerFormValues } from "@/features/workers/types/worker";
 import { AppButton } from "@/shared/ui/components/button";
 import { TextField } from "@/shared/ui/components/input";
@@ -9,6 +10,7 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { Controller, type Control } from "react-hook-form";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function WorkerFormFields({
   control,
@@ -19,6 +21,9 @@ export function WorkerFormFields({
   onChange?: () => void;
   ownerId?: string;
 }) {
+  const { t } = useTranslation("features/workers");
+  const { language } = useLocalization();
+  const { t: tShared } = useTranslation("shared");
   const tradeCategoriesQuery = useTradeCategories();
   const tradeCategories =
     tradeCategoriesQuery.data?.pages.flatMap((page) => page.items) ?? [];
@@ -32,7 +37,7 @@ export function WorkerFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="First name"
+            label={t(($) => $["features/workers"].fields.firstName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -51,7 +56,7 @@ export function WorkerFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="Last name"
+            label={t(($) => $["features/workers"].fields.lastName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -69,7 +74,7 @@ export function WorkerFormFields({
           <TextField
             errorText={fieldState.error?.message}
             keyboardType="phone-pad"
-            label="Phone number"
+            label={t(($) => $["features/workers"].fields.phone)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -89,7 +94,7 @@ export function WorkerFormFields({
             autoCorrect={false}
             errorText={fieldState.error?.message}
             keyboardType="email-address"
-            label="Email"
+            label={t(($) => $["features/workers"].fields.email)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -115,11 +120,13 @@ export function WorkerFormFields({
         )}
       />
       {tradeCategoriesQuery.isLoading ? (
-        <AppText tone="muted">Loading trade categories…</AppText>
+        <AppText tone="muted">
+          {t(($) => $["features/workers"].fields.loadingTrades)}
+        </AppText>
       ) : tradeCategoriesQuery.isError ? (
         <View style={{ gap: atomSpacing[2] }}>
           <AppText tone="danger">
-            We couldn&apos;t load trade categories.
+            {t(($) => $["features/workers"].fields.tradeLoadError)}
           </AppText>
           <AppButton
             color="neutral"
@@ -128,7 +135,7 @@ export function WorkerFormFields({
             size="sm"
             variant="bordered"
           >
-            Retry
+            {tShared(($) => $.shared.actions.retry)}
           </AppButton>
         </View>
       ) : (
@@ -139,14 +146,18 @@ export function WorkerFormFields({
             <View style={{ gap: atomSpacing[2] }}>
               <MultiSelectField
                 errorText={fieldState.error?.message}
-                helperText="Select the types of work this worker usually performs."
-                label="Trade categories"
+                helperText={t(
+                  ($) => $["features/workers"].fields.tradeHelper
+                )}
+                label={t(
+                  ($) => $["features/workers"].fields.tradeCategories
+                )}
                 onChange={(value) => {
                   field.onChange(value);
                   onChange?.();
                 }}
                 options={tradeCategories.map((category) => ({
-                  label: getTradeCategoryLabel(category.code),
+                  label: getTradeCategoryLabel(category.code, language),
                   value: category.id
                 }))}
                 value={field.value}
@@ -160,7 +171,7 @@ export function WorkerFormFields({
                   size="sm"
                   variant="ghost"
                 >
-                  Load more trade categories
+                  {t(($) => $["features/workers"].fields.loadMoreTrades)}
                 </AppButton>
               ) : null}
             </View>

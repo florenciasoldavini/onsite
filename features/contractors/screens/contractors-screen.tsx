@@ -24,14 +24,8 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FlatList, View, type ListRenderItemInfo } from "react-native";
-
-const contractorSortOptions = [
-  { label: "Newest", value: "created_desc" },
-  { label: "Oldest", value: "created_asc" },
-  { label: "A-Z", value: "name_asc" },
-  { label: "Z-A", value: "name_desc" }
-] satisfies { label: string; value: ContractorSort }[];
 
 export default function ContractorsScreen({
   directoryHeader
@@ -39,9 +33,33 @@ export default function ContractorsScreen({
   directoryHeader?: ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/contractors");
+  const { t: tShared } = useTranslation("shared");
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<ContractorSort>("created_desc");
+  const contractorSortOptions = useMemo(
+    () =>
+      [
+        {
+          label: t(($) => $["features/contractors"].sort.newest),
+          value: "created_desc"
+        },
+        {
+          label: t(($) => $["features/contractors"].sort.oldest),
+          value: "created_asc"
+        },
+        {
+          label: t(($) => $["features/contractors"].sort.ascending),
+          value: "name_asc"
+        },
+        {
+          label: t(($) => $["features/contractors"].sort.descending),
+          value: "name_desc"
+        }
+      ] satisfies { label: string; value: ContractorSort }[],
+    [t]
+  );
   const contractorsQuery = useContractors({ query, sort });
   const contractors = useMemo(
     () => contractorsQuery.data?.pages.flatMap((page) => page.items) ?? [],
@@ -90,12 +108,12 @@ export default function ContractorsScreen({
                 onPress={() => router.push("/contractors/new" as never)}
                 size="sm"
               >
-                New contractor
+                {t(($) => $["features/contractors"].actions.new)}
               </AppButton>
             ) : null
           }
-          description="Keep contractor contact details ready for future worker assignments."
-          title="Contractors"
+          description={t(($) => $["features/contractors"].list.description)}
+          title={t(($) => $["features/contractors"].list.title)}
         />
       )}
       <View
@@ -108,14 +126,18 @@ export default function ContractorsScreen({
         <View style={{ flex: 1 }}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search contractors"
+            placeholder={t(
+              ($) => $["features/contractors"].list.searchPlaceholder
+            )}
             value={query}
           />
         </View>
         <SelectMenu
-          accessibilityLabel="Sort contractors"
+          accessibilityLabel={t(
+            ($) => $["features/contractors"].accessibility.sort
+          )}
           icon={SortIcon}
-          labelPrefix="Sort"
+          labelPrefix={t(($) => $["features/contractors"].sort.label)}
           onChange={setSort}
           options={contractorSortOptions}
           value={sort}
@@ -134,34 +156,41 @@ export default function ContractorsScreen({
     <InlineErrorState
       action={{
         icon: RefreshIcon,
-        label: "Retry",
+        label: tShared(($) => $.shared.actions.retry),
         onPress: () => void contractorsQuery.refetch()
       }}
       description={getUserFacingErrorMessage(
         contractorsQuery.error,
-        "We couldn't load your contractors. Check your connection and try again."
+        t(($) => $["features/contractors"].errors.loadList)
       )}
       icon={HardHatIcon}
-      title="Contractors unavailable"
+      title={t(($) => $["features/contractors"].errors.listUnavailable)}
     />
   ) : (
     <EmptyState
       action={
         hasSearch
-          ? { label: "Clear search", onPress: () => setQuery("") }
+          ? {
+              label: t(($) => $["features/contractors"].actions.clearSearch),
+              onPress: () => setQuery("")
+            }
           : {
               icon: PlusIcon,
-              label: "New contractor",
+              label: t(($) => $["features/contractors"].actions.new),
               onPress: () => router.push("/contractors/new" as never)
             }
       }
       description={
         hasSearch
-          ? "Try another name, phone number, or email."
-          : "Add your first contractor to start building your directory."
+          ? t(($) => $["features/contractors"].search.noMatchDescription)
+          : t(($) => $["features/contractors"].search.emptyDescription)
       }
       icon={HardHatIcon}
-      title={hasSearch ? "No matching contractors" : "No contractors yet"}
+      title={
+        hasSearch
+          ? t(($) => $["features/contractors"].search.noMatchTitle)
+          : t(($) => $["features/contractors"].search.emptyTitle)
+      }
     />
   );
 
@@ -170,7 +199,9 @@ export default function ContractorsScreen({
       floatingAction={
         contractors.length > 0 && isCompact ? (
           <AppButton
-            accessibilityLabel="New contractor"
+            accessibilityLabel={t(
+              ($) => $["features/contractors"].accessibility.new
+            )}
             icon={PlusIcon}
             layout="icon"
             onPress={() => router.push("/contractors/new" as never)}
@@ -200,7 +231,7 @@ export default function ContractorsScreen({
                 size="sm"
                 variant="bordered"
               >
-                Load more contractors
+                {t(($) => $["features/contractors"].actions.loadMore)}
               </AppButton>
             </View>
           ) : null

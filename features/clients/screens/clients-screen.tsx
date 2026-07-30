@@ -19,14 +19,8 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FlatList, View, type ListRenderItemInfo } from "react-native";
-
-const clientSortOptions = [
-  { label: "Newest", value: "created_desc" },
-  { label: "Oldest", value: "created_asc" },
-  { label: "A-Z", value: "name_asc" },
-  { label: "Z-A", value: "name_desc" }
-] satisfies { label: string; value: ClientSort }[];
 
 export default function ClientsScreen({
   directoryHeader
@@ -34,9 +28,33 @@ export default function ClientsScreen({
   directoryHeader?: ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/clients");
+  const { t: tShared } = useTranslation("shared");
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<ClientSort>("created_desc");
+  const clientSortOptions = useMemo(
+    () =>
+      [
+        {
+          label: t(($) => $["features/clients"].sort.newest),
+          value: "created_desc"
+        },
+        {
+          label: t(($) => $["features/clients"].sort.oldest),
+          value: "created_asc"
+        },
+        {
+          label: t(($) => $["features/clients"].sort.ascending),
+          value: "name_asc"
+        },
+        {
+          label: t(($) => $["features/clients"].sort.descending),
+          value: "name_desc"
+        }
+      ] satisfies { label: string; value: ClientSort }[],
+    [t]
+  );
   const clientsQuery = useClients({ query, sort });
   const clients = useMemo(
     () => clientsQuery.data?.pages.flatMap((page) => page.items) ?? [],
@@ -81,12 +99,12 @@ export default function ClientsScreen({
                 onPress={() => router.push("/clients/new" as never)}
                 size="sm"
               >
-                New client
+                {t(($) => $["features/clients"].actions.new)}
               </AppButton>
             ) : null
           }
-          description="Keep client contact details connected to the right projects."
-          title="Clients"
+          description={t(($) => $["features/clients"].list.description)}
+          title={t(($) => $["features/clients"].list.title)}
         />
       )}
       <View
@@ -99,14 +117,18 @@ export default function ClientsScreen({
         <View style={{ flex: 1 }}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search clients"
+            placeholder={t(
+              ($) => $["features/clients"].list.searchPlaceholder
+            )}
             value={query}
           />
         </View>
         <SelectMenu
-          accessibilityLabel="Sort clients"
+          accessibilityLabel={t(
+            ($) => $["features/clients"].accessibility.sort
+          )}
           icon={SortIcon}
-          labelPrefix="Sort"
+          labelPrefix={t(($) => $["features/clients"].sort.label)}
           onChange={setSort}
           options={clientSortOptions}
           value={sort}
@@ -125,34 +147,41 @@ export default function ClientsScreen({
     <InlineErrorState
       action={{
         icon: RefreshIcon,
-        label: "Retry",
+        label: tShared(($) => $.shared.actions.retry),
         onPress: () => void clientsQuery.refetch()
       }}
       description={getUserFacingErrorMessage(
         clientsQuery.error,
-        "We couldn't load your clients. Check your connection and try again."
+        t(($) => $["features/clients"].errors.loadList)
       )}
       icon={UserIcon}
-      title="Clients unavailable"
+      title={t(($) => $["features/clients"].errors.listUnavailable)}
     />
   ) : (
     <EmptyState
       action={
         hasSearch
-          ? { label: "Clear search", onPress: () => setQuery("") }
+          ? {
+              label: t(($) => $["features/clients"].actions.clearSearch),
+              onPress: () => setQuery("")
+            }
           : {
               icon: PlusIcon,
-              label: "New client",
+              label: t(($) => $["features/clients"].actions.new),
               onPress: () => router.push("/clients/new" as never)
             }
       }
       description={
         hasSearch
-          ? "Try another name, phone number, or email."
-          : "Add your first client to connect their contact details to projects."
+          ? t(($) => $["features/clients"].search.noMatchDescription)
+          : t(($) => $["features/clients"].search.emptyDescription)
       }
       icon={UserIcon}
-      title={hasSearch ? "No matching clients" : "No clients yet"}
+      title={
+        hasSearch
+          ? t(($) => $["features/clients"].search.noMatchTitle)
+          : t(($) => $["features/clients"].search.emptyTitle)
+      }
     />
   );
 
@@ -161,7 +190,9 @@ export default function ClientsScreen({
       floatingAction={
         clients.length > 0 && isCompact ? (
           <AppButton
-            accessibilityLabel="New client"
+            accessibilityLabel={t(
+              ($) => $["features/clients"].accessibility.newClient
+            )}
             icon={PlusIcon}
             layout="icon"
             onPress={() => router.push("/clients/new" as never)}
@@ -188,7 +219,7 @@ export default function ClientsScreen({
                 size="sm"
                 variant="bordered"
               >
-                Load more clients
+                {t(($) => $["features/clients"].actions.loadMore)}
               </AppButton>
             </View>
           ) : null

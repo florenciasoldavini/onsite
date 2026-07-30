@@ -3,6 +3,7 @@ import type {
   ClientSort
 } from "@/features/clients/types/client";
 import {
+  createPersonContactFormSchema,
   personContactFormSchema,
   personContactRecordSchema
 } from "@/shared/schemas/contact";
@@ -14,6 +15,7 @@ import {
 } from "@/shared/utils/contact";
 
 export const ClientSchema = personContactRecordSchema;
+export const createClientFormSchema = createPersonContactFormSchema;
 export const clientFormSchema = personContactFormSchema;
 export const toClientInput = toPersonContactInput;
 export const getClientDisplayName = getPersonDisplayName;

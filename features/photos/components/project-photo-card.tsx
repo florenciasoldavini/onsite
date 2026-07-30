@@ -1,4 +1,5 @@
-import { PROJECT_PHOTO_KIND_LABELS } from "@/features/photos/constants/photo.constants";
+import { PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE } from "@/features/photos/constants/photo.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type { ProjectPhoto } from "@/features/photos/types/photo";
 import { AppBadge } from "@/shared/ui/components/badge";
 import { AppText } from "@/shared/ui/components/text";
@@ -9,6 +10,7 @@ import {
 } from "@/shared/ui/components/theme";
 import { Image } from "expo-image";
 import { Pressable, View, type ViewStyle } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectPhotoCard({
   onPress,
@@ -19,10 +21,21 @@ export function ProjectPhotoCard({
   photo: ProjectPhoto;
   width: number;
 }) {
+  const { formattingLocale, language } = useLocalization();
+  const { t } = useTranslation("features/photos");
+  const kindLabel = PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][photo.kind];
   return (
     <Pressable
-      accessibilityHint="Opens photo details"
-      accessibilityLabel={`${PROJECT_PHOTO_KIND_LABELS[photo.kind]} project photo${photo.is_marketing ? ", marked for marketing" : ""}`}
+      accessibilityHint={t(
+        ($) => $["features/photos"].accessibility.openHint
+      )}
+      accessibilityLabel={`${kindLabel} ${t(
+        ($) => $["features/photos"].accessibility.photo
+      )}${
+        photo.is_marketing
+          ? t(($) => $["features/photos"].marketing.markedSuffix)
+          : ""
+      }`}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [
@@ -42,8 +55,14 @@ export function ProjectPhotoCard({
     >
       <View style={{ aspectRatio: 1.2, position: "relative" }}>
         <Image
-          accessibilityLabel={photo.caption ?? "Project photo"}
-          alt={photo.caption ?? "Project photo"}
+          accessibilityLabel={
+            photo.caption ??
+            t(($) => $["features/photos"].accessibility.photo)
+          }
+          alt={
+            photo.caption ??
+            t(($) => $["features/photos"].accessibility.photo)
+          }
           contentFit="cover"
           source={
             photo.thumbnail_url ? { uri: photo.thumbnail_url } : undefined
@@ -63,26 +82,36 @@ export function ProjectPhotoCard({
               top: atomSpacing[3]
             }}
           >
-            <AppBadge tone="accent">Marketing</AppBadge>
+            <AppBadge tone="accent">
+              {t(($) => $["features/photos"].gallery.marketing)}
+            </AppBadge>
           </View>
         ) : null}
       </View>
       <View style={{ gap: atomSpacing[1], padding: atomSpacing[3] }}>
         <AppText variant="label">
-          {PROJECT_PHOTO_KIND_LABELS[photo.kind]}
+          {kindLabel}
         </AppText>
         <AppText numberOfLines={2} tone="muted" variant="bodySm">
-          {photo.caption || formatCapturedAt(photo.captured_at)}
+          {photo.caption ||
+            formatCapturedAt(
+              photo.captured_at,
+              formattingLocale,
+              t(($) => $["features/photos"].detail.unavailable)
+            )}
         </AppText>
       </View>
     </Pressable>
   );
 }
 
-function formatCapturedAt(value: string) {
+function formatCapturedAt(value: string, locale: string, fallback: string) {
   const date = new Date(value);
 
   return Number.isNaN(date.getTime())
-    ? "Capture date unavailable"
-    : date.toLocaleString();
+    ? fallback
+    : new Intl.DateTimeFormat(locale, {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
 }

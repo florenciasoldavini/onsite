@@ -1,3 +1,24 @@
+import englishShared from "@/shared/i18n/en";
+import spanishShared from "@/shared/i18n/es";
+import type { SupportedLanguage } from "@/features/localization/types/language";
+
+const genericErrorResources = {
+  en: englishShared.genericErrors,
+  es: spanishShared.genericErrors
+} as const;
+
+type GenericErrorKey = keyof typeof englishShared.genericErrors;
+
+let currentUserFacingLanguage: SupportedLanguage = "en";
+
+export function setUserFacingErrorLanguage(language: SupportedLanguage) {
+  currentUserFacingLanguage = language;
+}
+
+function genericError(key: GenericErrorKey) {
+  return genericErrorResources[currentUserFacingLanguage][key];
+}
+
 export class UserFacingError extends Error {
   readonly cause?: unknown;
 
@@ -8,12 +29,9 @@ export class UserFacingError extends Error {
   }
 }
 
-export function getUserFacingErrorMessage(
-  error: unknown,
-  fallback: string
-) {
+export function getUserFacingErrorMessage(error: unknown, fallback: string) {
   if (error instanceof UserFacingError) {
-    return error.message;
+    return currentUserFacingLanguage === "en" ? error.message : fallback;
   }
 
   const code = getErrorField(error, "code")?.toLowerCase();
@@ -22,11 +40,11 @@ export function getUserFacingErrorMessage(
   const status = getErrorStatus(error);
 
   if (code === "invalid_credentials") {
-    return "The email or password is incorrect. Check your details and try again.";
+    return genericError("invalidCredentials");
   }
 
   if (code === "email_not_confirmed") {
-    return "Confirm your email address before signing in.";
+    return genericError("unconfirmedEmail");
   }
 
   if (
@@ -34,15 +52,15 @@ export function getUserFacingErrorMessage(
     code === "email_exists" ||
     code === "23505"
   ) {
-    return "An account or record with these details already exists.";
+    return genericError("alreadyExists");
   }
 
   if (code === "weak_password") {
-    return "Choose a stronger password and try again.";
+    return genericError("weakPassword");
   }
 
   if (code === "same_password") {
-    return "Choose a password that is different from your current password.";
+    return genericError("differentPassword");
   }
 
   if (
@@ -50,19 +68,19 @@ export function getUserFacingErrorMessage(
     code === "over_request_rate_limit" ||
     status === 429
   ) {
-    return "Too many requests were made. Wait a moment and try again.";
+    return genericError("rateLimited");
   }
 
   if (code === "manual_linking_disabled") {
-    return "Account linking is temporarily unavailable. Try again later.";
+    return genericError("linkingDisabled");
   }
 
   if (code === "identity_already_exists") {
-    return "That sign-in method is already linked to an account.";
+    return genericError("methodAlreadyLinked");
   }
 
   if (code === "provider_disabled") {
-    return "That sign-in method is not available right now.";
+    return genericError("methodUnavailable");
   }
 
   if (
@@ -70,15 +88,15 @@ export function getUserFacingErrorMessage(
     code === "refresh_token_not_found" ||
     code === "refresh_token_already_used"
   ) {
-    return "Your session has expired. Sign in and try again.";
+    return genericError("sessionExpired");
   }
 
   if (code === "42501" || status === 401 || status === 403) {
-    return "You do not have permission to complete this action.";
+    return genericError("permission");
   }
 
   if (code === "23503") {
-    return "This item is still in use and cannot be changed right now.";
+    return genericError("inUse");
   }
 
   if (
@@ -89,27 +107,23 @@ export function getUserFacingErrorMessage(
     code === "pgrst003" ||
     (status !== null && status >= 500)
   ) {
-    return "The service is temporarily unavailable. Try again shortly.";
+    return genericError("serviceUnavailable");
   }
 
   if (name === "duplicate" || storageError === "duplicate") {
-    return "A file with these details already exists. Choose another file and try again.";
+    return genericError("fileDuplicate");
   }
 
-  if (
-    name === "notfound" ||
-    storageError === "notfound" ||
-    status === 404
-  ) {
-    return "The requested item could not be found.";
+  if (name === "notfound" || storageError === "notfound" || status === 404) {
+    return genericError("notFound");
   }
 
   if (status === 413) {
-    return "This file is too large to upload. Choose a smaller file and try again.";
+    return genericError("fileTooLarge");
   }
 
   if (name === "typeerror" || status === 0) {
-    return "Check your internet connection and try again.";
+    return genericError("transport");
   }
 
   return fallback;
@@ -120,10 +134,7 @@ export function toUserFacingError(error: unknown, fallback: string) {
     return error;
   }
 
-  return new UserFacingError(
-    getUserFacingErrorMessage(error, fallback),
-    error
-  );
+  return new UserFacingError(getUserFacingErrorMessage(error, fallback), error);
 }
 
 function getErrorField(error: unknown, field: string) {

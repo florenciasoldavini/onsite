@@ -1,10 +1,12 @@
+import type { ProjectFilterState } from "@/features/projects/components/projects-screen/projects-screen.config";
 import {
-  buildingTypeFilterOptions,
-  phaseFilterOptions,
-  projectTypeFilterOptions,
-  statusFilterOptions,
-  type ProjectFilterState
-} from "@/features/projects/components/projects-screen/projects-screen.config";
+  PROJECT_BUILDING_TYPES,
+  PROJECT_LABELS_BY_LANGUAGE,
+  PROJECT_PHASES,
+  PROJECT_STATUSES,
+  PROJECT_TYPES
+} from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { projectsScreenStyles as styles } from "@/features/projects/components/projects-screen/projects-screen.styles";
 import { ProjectCard } from "@/features/projects/components/project-card";
 import type { ProjectSummary } from "@/features/projects/types/project.types";
@@ -14,6 +16,7 @@ import { MultiSelectField } from "@/shared/ui/components/multi-select-field";
 import { AppText } from "@/shared/ui/components/text";
 import { TransitionView } from "@/shared/ui/components/transition-view";
 import { memo } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Pressable,
@@ -58,6 +61,7 @@ export function ProjectsPaginationFooter({
   isLoading: boolean;
   onLoadMore: () => void;
 }) {
+  const { t } = useTranslation("features/projects");
   if (!hasNextPage && !isError) {
     return null;
   }
@@ -71,7 +75,9 @@ export function ProjectsPaginationFooter({
         size="sm"
         variant="bordered"
       >
-        {isError ? "Retry loading projects" : "Load more projects"}
+        {isError
+          ? t(($) => $["features/projects"].actions.retryLoad)
+          : t(($) => $["features/projects"].actions.loadMore)}
       </AppButton>
     </View>
   );
@@ -97,6 +103,25 @@ export function ProjectFiltersModal({
   onReset: () => void;
   visible: boolean;
 }) {
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
+  const statusFilterOptions = PROJECT_STATUSES.map((value) => ({
+    label: labels.statuses[value],
+    value
+  }));
+  const phaseFilterOptions = PROJECT_PHASES.map((value) => ({
+    label: labels.phases[value],
+    value
+  }));
+  const projectTypeFilterOptions = PROJECT_TYPES.map((value) => ({
+    label: labels.types[value],
+    value
+  }));
+  const buildingTypeFilterOptions = PROJECT_BUILDING_TYPES.map((value) => ({
+    label: labels.buildingTypes[value],
+    value
+  }));
   return (
     <Modal
       animationType="fade"
@@ -106,7 +131,9 @@ export function ProjectFiltersModal({
     >
       <View style={styles.modalRoot}>
         <Pressable
-          accessibilityLabel="Close project filters"
+          accessibilityLabel={t(
+            ($) => $["features/projects"].accessibility.closeFilters
+          )}
           onPress={onClose}
           style={StyleSheet.absoluteFill}
         />
@@ -114,7 +141,9 @@ export function ProjectFiltersModal({
         <TransitionView animateEnter style={styles.modalContent}>
           <AppCard padding="md" style={styles.modalCard}>
             <View style={styles.modalHeader}>
-              <AppText variant="formLabel">Project filters</AppText>
+              <AppText variant="formLabel">
+                {t(($) => $["features/projects"].filters.title)}
+              </AppText>
             </View>
 
             <ScrollView
@@ -122,25 +151,25 @@ export function ProjectFiltersModal({
               showsVerticalScrollIndicator={false}
             >
               <MultiSelectField
-                label="Status"
+                label={t(($) => $["features/projects"].filters.status)}
                 onChange={(value) => onChangeFilter("statuses", value)}
                 options={statusFilterOptions}
                 value={filters.statuses}
               />
               <MultiSelectField
-                label="Phase"
+                label={t(($) => $["features/projects"].filters.phase)}
                 onChange={(value) => onChangeFilter("phases", value)}
                 options={phaseFilterOptions}
                 value={filters.phases}
               />
               <MultiSelectField
-                label="Project type"
+                label={t(($) => $["features/projects"].filters.projectType)}
                 onChange={(value) => onChangeFilter("projectTypes", value)}
                 options={projectTypeFilterOptions}
                 value={filters.projectTypes}
               />
               <MultiSelectField
-                label="Building type"
+                label={t(($) => $["features/projects"].filters.buildingType)}
                 onChange={(value) => onChangeFilter("buildingTypes", value)}
                 options={buildingTypeFilterOptions}
                 value={filters.buildingTypes}
@@ -155,12 +184,12 @@ export function ProjectFiltersModal({
                   size="md"
                   variant="bordered"
                 >
-                  Clear
+                  {t(($) => $["features/projects"].actions.clear)}
                 </AppButton>
               </View>
               <View style={styles.modalFooterAction}>
                 <AppButton onPress={onClose} size="md">
-                  Done
+                  {t(($) => $["features/projects"].actions.done)}
                 </AppButton>
               </View>
             </View>

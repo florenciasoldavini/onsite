@@ -13,10 +13,11 @@ import {
   authFormControlSize
 } from "@/features/auth/components/auth-shell";
 import { useEmailVerificationResend } from "@/features/auth/hooks/use-auth-mutations";
-import { emailSchema } from "@/features/auth/schemas/field.schemas";
+import { createEmailSchema } from "@/features/auth/schemas/field.schemas";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const resendCooldownSeconds = 60;
 
@@ -29,6 +30,7 @@ export default function VerifyEmailScreen({
   nextPath?: string;
   notice?: string;
 }) {
+  const { i18n, t } = useTranslation("features/auth");
   const verificationResend = useEmailVerificationResend();
   const email = (requestedEmail ?? "").trim().toLowerCase();
   const hasNext = nextPath !== "/";
@@ -38,14 +40,17 @@ export default function VerifyEmailScreen({
     isRateLimited || isInitialEmailSent ? resendCooldownSeconds : 0
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(
-    isInitialEmailSent
-      ? "Verification link sent. Check your inbox and spam folder."
-      : null
-  );
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [isResending, setIsResending] = useState(false);
+  const emailSchema = useMemo(
+    () => createEmailSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const emailResult = emailSchema.safeParse(email);
   const canResend = emailResult.success && cooldownSeconds === 0;
+  const displayedSuccessMessage =
+    successMessage ??
+    (isInitialEmailSent ? t(($) => $["features/auth"].verify.sent) : null);
 
   useEffect(() => {
     if (cooldownSeconds <= 0) {
@@ -63,7 +68,7 @@ export default function VerifyEmailScreen({
 
   async function resendEmail() {
     if (!emailResult.success) {
-      setErrorMessage("Go back to sign up and enter a valid email address.");
+      setErrorMessage(t(($) => $["features/auth"].verify.invalidEmail));
       return;
     }
 
@@ -79,7 +84,7 @@ export default function VerifyEmailScreen({
 
       setSuccessMessage(
         result.status === "sent"
-          ? "Verification link sent. Check your inbox and spam folder."
+          ? t(($) => $["features/auth"].verify.sent)
           : null
       );
       setCooldownSeconds(resendCooldownSeconds);
@@ -87,7 +92,7 @@ export default function VerifyEmailScreen({
       setErrorMessage(
         getUserFacingErrorMessage(
           error,
-          "We couldn't resend the verification email. Try again."
+          t(($) => $["features/auth"].verify.resendError)
         )
       );
     } finally {
@@ -97,19 +102,21 @@ export default function VerifyEmailScreen({
 
   const resendLabel =
     cooldownSeconds > 0
-      ? `Resend in ${cooldownSeconds}s`
-      : "Resend Verification Link";
+      ? t(($) => $["features/auth"].verify.resendCountdown, {
+          count: cooldownSeconds
+        })
+      : t(($) => $["features/auth"].verify.resend);
 
   return (
     <AuthShell
-      description="Confirm your email address before entering the workspace."
-      panelTag="Access / Verify Email"
-      title="Check Your Email"
+      description={t(($) => $["features/auth"].verify.description)}
+      panelTag={t(($) => $["features/auth"].verify.panelTag)}
+      title={t(($) => $["features/auth"].verify.title)}
     >
       <View style={{ gap: atomSpacing[6] }}>
         <View style={{ gap: atomSpacing[3] }}>
           <AppText tone="subtle" variant="label">
-            Email address
+            {t(($) => $["features/auth"].verify.emailLabel)}
           </AppText>
           <AppCard
             padding="sm"
@@ -120,7 +127,9 @@ export default function VerifyEmailScreen({
             }}
           >
             <AppText>
-              {emailResult.success ? email : "No email address was provided."}
+              {emailResult.success
+                ? email
+                : t(($) => $["features/auth"].verify.missingEmail)}
             </AppText>
           </AppCard>
         </View>
@@ -137,8 +146,10 @@ export default function VerifyEmailScreen({
             {resendLabel}
           </AppButton>
 
-          {successMessage ? (
-            <FieldMessage tone="success">{successMessage}</FieldMessage>
+          {displayedSuccessMessage ? (
+            <FieldMessage tone="success">
+              {displayedSuccessMessage}
+            </FieldMessage>
           ) : null}
           {errorMessage ? (
             <FieldMessage tone="error">{errorMessage}</FieldMessage>
@@ -158,7 +169,7 @@ export default function VerifyEmailScreen({
           }}
         >
           <AppText style={{ textAlign: "center" }} tone="muted">
-            Already verified it?
+            {t(($) => $["features/auth"].verify.alreadyVerified)}
           </AppText>
           <AppLink
             href={
@@ -167,7 +178,7 @@ export default function VerifyEmailScreen({
                 : "/sign-in"
             }
           >
-            Sign In
+            {t(($) => $["features/auth"].verify.signIn)}
           </AppLink>
         </View>
       </View>

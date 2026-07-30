@@ -116,7 +116,8 @@ describe("auth service", () => {
       status: "rate-limited"
     });
     expect(mockRepository.resendVerificationEmail).toHaveBeenCalledWith(
-      "user@example.com"
+      "user@example.com",
+      "es"
     );
   });
 

@@ -12,6 +12,7 @@ import { MapPinIcon } from "@/shared/ui/icons";
 import { Spinner } from "@/shared/ui/primitives/spinner";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, View, type ViewStyle } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const mapMarkerImage = require("@/assets/images/map-marker.png");
 
@@ -43,10 +44,12 @@ export function AddressAutocompleteField({
   label: string;
   required?: boolean;
 }) {
+  const { t } = useTranslation("shared");
+
   return (
     <View style={{ gap: atomSpacing[3] }}>
       <SearchField
-        clearAccessibilityLabel={`Clear ${label.toLocaleLowerCase()}`}
+        clearAccessibilityLabel={t(($) => $.shared.address.clear, { label })}
         errorText={errorText}
         label={label}
         leftIcon={MapPinIcon}
@@ -55,7 +58,7 @@ export function AddressAutocompleteField({
         onClear={controller.onClear}
         onFocus={controller.onFocus}
         onPressIn={controller.onFocus}
-        placeholder="Search with Google Maps"
+        placeholder={t(($) => $.shared.address.searchPlaceholder)}
         required={required}
         rightSlot={
           controller.isBusy ? (
@@ -87,7 +90,7 @@ export function AddressAutocompleteField({
               </Pressable>
             ))}
             <AppText tone="subtle" variant="caption">
-              Address suggestions by Google Maps
+              {t(($) => $.shared.address.attribution)}
             </AppText>
           </View>
         </AppCard>
@@ -102,7 +105,7 @@ export function AddressAutocompleteField({
       {controller.showNoResults ? (
         <AppCard padding="sm" tone="muted">
           <AppText tone="subtle" variant="bodySm">
-            No matching addresses found.
+            {t(($) => $.shared.address.noResults)}
           </AppText>
         </AppCard>
       ) : null}
@@ -113,11 +116,13 @@ export function AddressAutocompleteField({
       ) : null}
       {controller.value && controller.preview ? (
         <View
-          accessibilityLabel={`Selected location: ${controller.value.address}`}
+          accessibilityLabel={t(($) => $.shared.address.selected, {
+            address: controller.value.address
+          })}
           style={styles.mapPreview}
         >
           <Image
-            alt="Selected location map preview"
+            alt={t(($) => $.shared.address.mapAlt)}
             contentFit="cover"
             source={{ uri: controller.preview.imageDataUrl }}
             style={StyleSheet.absoluteFill}

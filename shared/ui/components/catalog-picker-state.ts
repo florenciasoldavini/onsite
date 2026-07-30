@@ -16,9 +16,12 @@ export function findSelectedCatalogItem<TItem extends { id: string }>({
   return items.find((item) => item.id === value) ?? fallback ?? null;
 }
 
-export function getCatalogContactSummary(item: CatalogContactItem) {
+export function getCatalogContactSummary(
+  item: CatalogContactItem,
+  emptyLabel = "No contact details"
+) {
   return (
     [item.phone_number, item.email].filter(Boolean).join(" · ") ||
-    "No contact details"
+    emptyLabel
   );
 }

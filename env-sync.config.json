@@ -132,6 +132,11 @@
         "sensitive": true
       }
     },
+    "SEND_EMAIL_HOOK_SECRET": {
+      "section": "Email / Server",
+      "comment": "Standard Webhooks signing secret for the Supabase Auth Send Email Hook. Set with Supabase secrets.",
+      "example": "v1,whsec_your_send_email_hook_secret"
+    },
     "EMAIL_FROM": {
       "comment": "Default sender for server-side product emails.",
       "example": "Onzait <onboarding@resend.dev>",

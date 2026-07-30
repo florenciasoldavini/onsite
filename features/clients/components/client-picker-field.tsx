@@ -1,6 +1,6 @@
 import { ClientFormFields } from "@/features/clients/components/client-form-fields";
 import {
-  clientFormSchema,
+  createClientFormSchema,
   getClientDisplayName,
   toClientInput
 } from "@/features/clients/schemas/client.schema";
@@ -23,8 +23,9 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { PlusIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { Modal, Pressable, ScrollView, StyleSheet, View } from "react-native";
 
 const quickClientDefaults: ClientFormValues = {
@@ -46,6 +47,7 @@ export function ClientPickerField({
   value: string | null;
 }) {
   const { user } = useAuth();
+  const { t } = useTranslation("features/clients");
   const effectiveOwnerId = ownerId ?? user?.id;
   const [query, setQuery] = useState("");
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
@@ -61,8 +63,8 @@ export function ClientPickerField({
     <>
       <CatalogPickerField
         disabled={disabled}
-        entityName="client"
-        entityNamePlural="clients"
+        entityName={t(($) => $["features/clients"].picker.entity)}
+        entityNamePlural={t(($) => $["features/clients"].picker.entities)}
         footer={
           canQuickCreate ? (
             <AppButton
@@ -74,7 +76,7 @@ export function ClientPickerField({
               size="sm"
               variant="bordered"
             >
-              Quick-create client
+              {t(($) => $["features/clients"].picker.quickCreate)}
             </AppButton>
           ) : null
         }
@@ -84,7 +86,7 @@ export function ClientPickerField({
         isError={clientsQuery.isError}
         isFetchingNextPage={clientsQuery.isFetchingNextPage}
         isLoading={clientsQuery.isLoading}
-        label="Client"
+        label={t(($) => $["features/clients"].picker.label)}
         onChange={onChange}
         onLoadMore={() => void clientsQuery.fetchNextPage()}
         onQueryChange={setQuery}
@@ -115,11 +117,17 @@ function QuickCreateClientModal({
   visible: boolean;
 }) {
   const createMutation = useCreateClient();
+  const { t } = useTranslation("features/clients");
+  const { i18n, t: tShared } = useTranslation("shared");
   const [formError, setFormError] = useState<string | null>(null);
+  const formSchema = useMemo(
+    () => createClientFormSchema(tShared),
+    [i18n.resolvedLanguage, tShared]
+  );
   const form = useForm<ClientFormValues>({
     defaultValues: quickClientDefaults,
     mode: "onChange",
-    resolver: zodResolver(clientFormSchema)
+    resolver: zodResolver(formSchema)
   });
   const {
     control,
@@ -137,7 +145,7 @@ function QuickCreateClientModal({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't create this client. Try again."
+          t(($) => $["features/clients"].errors.create)
         )
       );
     }
@@ -160,7 +168,9 @@ function QuickCreateClientModal({
     >
       <View style={pickerStyles.modalRoot}>
         <Pressable
-          accessibilityLabel="Close quick-create client"
+          accessibilityLabel={t(
+            ($) => $["features/clients"].accessibility.closeQuickCreate
+          )}
           onPress={close}
           style={StyleSheet.absoluteFill}
         />
@@ -171,7 +181,9 @@ function QuickCreateClientModal({
             showsVerticalScrollIndicator={false}
           >
             <View style={{ gap: atomSpacing[5] }}>
-              <AppHeading variant="section">New client</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/clients"].form.createTitle)}
+              </AppHeading>
               <ClientFormFields
                 control={control}
                 onChange={() => setFormError(null)}
@@ -185,7 +197,7 @@ function QuickCreateClientModal({
                   size="md"
                   variant="bordered"
                 >
-                  Cancel
+                  {tShared(($) => $.shared.actions.cancel)}
                 </AppButton>
                 <AppButton
                   isDisabled={!isValid}
@@ -193,7 +205,7 @@ function QuickCreateClientModal({
                   onPress={() => void submit()}
                   size="md"
                 >
-                  Create client
+                  {t(($) => $["features/clients"].actions.create)}
                 </AppButton>
               </View>
             </View>

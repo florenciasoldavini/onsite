@@ -10,6 +10,7 @@ import {
   toRepositoryError
 } from "@/infrastructure/supabase/repository";
 import { UserFacingError } from "@/shared/utils/user-facing-errors";
+import type { SupportedLanguage } from "@/features/localization/types/language";
 
 type CollaborationBody = Record<string, unknown> & { action: string };
 
@@ -66,6 +67,7 @@ export async function previewProjectInvitationRow(token: string) {
 
 export function createProjectInvitationRow(input: {
   email: string;
+  language: SupportedLanguage;
   projectId: string;
   roleCode: string;
 }) {

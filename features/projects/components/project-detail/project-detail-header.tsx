@@ -15,6 +15,7 @@ import { MoreVerticalIcon, PencilIcon, TrashIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Pressable,
@@ -47,6 +48,7 @@ function ProjectActionsMenu({
   projectName: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
   const appToast = useAppToast();
   const { height: windowHeight, width: windowWidth } = useWindowDimensions();
   const triggerRef = useRef<View>(null);
@@ -90,21 +92,24 @@ function ProjectActionsMenu({
       await deleteMutation.mutateAsync(projectId);
       deleteConfirmation.close();
       appToast.show({
-        description: `${projectName} was removed from active projects.`,
-        title: "Project deleted",
+        description: t(
+          ($) => $["features/projects"].detail.deletedDescription,
+          { name: projectName }
+        ),
+        title: t(($) => $["features/projects"].detail.deleted),
         tone: "success"
       });
       router.replace("/projects" as never);
     } catch (error) {
       const message = getUserFacingErrorMessage(
         error,
-        "We couldn't delete this project. Try again."
+        t(($) => $["features/projects"].detail.deleteFailure)
       );
 
       deleteConfirmation.setError(message);
       appToast.show({
         description: message,
-        title: "Project could not be deleted",
+        title: t(($) => $["features/projects"].detail.deleteError),
         tone: "error"
       });
     }
@@ -118,7 +123,9 @@ function ProjectActionsMenu({
     <>
       <View collapsable={false} ref={triggerRef}>
         <AppButton
-          accessibilityLabel="Project actions"
+          accessibilityLabel={t(
+            ($) => $["features/projects"].detail.actions
+          )}
           color="neutral"
           fullWidth={false}
           icon={MoreVerticalIcon}
@@ -138,7 +145,9 @@ function ProjectActionsMenu({
       >
         <View style={StyleSheet.absoluteFill}>
           <Pressable
-            accessibilityLabel="Close project actions"
+            accessibilityLabel={t(
+              ($) => $["features/projects"].detail.closeActions
+            )}
             onPress={() => setIsMenuOpen(false)}
             style={StyleSheet.absoluteFill}
           />
@@ -151,7 +160,7 @@ function ProjectActionsMenu({
             {canEdit ? (
               <ActionMenuItem
                 icon={PencilIcon}
-                label="Edit"
+                label={t(($) => $["features/projects"].actions.edit)}
                 onPress={() => {
                   setIsMenuOpen(false);
                   router.push(`/projects/${projectId}/edit` as never);
@@ -162,7 +171,7 @@ function ProjectActionsMenu({
               <ActionMenuItem
                 danger
                 icon={TrashIcon}
-                label="Delete"
+                label={t(($) => $["features/projects"].actions.delete)}
                 onPress={() => {
                   setIsMenuOpen(false);
                   deleteConfirmation.open();
@@ -174,12 +183,16 @@ function ProjectActionsMenu({
       </Modal>
 
       <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting project"
+        accessibilityLabel={t(
+          ($) => $["features/projects"].detail.cancelDelete
+        )}
         controller={deleteConfirmation}
-        description={`${projectName} will be removed from active project views. This action cannot currently be undone in the app.`}
+        description={t(
+          ($) => $["features/projects"].detail.deleteDescription
+        )}
         isPending={deleteMutation.isPending}
         onConfirm={deleteProject}
-        title="Delete project?"
+        title={t(($) => $["features/projects"].detail.deleteTitle)}
       />
     </>
   );

@@ -2,6 +2,7 @@ import type { ContractorFormValues } from "@/features/contractors/types/contract
 import { TextField } from "@/shared/ui/components/input";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { Controller, type Control } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 export function ContractorFormFields({
@@ -11,6 +12,7 @@ export function ContractorFormFields({
   control: Control<ContractorFormValues>;
   onChange?: () => void;
 }) {
+  const { t } = useTranslation("features/contractors");
   return (
     <View style={{ gap: atomSpacing[5] }}>
       <Controller
@@ -20,7 +22,7 @@ export function ContractorFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="First name"
+            label={t(($) => $["features/contractors"].fields.firstName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -39,7 +41,7 @@ export function ContractorFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="Last name"
+            label={t(($) => $["features/contractors"].fields.lastName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -57,7 +59,7 @@ export function ContractorFormFields({
           <TextField
             errorText={fieldState.error?.message}
             keyboardType="phone-pad"
-            label="Phone number"
+            label={t(($) => $["features/contractors"].fields.phone)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -77,7 +79,7 @@ export function ContractorFormFields({
             autoCorrect={false}
             errorText={fieldState.error?.message}
             keyboardType="email-address"
-            label="Email"
+            label={t(($) => $["features/contractors"].fields.email)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);

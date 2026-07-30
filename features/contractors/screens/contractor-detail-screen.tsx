@@ -8,6 +8,7 @@ import { HardHatIcon, RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function ContractorDetailScreen({
   contractorId
@@ -15,9 +16,11 @@ export default function ContractorDetailScreen({
   contractorId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/contractors");
+  const { t: tShared } = useTranslation("shared");
   const contractorQuery = useContractor(contractorId);
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/contractors"].accessibility.backToDirectory),
     onPress: () => router.replace("/directory?section=contractors" as never)
   };
 
@@ -28,12 +31,12 @@ export default function ContractorDetailScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void contractorQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             contractorQuery.error,
-            "We couldn't load this contractor. Try again."
+            t(($) => $["features/contractors"].errors.load)
           ),
           icon: HardHatIcon
         },
@@ -51,7 +54,7 @@ export default function ContractorDetailScreen({
           </View>
         </Screen>
       }
-      resourceName="contractor"
+      resourceName={t(($) => $["features/contractors"].fields.contractor)}
     >
       {contractorQuery.data ? (
         <ContractorDetailContent contractor={contractorQuery.data} />

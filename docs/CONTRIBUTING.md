@@ -68,6 +68,7 @@ Run the checks relevant to the change:
 
 ```bash
 npm run env:check
+npm run i18n:check
 npx tsc --noEmit
 npm run lint
 npm test

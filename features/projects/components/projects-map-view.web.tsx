@@ -8,11 +8,8 @@ import {
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_TYPE_LABELS
-} from "@/features/projects/constants/project.constants";
+import { PROJECT_LABELS_BY_LANGUAGE } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { getProjectsMapViewport } from "@/features/projects/maps/map-points";
 import type {
   ProjectStatus,
@@ -36,6 +33,7 @@ import {
   useState
 } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const statusColors: Record<ProjectStatus, string> = {
   cancelled: atomPalette.error,
@@ -132,6 +130,7 @@ export function ProjectsMapView({
   onOpenProject: (project: ProjectSummary) => void;
   projects: ProjectSummary[];
 }) {
+  const { t } = useTranslation("features/projects");
   const locatedProjects = useMemo(
     () =>
       projects.filter(
@@ -167,10 +166,11 @@ export function ProjectsMapView({
           <MapPinIcon color={atomPalette.textSubtle} size={32} />
         </View>
         <View style={{ gap: atomSpacing[2] }}>
-          <AppHeading variant="section">No mapped projects</AppHeading>
+          <AppHeading variant="section">
+            {t(($) => $["features/projects"].map.noMappedTitle)}
+          </AppHeading>
           <AppText tone="muted">
-            Projects need a saved address with coordinates before they can
-            appear on the map.
+            {t(($) => $["features/projects"].map.noMappedDescription)}
           </AppText>
         </View>
       </AppCard>
@@ -226,6 +226,7 @@ function InteractiveGoogleMap({
   projects: ProjectSummary[];
   selectedProjectId: string | null;
 }) {
+  const { t } = useTranslation("features/projects");
   const mapElementRef = useRef<HTMLDivElement | null>(null);
   const googleMapsRef = useRef<GoogleMapsNamespace | null>(null);
   const mapInstanceRef = useRef<GoogleMapInstance | null>(null);
@@ -415,7 +416,7 @@ function InteractiveGoogleMap({
         icon: getUserLocationMarkerIcon(google),
         map,
         position,
-        title: "Your current location",
+        title: t(($) => $["features/projects"].map.userLocation),
         zIndex: 999
       });
     }
@@ -425,7 +426,7 @@ function InteractiveGoogleMap({
       map.setZoom(Math.max(map.getZoom() ?? initialZoom, 15));
       hasCenteredOnUserRef.current = true;
     }
-  }, [initialZoom, userLocation.location]);
+  }, [initialZoom, t, userLocation.location]);
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -448,7 +449,7 @@ function InteractiveGoogleMap({
   return (
     <>
       {createElement("div", {
-        "aria-label": "Project locations map",
+        "aria-label": t(($) => $["features/projects"].map.label),
         ref: mapElementRef,
         role: "application",
         style: {
@@ -461,8 +462,8 @@ function InteractiveGoogleMap({
           <AppButton
             accessibilityLabel={
               userLocation.isWatching
-                ? "Hide current location"
-                : "Show current location"
+                ? t(($) => $["features/projects"].map.hideLocation)
+                : t(($) => $["features/projects"].map.showLocation)
             }
             color={userLocation.isWatching ? "accent" : "neutral"}
             fullWidth={false}
@@ -477,7 +478,9 @@ function InteractiveGoogleMap({
           {showZoomControls ? (
             <>
               <AppButton
-                accessibilityLabel="Zoom in"
+                accessibilityLabel={t(
+                  ($) => $["features/projects"].map.zoomIn
+                )}
                 color="neutral"
                 fullWidth={false}
                 icon={ZoomInIcon}
@@ -488,7 +491,9 @@ function InteractiveGoogleMap({
                 variant="bordered"
               />
               <AppButton
-                accessibilityLabel="Zoom out"
+                accessibilityLabel={t(
+                  ($) => $["features/projects"].map.zoomOut
+                )}
                 color="neutral"
                 fullWidth={false}
                 icon={ZoomOutIcon}
@@ -508,13 +513,12 @@ function InteractiveGoogleMap({
             <>
               <MapPinIcon color={atomPalette.textSubtle} size={28} />
               <AppText tone="muted" variant="caption">
-                Google Maps could not load. Check that Maps JavaScript API is
-                enabled and this web origin is allowed.
+                {t(($) => $["features/projects"].map.error)}
               </AppText>
             </>
           ) : (
             <AppText tone="muted" variant="caption">
-              Loading project map...
+              {t(($) => $["features/projects"].map.loading)}
             </AppText>
           )}
         </View>
@@ -551,13 +555,16 @@ function getUserLocationMarkerIcon(google: GoogleMapsNamespace) {
 }
 
 function MapUnavailableState() {
+  const { t } = useTranslation("features/projects");
   return (
     <View style={styles.mapUnavailableState}>
       <MapPinIcon color={atomPalette.textSubtle} size={28} />
       <View style={{ gap: atomSpacing[1] }}>
-        <AppText variant="bodySm">Interactive map key missing</AppText>
+        <AppText variant="bodySm">
+          {t(($) => $["features/projects"].map.keyTitle)}
+        </AppText>
         <AppText tone="muted" variant="caption">
-          Add EXPO_PUBLIC_GOOGLE_MAPS_BROWSER_KEY to enable the live Google map.
+          {t(($) => $["features/projects"].map.keyDescription)}
         </AppText>
       </View>
     </View>
@@ -573,6 +580,9 @@ function SelectedProjectCard({
   onOpenProject: () => void;
   project: ProjectSummary;
 }) {
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
   return (
     <AppCard padding="sm" style={styles.selectedCard}>
       <View style={styles.selectedCardContent}>
@@ -584,7 +594,7 @@ function SelectedProjectCard({
             ]}
           />
           <AppText tone="subtle" variant="formLabel">
-            {PROJECT_STATUS_LABELS[project.status]}
+            {labels.statuses[project.status]}
           </AppText>
         </View>
         <AppHeading numberOfLines={1} variant="card">
@@ -594,13 +604,14 @@ function SelectedProjectCard({
           {project.address}
         </AppText>
         <AppText tone="subtle" variant="caption">
-          {PROJECT_TYPE_LABELS[project.project_type]} -{" "}
-          {PROJECT_PHASE_LABELS[project.phase]}
+          {labels.types[project.project_type]} - {labels.phases[project.phase]}
         </AppText>
       </View>
       <View style={styles.selectedCardActions}>
         <Pressable
-          accessibilityLabel="Close project preview"
+          accessibilityLabel={t(
+            ($) => $["features/projects"].map.closePreview
+          )}
           hitSlop={8}
           onPress={onClose}
           style={styles.closeButton}
@@ -617,7 +628,7 @@ function SelectedProjectCard({
           onPress={onOpenProject}
           size="sm"
         >
-          Open
+          {t(($) => $["features/projects"].map.open)}
         </AppButton>
       </View>
     </AppCard>

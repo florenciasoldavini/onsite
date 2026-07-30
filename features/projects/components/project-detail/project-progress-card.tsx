@@ -1,14 +1,15 @@
 import { projectDetailStyles } from "@/features/projects/components/project-detail/project-detail.styles";
 import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_PHASES,
-  PROJECT_STATUS_LABELS
+  PROJECT_LABELS_BY_LANGUAGE,
+  PROJECT_PHASES
 } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type { Project } from "@/features/projects/types/project.types";
 import { AppHeading } from "@/shared/ui/components/heading";
 import { AppText } from "@/shared/ui/components/text";
 import { formatDateOnly } from "@/shared/utils/date-only";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectProgressCard({
   expanded,
@@ -17,12 +18,15 @@ export function ProjectProgressCard({
   expanded: boolean;
   project: Project;
 }) {
+  const { formattingLocale, language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
   const progress = Math.min(Math.max(project.progress_percentage, 0), 100);
   const progressWidth = `${progress}%` as `${number}%`;
   const phaseNumber = String(
     PROJECT_PHASES.indexOf(project.phase) + 1
   ).padStart(2, "0");
-  const statusLabel = PROJECT_STATUS_LABELS[project.status]
+  const statusLabel = labels.statuses[project.status]
     .toUpperCase()
     .replaceAll(" ", "_");
 
@@ -36,20 +40,23 @@ export function ProjectProgressCard({
       <View style={projectDetailStyles.progressDataBadge}>
         <View style={projectDetailStyles.progressDataDot} />
         <AppText tone="accent" variant="label">
-          PROJECT_PROGRESS
+          {t(($) => $["features/projects"].detail.progressEyebrow)}
         </AppText>
       </View>
 
       <View style={projectDetailStyles.progressCardContent}>
         <AppText tone="subtle" variant="label">
-          {`PHASE ${phaseNumber} // ${statusLabel}`}
+          {t(($) => $["features/projects"].detail.phaseStatus, {
+            phase: phaseNumber,
+            status: statusLabel
+          })}
         </AppText>
         <AppHeading
           selectable
           style={projectDetailStyles.progressPhaseTitle}
           variant="hero"
         >
-          {PROJECT_PHASE_LABELS[project.phase]}
+          {labels.phases[project.phase]}
         </AppHeading>
 
         <View style={projectDetailStyles.progressValuesRow}>
@@ -68,21 +75,27 @@ export function ProjectProgressCard({
 
           <View style={projectDetailStyles.progressMetric}>
             <AppText tone="subtle" variant="label">
-              ESTIMATED_END
+              {t(($) => $["features/projects"].detail.estimatedEnd)}
             </AppText>
             <AppText
               numberOfLines={1}
               selectable
               style={projectDetailStyles.progressMetricValue}
             >
-              {formatDateOnly(project.estimated_end_date, { fallback: "TBD" })}
+              {formatDateOnly(project.estimated_end_date, {
+                fallback: "—",
+                locale: formattingLocale
+              })}
             </AppText>
           </View>
         </View>
 
         <View style={projectDetailStyles.progressMeterBlock}>
           <View
-            accessibilityLabel={`Project progress ${progress}%`}
+            accessibilityLabel={t(
+              ($) => $["features/projects"].accessibility.progress,
+              { progress }
+            )}
             style={projectDetailStyles.progressTrack}
           >
             <View
@@ -99,7 +112,7 @@ export function ProjectProgressCard({
               tone="subtle"
               variant="meta"
             >
-              0.00_START
+              {t(($) => $["features/projects"].detail.start)}
             </AppText>
             <AppText
               numberOfLines={1}
@@ -110,7 +123,7 @@ export function ProjectProgressCard({
               tone="subtle"
               variant="meta"
             >
-              CURRENT_PROGRESS
+              {t(($) => $["features/projects"].detail.actualProgress)}
             </AppText>
             <AppText
               numberOfLines={1}
@@ -121,7 +134,7 @@ export function ProjectProgressCard({
               tone="subtle"
               variant="meta"
             >
-              1.00_FINAL
+              {t(($) => $["features/projects"].detail.final)}
             </AppText>
           </View>
         </View>

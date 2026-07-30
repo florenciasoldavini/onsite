@@ -10,12 +10,15 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { AlertIcon, MailIcon, RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectInvitationsScreen({
   highlightedInvitationId
 }: {
   highlightedInvitationId?: string;
 }) {
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const invitationsQuery = useMyProjectInvitations();
   const invitations =
     invitationsQuery.data?.pages.flatMap((page) => page.items) ?? [];
@@ -26,15 +29,15 @@ export function ProjectInvitationsScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void invitationsQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             invitationsQuery.error,
-            "We couldn't load your project invitations. Try again."
+            t(($) => $["features/projects"].invitations.listLoad)
           ),
           icon: AlertIcon,
-          title: "Invitations unavailable"
+          title: t(($) => $["features/projects"].invitations.unavailable)
         }
       }}
       isError={invitationsQuery.isError}
@@ -52,9 +55,15 @@ export function ProjectInvitationsScreen({
       <Screen>
         <View style={{ gap: atomSpacing[6] }}>
           <NavScreenHeader
-            breadcrumbLabel="Invitations"
-            description="Review projects that other Onzait users shared with you."
-            title="Project invitations"
+            breadcrumbLabel={t(
+              ($) => $["features/projects"].invitations.pending
+            )}
+            description={t(
+              ($) => $["features/projects"].invitations.listDescription
+            )}
+            title={t(
+              ($) => $["features/projects"].invitations.listTitle
+            )}
           />
           {invitations.length ? (
             invitations.map((invitation) => (
@@ -66,9 +75,13 @@ export function ProjectInvitationsScreen({
             ))
           ) : (
             <EmptyState
-              description="When someone invites your verified email to a project, it will appear here."
+              description={t(
+                ($) => $["features/projects"].invitations.emptyDescription
+              )}
               icon={MailIcon}
-              title="No pending invitations"
+              title={t(
+                ($) => $["features/projects"].team.emptyInvitations
+              )}
             />
           )}
           {invitationsQuery.hasNextPage ? (
@@ -78,7 +91,7 @@ export function ProjectInvitationsScreen({
               onPress={() => void invitationsQuery.fetchNextPage()}
               variant="bordered"
             >
-              Load more invitations
+              {t(($) => $["features/projects"].invitations.loadMore)}
             </AppButton>
           ) : null}
         </View>

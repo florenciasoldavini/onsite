@@ -6,6 +6,7 @@ import type {
   WorkerSort
 } from "@/features/workers/types/worker";
 import {
+  createPersonContactFormSchema,
   personContactFormSchema,
   personContactRecordSchema,
   personContactSummarySchema
@@ -28,6 +29,14 @@ export const workerFormSchema = personContactFormSchema.extend({
   contractor_id: z.string().nullable(),
   trade_category_ids: z.array(z.string())
 });
+
+export const createWorkerFormSchema = (
+  t: Parameters<typeof createPersonContactFormSchema>[0]
+) =>
+  createPersonContactFormSchema(t).extend({
+    contractor_id: z.string().nullable(),
+    trade_category_ids: z.array(z.string())
+  });
 
 export function toWorkerInput(values: WorkerFormValues): CreateWorkerInput {
   return {

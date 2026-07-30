@@ -37,3 +37,26 @@ test("protects authenticated routes when no session exists", async ({
   await expect(page).toHaveURL(/\/sign-in$/);
   await expect(page.getByText("Welcome Back", { exact: true })).toBeVisible();
 });
+
+test("switches and persists the public app language", async ({ page }) => {
+  await page.goto("/sign-in");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+
+  await page
+    .getByRole("button", { name: "App language, currently English" })
+    .click();
+  await page.getByRole("button", { name: "Español", exact: true }).click();
+
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(
+    page.getByText("Bienvenido de nuevo", { exact: true })
+  ).toBeVisible();
+
+  await page.reload();
+  await expect(page.locator("html")).toHaveAttribute("lang", "es");
+  await expect(
+    page.getByRole("button", {
+      name: "Idioma de la aplicación: Español"
+    })
+  ).toBeVisible();
+});

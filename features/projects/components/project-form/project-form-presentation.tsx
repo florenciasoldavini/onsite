@@ -6,6 +6,7 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export const projectFormStyles = StyleSheet.create({
   formCardExpanded: {
@@ -33,35 +34,49 @@ export function ProjectFormHeader({
   projectId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
 
   return (
     <View style={{ gap: atomSpacing[3] }}>
       <Breadcrumb
         items={[
           {
-            accessibilityLabel: "Back to projects",
-            label: "Projects",
+            accessibilityLabel: t(
+              ($) => $["features/projects"].actions.backProjects
+            ),
+            label: t(($) => $["features/projects"].list.title),
             onPress: () => router.replace("/projects" as never)
           },
           ...(mode === "edit" && projectId
             ? [
                 {
-                  accessibilityLabel: "Back to project detail",
-                  label: "Project Detail",
+                  accessibilityLabel: t(
+                    ($) => $["features/projects"].form.backDetail
+                  ),
+                  label: t(($) => $["features/projects"].detail.title),
                   onPress: () =>
                     router.replace(`/projects/${projectId}` as never)
                 }
               ]
             : []),
-          { label: mode === "create" ? "New" : "Edit" }
+          {
+            label: t(($) =>
+              mode === "create"
+                ? $["features/projects"].form.createTitle
+                : $["features/projects"].form.editTitle
+            )
+          }
         ]}
       />
       <AppHeading variant="hero">
-        {mode === "create" ? "Create a project." : "Update project details."}
+        {t(($) =>
+          mode === "create"
+            ? $["features/projects"].form.createHeading
+            : $["features/projects"].form.editHeading
+        )}
       </AppHeading>
       <AppText tone="muted">
-        Projects anchor site tasks, uploads, location, and future client-facing
-        work.
+        {t(($) => $["features/projects"].form.description)}
       </AppText>
     </View>
   );

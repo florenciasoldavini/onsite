@@ -17,8 +17,6 @@ import {
   getActiveFilterCount,
   getProjectGridMetrics,
   initialProjectFilters,
-  projectSortOptions,
-  projectViewOptions,
   type ProjectFilterState,
   type ProjectsViewMode
 } from "@/features/projects/components/projects-screen/projects-screen.config";
@@ -44,6 +42,7 @@ import {
 import { useRouter } from "expo-router";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { Suspense, lazy, useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   FlatList,
   View,
@@ -61,6 +60,8 @@ const ProjectsMapView = lazy(async () => {
 
 export default function ProjectsScreen() {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const { width } = useWindowDimensions();
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
@@ -70,6 +71,41 @@ export default function ProjectsScreen() {
     initialProjectFilters
   );
   const [filtersVisible, setFiltersVisible] = useState(false);
+  const projectSortOptions = useMemo(
+    () =>
+      [
+        {
+          label: t(($) => $["features/projects"].sort.newest),
+          value: "created_desc"
+        },
+        {
+          label: t(($) => $["features/projects"].sort.oldest),
+          value: "created_asc"
+        },
+        {
+          label: t(($) => $["features/projects"].sort.ascending),
+          value: "name_asc"
+        },
+        {
+          label: t(($) => $["features/projects"].sort.descending),
+          value: "name_desc"
+        }
+      ] satisfies { label: string; value: ProjectSort }[],
+    [t]
+  );
+  const projectViewOptions = useMemo(
+    () => [
+      {
+        label: t(($) => $["features/projects"].gallery.list),
+        value: "list" as const
+      },
+      {
+        label: t(($) => $["features/projects"].gallery.map),
+        value: "map" as const
+      }
+    ],
+    [t]
+  );
   const projectsQuery = useProjects({
     ...filters,
     query,
@@ -138,7 +174,9 @@ export default function ProjectsScreen() {
         action={
           <View style={{ flexDirection: "row", gap: atomSpacing[2] }}>
             <AppButton
-              accessibilityLabel="Project invitations"
+              accessibilityLabel={t(
+                ($) => $["features/projects"].accessibility.invitations
+              )}
               color="neutral"
               fullWidth={false}
               icon={MailIcon}
@@ -155,12 +193,12 @@ export default function ProjectsScreen() {
                 onPress={() => router.push("/projects/new" as never)}
                 size="sm"
               >
-                New project
+                {t(($) => $["features/projects"].actions.new)}
               </AppButton>
             ) : null}
           </View>
         }
-        title="Projects"
+        title={t(($) => $["features/projects"].list.title)}
       />
 
       <View
@@ -169,16 +207,20 @@ export default function ProjectsScreen() {
         <View style={isExpanded ? styles.searchExpanded : styles.searchFluid}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search projects"
+            placeholder={t(
+              ($) => $["features/projects"].list.searchPlaceholder
+            )}
             value={query}
           />
         </View>
 
         <View style={styles.controlsRow}>
           <SelectMenu
-            accessibilityLabel="Sort projects"
+            accessibilityLabel={t(
+              ($) => $["features/projects"].accessibility.sort
+            )}
             icon={SortIcon}
-            labelPrefix="Sort"
+            labelPrefix={t(($) => $["features/projects"].sort.label)}
             onChange={setSort}
             options={projectSortOptions}
             value={sort}
@@ -193,8 +235,10 @@ export default function ProjectsScreen() {
               onPress={() => setFiltersVisible(true)}
             >
               {activeFilterCount > 0
-                ? `Filters (${activeFilterCount})`
-                : "Filters"}
+                ? t(($) => $["features/projects"].filters.activeCount, {
+                    activeCount: activeFilterCount
+                  })
+                : t(($) => $["features/projects"].filters.label)}
             </AppButton>
           </View>
         </View>
@@ -223,16 +267,16 @@ export default function ProjectsScreen() {
     <InlineErrorState
       action={{
         icon: RefreshIcon,
-        label: "Retry",
+        label: tShared(($) => $.shared.actions.retry),
         onPress: () => {
           void projectsQuery.refetch();
         }
       }}
       description={getUserFacingErrorMessage(
         projectsQuery.error,
-        "We couldn't load your projects. Check your connection and try again."
+        t(($) => $["features/projects"].errors.listLoad)
       )}
-      title="Projects unavailable"
+      title={t(($) => $["features/projects"].errors.listUnavailable)}
     />
   ) : (
     <EmptyState
@@ -240,22 +284,26 @@ export default function ProjectsScreen() {
         hasSearchOrFilters
           ? {
               icon: RefreshIcon,
-              label: "Reset view",
+              label: t(($) => $["features/projects"].actions.reset),
               onPress: resetProjectView
             }
           : {
               icon: FolderPlusIcon,
-              label: "New Project",
+              label: t(($) => $["features/projects"].actions.newEmpty),
               onPress: () => router.push("/projects/new" as never)
             }
       }
       description={
         hasSearchOrFilters
-          ? "Adjust the search, sort, or filters to widen the project list."
-          : "Create your first project to start organizing job-site work."
+          ? t(($) => $["features/projects"].list.filteredDescription)
+          : t(($) => $["features/projects"].list.emptyDescription)
       }
       icon={hasSearchOrFilters ? FilterIcon : FolderPlusIcon}
-      title={hasSearchOrFilters ? "No matching projects" : "No projects yet"}
+      title={
+        hasSearchOrFilters
+          ? t(($) => $["features/projects"].list.filteredTitle)
+          : t(($) => $["features/projects"].list.emptyTitle)
+      }
     />
   );
 
@@ -282,7 +330,9 @@ export default function ProjectsScreen() {
       floatingAction={
         hasProjects && !isMapMode && isCompact ? (
           <AppButton
-            accessibilityLabel="New project"
+            accessibilityLabel={t(
+              ($) => $["features/projects"].accessibility.newProject
+            )}
             icon={FolderPlusIcon}
             layout="icon"
             onPress={() => router.push("/projects/new" as never)}

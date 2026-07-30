@@ -3,6 +3,7 @@ import type {
   PersonContactFormValues
 } from "@/shared/types/contact";
 import { z } from "zod";
+import type { TFunction } from "i18next";
 
 export const optionalEmailSchema = z
   .string()
@@ -41,6 +42,46 @@ export const personContactFormSchema = z.object({
   last_name: lastNameSchema,
   phone_number: optionalPhoneSchema
 }) satisfies z.ZodType<PersonContactFormValues>;
+
+export function createPersonContactFormSchema(t: TFunction<"shared">) {
+  const optionalEmailSchema = z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value.length === 0 ||
+        z.string().email().max(254).safeParse(value).success,
+      { message: t(($) => $.shared.validation.email) }
+    );
+
+  const optionalPhoneSchema = z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 3, {
+      message: t(($) => $.shared.validation.phone)
+    })
+    .refine((value) => value.length <= 40, {
+      message: t(($) => $.shared.validation.phoneMax)
+    });
+
+  const firstNameSchema = z
+    .string()
+    .trim()
+    .min(1, t(($) => $.shared.validation.firstNameRequired))
+    .max(80, t(($) => $.shared.validation.firstNameMax));
+
+  const lastNameSchema = z
+    .string()
+    .trim()
+    .max(80, t(($) => $.shared.validation.lastNameMax));
+
+  return z.object({
+    email: optionalEmailSchema,
+    first_name: firstNameSchema,
+    last_name: lastNameSchema,
+    phone_number: optionalPhoneSchema
+  }) satisfies z.ZodType<PersonContactFormValues>;
+}
 
 export const personContactRecordSchema = z.object({
   created_at: z.string(),

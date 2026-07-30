@@ -39,6 +39,9 @@ jobs:
       - name: Expo dependency compatibility
         run: npm run doctor
 
+      - name: Localization drift and completeness
+        run: npm run i18n:check
+
       - name: TypeScript check
         run: npx tsc --noEmit
 

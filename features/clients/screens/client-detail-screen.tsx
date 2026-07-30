@@ -7,6 +7,7 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { RefreshIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 export default function ClientDetailScreen({
@@ -15,9 +16,11 @@ export default function ClientDetailScreen({
   clientId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/clients");
+  const { t: tShared } = useTranslation("shared");
   const clientQuery = useClient(clientId);
   const backToClients = {
-    label: "Back to clients",
+    label: t(($) => $["features/clients"].accessibility.backToClients),
     onPress: () => router.replace("/directory?section=clients" as never)
   };
 
@@ -28,12 +31,12 @@ export default function ClientDetailScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void clientQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             clientQuery.error,
-            "We couldn't load this client. Try again."
+            t(($) => $["features/clients"].errors.load)
           ),
           icon: UserIcon
         },
@@ -51,7 +54,7 @@ export default function ClientDetailScreen({
           </View>
         </Screen>
       }
-      resourceName="client"
+      resourceName={t(($) => $["features/clients"].fields.client)}
     >
       {clientQuery.data ? (
         <ClientDetailContent client={clientQuery.data} />

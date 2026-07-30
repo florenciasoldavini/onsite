@@ -1,7 +1,7 @@
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useChangeProfilePassword } from "@/features/profile/hooks/use-profile-avatar";
 import {
-  profilePasswordSchema,
+  createProfilePasswordSchema,
   type ProfilePasswordInput
 } from "@/features/profile/schemas/profile.schemas";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/client";
@@ -16,9 +16,10 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const passwordDefaults: ProfilePasswordInput = {
   confirmPassword: "",
@@ -26,6 +27,12 @@ const passwordDefaults: ProfilePasswordInput = {
 };
 
 export function ProfileSecurityTab() {
+  const { i18n, t } = useTranslation("features/auth");
+  const { t: tProfile } = useTranslation("features/profile");
+  const profilePasswordSchema = useMemo(
+    () => createProfilePasswordSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const { session, user } = useAuth();
   const changePasswordMutation = useChangeProfilePassword();
   const [status, setStatus] = useState<string | null>(null);
@@ -69,7 +76,7 @@ export function ProfileSecurityTab() {
     try {
       await changePasswordMutation.mutateAsync(password);
       reset(passwordDefaults);
-      setStatus("Password updated.");
+      setStatus(tProfile(($) => $["features/profile"].security.updated));
     } catch (mutationError) {
       setError(getSupabaseErrorMessage(mutationError));
     }
@@ -79,8 +86,12 @@ export function ProfileSecurityTab() {
     <AppCard padding="lg">
       <View style={styles.content}>
         <View style={styles.heading}>
-          <AppText variant="label">Account Security</AppText>
-          <AppText tone="muted">Password settings</AppText>
+          <AppText variant="label">
+            {tProfile(($) => $["features/profile"].security.heading)}
+          </AppText>
+          <AppText tone="muted">
+            {tProfile(($) => $["features/profile"].security.settings)}
+          </AppText>
         </View>
 
         <View style={styles.fields}>
@@ -94,10 +105,14 @@ export function ProfileSecurityTab() {
                 errorText={fieldState.error?.message}
                 helperText={
                   !fieldState.error
-                    ? "Use 8+ chars with uppercase, number, and symbol."
+                    ? tProfile(
+                        ($) => $["features/profile"].security.passwordHint
+                      )
                     : null
                 }
-                label="New Password"
+                label={tProfile(
+                  ($) => $["features/profile"].security.newPassword
+                )}
                 leftIcon={LockIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -130,7 +145,9 @@ export function ProfileSecurityTab() {
                 autoCapitalize="none"
                 autoComplete="new-password"
                 errorText={fieldState.error?.message}
-                label="Confirm Password"
+                label={tProfile(
+                  ($) => $["features/profile"].security.confirm
+                )}
                 leftIcon={LockIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -161,7 +178,7 @@ export function ProfileSecurityTab() {
             onPress={() => void changePassword()}
             size="md"
           >
-            Change Password
+            {tProfile(($) => $["features/profile"].security.change)}
           </AppButton>
         </View>
 

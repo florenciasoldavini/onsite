@@ -1,7 +1,7 @@
 import { ProjectPhotoDraftCard } from "@/features/photos/components/project-photo-draft-card";
 import {
   PROJECT_PHOTO_BATCH_LIMIT,
-  PROJECT_PHOTO_KIND_LABELS,
+  PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE,
   PROJECT_PHOTO_KINDS
 } from "@/features/photos/constants/photo.constants";
 import { useUploadProjectPhotos } from "@/features/photos/hooks/use-project-photos";
@@ -27,7 +27,9 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, View } from "react-native";
 import {
   useFieldArray,
@@ -38,17 +40,19 @@ import {
 
 type FormValues = { photos: ProjectPhotoDraft[] };
 
-const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
-  label: PROJECT_PHOTO_KIND_LABELS[kind],
-  value: kind
-}));
-
 export default function ProjectPhotoUploadScreen({
   projectId
 }: {
   projectId?: string;
 }) {
   const router = useRouter();
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/photos");
+  const { t: tShared } = useTranslation("shared");
+  const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
+    label: PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][kind],
+    value: kind
+  }));
   const toast = useAppToast();
   const routeProjectId = projectId ?? "";
   const projectQuery = useProject(projectId);
@@ -110,8 +114,11 @@ export default function ProjectPhotoUploadScreen({
 
     if (assets.length > accepted.length) {
       toast.show({
-        description: `Only ${remaining} more photo${remaining === 1 ? "" : "s"} could be added.`,
-        title: "20-photo limit reached",
+        description: t(
+          ($) => $["features/photos"].upload.limitDescription,
+          { count: remaining }
+        ),
+        title: t(($) => $["features/photos"].upload.limitTitle),
         tone: "warning"
       });
     }
@@ -132,8 +139,8 @@ export default function ProjectPhotoUploadScreen({
         if (!permission.granted) {
           setPickerError(
             permission.canAskAgain
-              ? "Photo access is required to select project photos. Allow access and try again."
-              : "Photo access is disabled. Enable Photos access for Onzait in your device settings, then try again."
+              ? t(($) => $["features/photos"].upload.libraryRequired)
+              : t(($) => $["features/photos"].upload.libraryDenied)
           );
           return;
         }
@@ -155,7 +162,7 @@ export default function ProjectPhotoUploadScreen({
       setPickerError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't open your photo library. Try again."
+          t(($) => $["features/photos"].upload.openLibrary)
         )
       );
     }
@@ -174,8 +181,8 @@ export default function ProjectPhotoUploadScreen({
       if (!permission.granted) {
         setPickerError(
           permission.canAskAgain
-            ? "Camera access is required to take a project photo. Allow access and try again."
-            : "Camera access is disabled. Enable Camera access for Onzait in your device settings, then try again."
+            ? t(($) => $["features/photos"].upload.cameraRequired)
+            : t(($) => $["features/photos"].upload.cameraDenied)
         );
         return;
       }
@@ -193,7 +200,7 @@ export default function ProjectPhotoUploadScreen({
       setPickerError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't open the camera. Try again."
+          t(($) => $["features/photos"].upload.openCamera)
         )
       );
     }
@@ -236,7 +243,7 @@ export default function ProjectPhotoUploadScreen({
             outcome.photoId,
             getUserFacingErrorMessage(
               outcome.error,
-              "This photo could not be uploaded. Check your connection and retry."
+              t(($) => $["features/photos"].upload.uploadError)
             )
           ])
         )
@@ -252,16 +259,22 @@ export default function ProjectPhotoUploadScreen({
         )
       );
       toast.show({
-        description: `${savedIds.size} saved. ${failures.length} remain in the review queue.`,
-        title: "Some photos need another try",
+        description: t(
+          ($) => $["features/photos"].upload.partialDescription,
+          { failed: failures.length, saved: savedIds.size }
+        ),
+        title: t(($) => $["features/photos"].upload.partialTitle),
         tone: "warning"
       });
       return;
     }
 
     toast.show({
-      description: `${savedIds.size} photo${savedIds.size === 1 ? "" : "s"} added to the project.`,
-      title: "Photos saved",
+      description: t(
+        ($) => $["features/photos"].upload.savedDescription,
+        { count: savedIds.size }
+      ),
+      title: t(($) => $["features/photos"].upload.savedTitle),
       tone: "success"
     });
     router.replace(`/projects/${routeProjectId}/photos` as never);
@@ -272,23 +285,25 @@ export default function ProjectPhotoUploadScreen({
       feedback={{
         forbidden: {
           action: {
-            label: "Back to photos",
+            label: t(($) => $["features/photos"].actions.backPhotos),
             onPress: () =>
               router.replace(`/projects/${routeProjectId}/photos` as never)
           },
-          description: "Your project access does not allow adding photos.",
-          title: "Photo upload unavailable"
+          description: t(
+            ($) => $["features/photos"].upload.uploadForbidden
+          ),
+          title: t(($) => $["features/photos"].upload.uploadUnavailable)
         },
         invalidParams: {
           action: {
-            label: "Back to projects",
+            label: t(($) => $["features/photos"].actions.backProjects),
             onPress: () => router.replace("/projects" as never)
           }
         },
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => {
               void Promise.all([
                 projectQuery.refetch(),
@@ -301,11 +316,11 @@ export default function ProjectPhotoUploadScreen({
                 projectQuery.error,
                 "We couldn't load this project. Check your connection and try again."
               )
-            : "We couldn't verify your photo upload access. Check your connection and try again."
+            : t(($) => $["features/photos"].upload.uploadAccess)
         },
         notFound: {
           action: {
-            label: "Back to projects",
+            label: t(($) => $["features/photos"].actions.backProjects),
             onPress: () => router.replace("/projects" as never)
           }
         }
@@ -330,29 +345,33 @@ export default function ProjectPhotoUploadScreen({
           <Breadcrumb
             items={[
               {
-                label: "Photos",
+                label: t(($) => $["features/photos"].gallery.title),
                 onPress: () =>
                   router.replace(`/projects/${routeProjectId}/photos` as never)
               },
-              { label: "Add photos" }
+              { label: t(($) => $["features/photos"].actions.add) }
             ]}
           />
           <View style={{ gap: atomSpacing[2] }}>
             <AppText tone="accent" variant="eyebrow">
-              FIXED PROJECT
+              {t(($) => $["features/photos"].upload.fixedProject)}
             </AppText>
             <AppHeading selectable variant="hero">
-              {projectQuery.data?.name ?? "Project photos"}
+              {projectQuery.data?.name ??
+                t(($) => $["features/photos"].upload.projectPhotos)}
             </AppHeading>
             <AppText tone="muted">
-              Every photo in this batch will be saved to this project.
+              {t(($) => $["features/photos"].upload.description)}
             </AppText>
           </View>
 
           <AppCard padding="md" tone="muted">
             <View style={{ gap: atomSpacing[4] }}>
               <AppHeading variant="section">
-                Add photos ({photos.length}/{PROJECT_PHOTO_BATCH_LIMIT})
+                {t(($) => $["features/photos"].upload.addCount, {
+                  current: photos.length,
+                  limit: PROJECT_PHOTO_BATCH_LIMIT
+                })}
               </AppHeading>
               <View
                 style={{
@@ -368,7 +387,7 @@ export default function ProjectPhotoUploadScreen({
                   onPress={() => void chooseFromLibrary()}
                   variant="bordered"
                 >
-                  Photo library
+                  {t(($) => $["features/photos"].upload.chooseLibrary)}
                 </AppButton>
                 <AppButton
                   fullWidth={false}
@@ -377,7 +396,7 @@ export default function ProjectPhotoUploadScreen({
                   onPress={() => void takePhoto()}
                   variant="bordered"
                 >
-                  Camera
+                  {t(($) => $["features/photos"].upload.camera)}
                 </AppButton>
               </View>
               {pickerError ? (
@@ -392,16 +411,26 @@ export default function ProjectPhotoUploadScreen({
             <AppCard padding="md">
               <View style={{ gap: atomSpacing[4] }}>
                 <View style={{ gap: atomSpacing[1] }}>
-                  <AppHeading variant="section">Batch changes</AppHeading>
+                  <AppHeading variant="section">
+                    {t(($) => $["features/photos"].upload.batchChanges)}
+                  </AppHeading>
                   <AppText tone="muted" variant="bodySm">
                     {selectedIds.size > 0
-                      ? `Applies to ${selectedIds.size} selected photo${selectedIds.size === 1 ? "" : "s"}.`
-                      : "No photos selected, so changes apply to all photos."}
+                      ? t(
+                          ($) =>
+                            $["features/photos"].upload.selectedCount,
+                          { count: selectedIds.size }
+                        )
+                      : t(
+                          ($) => $["features/photos"].upload.noSelection
+                        )}
                   </AppText>
                 </View>
                 <SelectField
                   disabled={isBusy}
-                  label="Category"
+                  label={t(
+                    ($) => $["features/photos"].upload.batchCategory
+                  )}
                   onChange={setBatchKind}
                   options={kindOptions}
                   value={batchKind}
@@ -427,7 +456,7 @@ export default function ProjectPhotoUploadScreen({
                     size="sm"
                     variant="bordered"
                   >
-                    Apply category
+                    {t(($) => $["features/photos"].upload.applyCategory)}
                   </AppButton>
                   <AppButton
                     fullWidth={false}
@@ -442,7 +471,7 @@ export default function ProjectPhotoUploadScreen({
                     size="sm"
                     variant="bordered"
                   >
-                    Mark marketing
+                    {t(($) => $["features/photos"].upload.markMarketing)}
                   </AppButton>
                   <AppButton
                     color="neutral"
@@ -458,7 +487,7 @@ export default function ProjectPhotoUploadScreen({
                     size="sm"
                     variant="ghost"
                   >
-                    Clear marketing
+                    {t(($) => $["features/photos"].upload.clearMarketing)}
                   </AppButton>
                 </View>
               </View>
@@ -511,7 +540,7 @@ export default function ProjectPhotoUploadScreen({
             <AppText selectable tone="danger">
               {getUserFacingErrorMessage(
                 uploadMutation.error,
-                "We couldn't start this upload. Check the project and try again."
+                t(($) => $["features/photos"].upload.startError)
               )}
             </AppText>
           ) : null}
@@ -523,7 +552,11 @@ export default function ProjectPhotoUploadScreen({
             onPress={() => void submit()}
             size="lg"
           >
-            {uploadMutation.isError ? "Retry upload" : "Upload photos"}
+            {t(($) =>
+              uploadMutation.isError
+                ? $["features/photos"].upload.retry
+                : $["features/photos"].upload.upload
+            )}
           </AppButton>
         </View>
       </Screen>

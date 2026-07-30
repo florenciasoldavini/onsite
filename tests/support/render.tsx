@@ -3,6 +3,13 @@ import {
   type AuthContextValue
 } from "@/features/auth/providers/auth-context";
 import { GluestackUIProvider } from "@/shared/ui/primitives/gluestack-ui-provider";
+import { setUserFacingErrorLanguage } from "@/shared/utils/user-facing-errors";
+import { LocalizationContext } from "@/features/localization/providers/localization-context";
+import { localizationResources } from "@/features/localization/i18n/resources";
+import {
+  formattingLocales,
+  type SupportedLanguage
+} from "@/features/localization/types/language";
 import { NavigationContainer } from "@react-navigation/native";
 import {
   QueryClient,
@@ -16,7 +23,10 @@ import {
   type RenderOptions
 } from "@testing-library/react-native";
 import type { PropsWithChildren, ReactElement } from "react";
+import { useMemo, useState } from "react";
 import { SafeAreaProvider, type Metrics } from "react-native-safe-area-context";
+import { createInstance } from "i18next";
+import { I18nextProvider, initReactI18next } from "react-i18next";
 
 const defaultQueryOptions: DefaultOptions = {
   mutations: {
@@ -61,6 +71,7 @@ export function createTestQueryClient(defaultOptions = defaultQueryOptions) {
 interface AppTestProviderOptions {
   auth?: Partial<AuthContextValue>;
   includeNavigation?: boolean;
+  language?: SupportedLanguage;
   queryClient?: QueryClient;
   safeAreaMetrics?: Metrics;
 }
@@ -68,10 +79,39 @@ interface AppTestProviderOptions {
 function createAppTestWrapper({
   auth,
   includeNavigation = true,
+  language: initialLanguage = "en",
   queryClient = createTestQueryClient(),
   safeAreaMetrics = defaultSafeAreaMetrics
 }: AppTestProviderOptions = {}) {
+  setUserFacingErrorLanguage(initialLanguage);
+  const i18n = createInstance();
+  void i18n.use(initReactI18next).init({
+    fallbackLng: "en",
+    enableSelector: "strict",
+    initAsync: false,
+    interpolation: { escapeValue: false },
+    lng: initialLanguage,
+    resources: localizationResources,
+    supportedLngs: ["es", "en"]
+  });
+
   return function AppTestWrapper({ children }: PropsWithChildren) {
+    const [language, setLanguage] =
+      useState<SupportedLanguage>(initialLanguage);
+    const localizationValue = useMemo(
+      () => ({
+        changeLanguage: async (nextLanguage: SupportedLanguage) => {
+          await i18n.changeLanguage(nextLanguage);
+          setUserFacingErrorLanguage(nextLanguage);
+          setLanguage(nextLanguage);
+        },
+        formattingLocale: formattingLocales[language],
+        hasExplicitPreference: true,
+        isReady: true,
+        language
+      }),
+      [language]
+    );
     const content = includeNavigation ? (
       <NavigationContainer>{children}</NavigationContainer>
     ) : (
@@ -79,15 +119,19 @@ function createAppTestWrapper({
     );
 
     return (
-      <GluestackUIProvider mode="light">
-        <SafeAreaProvider initialMetrics={safeAreaMetrics}>
-          <QueryClientProvider client={queryClient}>
-            <AuthContext.Provider value={{ ...defaultAuthValue, ...auth }}>
-              {content}
-            </AuthContext.Provider>
-          </QueryClientProvider>
-        </SafeAreaProvider>
-      </GluestackUIProvider>
+      <I18nextProvider i18n={i18n}>
+        <LocalizationContext.Provider value={localizationValue}>
+          <GluestackUIProvider mode="light">
+            <SafeAreaProvider initialMetrics={safeAreaMetrics}>
+              <QueryClientProvider client={queryClient}>
+                <AuthContext.Provider value={{ ...defaultAuthValue, ...auth }}>
+                  {content}
+                </AuthContext.Provider>
+              </QueryClientProvider>
+            </SafeAreaProvider>
+          </GluestackUIProvider>
+        </LocalizationContext.Provider>
+      </I18nextProvider>
     );
   };
 }
@@ -99,6 +143,7 @@ export function renderWithAppProviders(
   const {
     auth,
     includeNavigation,
+    language,
     queryClient,
     safeAreaMetrics,
     ...renderOptions
@@ -108,6 +153,7 @@ export function renderWithAppProviders(
     wrapper: createAppTestWrapper({
       auth,
       includeNavigation,
+      language,
       queryClient,
       safeAreaMetrics
     }),
@@ -122,6 +168,7 @@ export function renderHookWithAppProviders<Result, Props>(
   const {
     auth,
     includeNavigation,
+    language,
     queryClient,
     safeAreaMetrics,
     ...renderHookOptions
@@ -131,6 +178,7 @@ export function renderHookWithAppProviders<Result, Props>(
     wrapper: createAppTestWrapper({
       auth,
       includeNavigation,
+      language,
       queryClient,
       safeAreaMetrics
     }),

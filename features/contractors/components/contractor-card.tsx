@@ -9,6 +9,7 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { MailIcon, PhoneIcon } from "@/shared/ui/icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, View, type ViewStyle } from "react-native";
 
 export function ContractorCard({
@@ -19,11 +20,15 @@ export function ContractorCard({
   onPress: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation("features/contractors");
   const isWebHovered = process.env.EXPO_OS === "web" && isHovered;
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${getContractorDisplayName(contractor)}`}
+      accessibilityLabel={t(
+        ($) => $["features/contractors"].accessibility.open,
+        { name: getContractorDisplayName(contractor) }
+      )}
       accessibilityRole="button"
       onHoverIn={() => {
         if (process.env.EXPO_OS === "web") setIsHovered(true);
@@ -82,11 +87,17 @@ export function ContractorCard({
           </View>
           <ContactLine
             icon={PhoneIcon}
-            text={contractor.phone_number ?? "No phone number"}
+            text={
+              contractor.phone_number ??
+              t(($) => $["features/contractors"].list.noPhone)
+            }
           />
           <ContactLine
             icon={MailIcon}
-            text={contractor.email ?? "No email address"}
+            text={
+              contractor.email ??
+              t(($) => $["features/contractors"].list.noEmail)
+            }
           />
         </View>
       </AppCard>

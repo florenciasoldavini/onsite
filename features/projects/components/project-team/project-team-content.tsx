@@ -23,10 +23,13 @@ import { RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 export function ProjectTeamContent({ projectId }: { projectId: string }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const accessQuery = useProjectAccess(projectId);
   const teamQuery = useProjectTeam(projectId);
   const rolesQuery = useProjectRoles();
@@ -55,7 +58,7 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
       leaveConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't remove you from this project. Try again."
+          t(($) => $["features/projects"].team.leaveError)
         )
       );
     }
@@ -70,15 +73,15 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
       feedback={{
         forbidden: {
           action: {
-            label: "Back to project",
+            label: t(($) => $["features/projects"].actions.backProject),
             onPress: () => router.replace(`/projects/${projectId}` as never)
           },
-          description: "You don't have permission to view this project team."
+          description: t(($) => $["features/projects"].team.forbidden)
         },
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => {
               void Promise.all([
                 accessQuery.refetch(),
@@ -89,7 +92,7 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
           },
           description: getUserFacingErrorMessage(
             error,
-            "We couldn't load this project team. Check your access and try again."
+            t(($) => $["features/projects"].team.load)
           )
         }
       }}
@@ -127,13 +130,17 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
                     size="sm"
                     variant="bordered"
                   >
-                    Leave project
+                    {t(($) => $["features/projects"].invitations.leave)}
                   </AppButton>
                 ) : null
               }
-              breadcrumbLabel="Project team"
-              description="Manage who can see and contribute to this project."
-              title="Team"
+              breadcrumbLabel={t(
+                ($) => $["features/projects"].team.title
+              )}
+              description={t(
+                ($) => $["features/projects"].team.description
+              )}
+              title={t(($) => $["features/projects"].team.title)}
             />
             {canManage ? (
               <InviteMemberCard
@@ -142,13 +149,19 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
               />
             ) : null}
             <DestructiveConfirmationDialog
-              accessibilityLabel="Close leave project confirmation"
-              confirmLabel="Leave"
+              accessibilityLabel={t(
+                ($) => $["features/projects"].invitations.leave
+              )}
+              confirmLabel={t(
+                ($) => $["features/projects"].invitations.leave
+              )}
               controller={leaveConfirmation}
-              description="You will immediately lose access to this project. The project owner can invite you again later."
+              description={t(
+                ($) => $["features/projects"].team.leaveDescription
+              )}
               isPending={leaveMutation.isPending}
               onConfirm={confirmLeave}
-              title="Leave this project?"
+              title={t(($) => $["features/projects"].team.leaveTitle)}
             />
             <MembersCard
               canManage={canManage}
@@ -171,7 +184,7 @@ export function ProjectTeamContent({ projectId }: { projectId: string }) {
                 onPress={() => void teamQuery.fetchNextPage()}
                 variant="bordered"
               >
-                Load more team members
+                {t(($) => $["features/projects"].team.loadMore)}
               </AppButton>
             ) : null}
           </View>

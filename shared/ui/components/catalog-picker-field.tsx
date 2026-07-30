@@ -16,6 +16,7 @@ import type { AppIconComponent } from "@/shared/ui/icons";
 import type { ReactNode } from "react";
 import { useMemo } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function CatalogPickerField<TItem extends CatalogContactItem>({
   disabled = false,
@@ -35,7 +36,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
   optional = true,
   pages,
   query,
-  searchPlaceholder = "Search by name, phone, or email",
+  searchPlaceholder,
   selectedItemFallback,
   value
 }: {
@@ -60,6 +61,12 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
   selectedItemFallback?: TItem | null;
   value: string | null;
 }) {
+  const { t } = useTranslation("shared");
+  const resolvedSearchPlaceholder =
+    searchPlaceholder ?? t(($) => $.shared.catalogPicker.searchPlaceholder);
+  const noContactDetails = t(
+    ($) => $.shared.catalogPicker.noContactDetails
+  );
   const items = useMemo(
     () => pages?.flatMap((page) => page.items) ?? [],
     [pages]
@@ -76,7 +83,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
         <AppText variant="label">{label}</AppText>
         {optional ? (
           <AppText tone="subtle" variant="meta">
-            (optional)
+            {t(($) => $.shared.optional)}
           </AppText>
         ) : null}
       </View>
@@ -95,7 +102,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
       {!disabled ? (
         <SearchField
           onChangeText={onQueryChange}
-          placeholder={searchPlaceholder}
+          placeholder={resolvedSearchPlaceholder}
           size="md"
           value={query}
         />
@@ -104,20 +111,33 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
       {!disabled ? <AppCard padding="sm" tone="muted">
         <View style={styles.options}>
           {isLoading ? (
-            <AppText tone="muted">Loading {entityNamePlural}…</AppText>
+            <AppText tone="muted">
+              {t(($) => $.shared.catalogPicker.loading, {
+                entities: entityNamePlural
+              })}
+            </AppText>
           ) : isError ? (
             <AppText tone="danger">
-              We couldn&apos;t load {entityNamePlural}. Try again.
+              {t(($) => $.shared.catalogPicker.loadError, {
+                entities: entityNamePlural
+              })}
             </AppText>
           ) : items.length === 0 ? (
-            <AppText tone="muted">No matching {entityNamePlural}.</AppText>
+            <AppText tone="muted">
+              {t(($) => $.shared.catalogPicker.noMatches, {
+                entities: entityNamePlural
+              })}
+            </AppText>
           ) : (
             items.map((item) => {
               const displayName = getDisplayName(item);
 
               return (
                 <Pressable
-                  accessibilityLabel={`Select ${displayName}`}
+                  accessibilityLabel={t(
+                    ($) => $.shared.catalogPicker.select,
+                    { name: displayName }
+                  )}
                   accessibilityRole="button"
                   accessibilityState={{ selected: value === item.id }}
                   key={item.id}
@@ -131,7 +151,7 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
                   <AppText variant="label">{displayName}</AppText>
                   {item.phone_number || item.email ? (
                     <AppText tone="muted" variant="bodySm">
-                      {getCatalogContactSummary(item)}
+                      {getCatalogContactSummary(item, noContactDetails)}
                     </AppText>
                   ) : null}
                 </Pressable>
@@ -147,7 +167,9 @@ export function CatalogPickerField<TItem extends CatalogContactItem>({
               size="sm"
               variant="ghost"
             >
-              Load more {entityNamePlural}
+              {t(($) => $.shared.catalogPicker.loadMore, {
+                entities: entityNamePlural
+              })}
             </AppButton>
           ) : null}
         </View>
@@ -173,6 +195,11 @@ function SelectedCatalogItem<TItem extends CatalogContactItem>({
   item: TItem;
   onClear: () => void;
 }) {
+  const { t } = useTranslation("shared");
+  const noContactDetails = t(
+    ($) => $.shared.catalogPicker.noContactDetails
+  );
+
   return (
     <AppCard padding="sm">
       <View style={styles.selected}>
@@ -180,11 +207,13 @@ function SelectedCatalogItem<TItem extends CatalogContactItem>({
         <View style={styles.selectedCopy}>
           <AppText variant="label">{getDisplayName(item)}</AppText>
           <AppText tone="muted" variant="bodySm">
-            {getCatalogContactSummary(item)}
+            {getCatalogContactSummary(item, noContactDetails)}
           </AppText>
         </View>
         <AppButton
-          accessibilityLabel={`Clear selected ${entityName}`}
+          accessibilityLabel={t(($) => $.shared.catalogPicker.clear, {
+            entity: entityName
+          })}
           color="neutral"
           fullWidth={false}
           isDisabled={disabled}
@@ -192,7 +221,7 @@ function SelectedCatalogItem<TItem extends CatalogContactItem>({
           size="sm"
           variant="ghost"
         >
-          Clear
+          {t(($) => $.shared.catalogPicker.clearAction)}
         </AppButton>
       </View>
     </AppCard>

@@ -1,10 +1,15 @@
 import {
   UserFacingError,
   getUserFacingErrorMessage,
+  setUserFacingErrorLanguage,
   toUserFacingError
 } from "@/shared/utils/user-facing-errors";
 
 describe("user-facing errors", () => {
+  beforeEach(() => {
+    setUserFacingErrorLanguage("en");
+  });
+
   it("maps stable provider codes without exposing technical messages", () => {
     expect(
       getUserFacingErrorMessage(
@@ -60,5 +65,18 @@ describe("user-facing errors", () => {
         "Request failed."
       )
     ).toBe("Check your internet connection and try again.");
+  });
+
+  it("maps provider codes in the selected Spanish language", () => {
+    setUserFacingErrorLanguage("es");
+
+    expect(
+      getUserFacingErrorMessage(
+        { code: "invalid_credentials", message: "Invalid login credentials" },
+        "No pudimos iniciar sesión."
+      )
+    ).toBe(
+      "El correo electrónico o la contraseña son incorrectos. Revisá los datos e intentá de nuevo."
+    );
   });
 });

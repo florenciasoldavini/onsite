@@ -47,6 +47,11 @@ The public preview discloses only the invitation ID, project name, inviter displ
 
 Invitations expire after seven days. Resend rotates the token, restarts expiry, uses a delivery-version idempotency key, enforces a 60-second cooldown, and shares a 20-email rolling 24-hour actor cap with new invitations. A provider failure leaves the invitation pending with failed delivery state so it can be resent safely.
 
+Each invitation persists a required `language_code` of `es` or `en`. The form
+defaults to the sender's active UI language, while every resend reuses the
+persisted recipient language. Email role labels are translated from stable role
+codes; database English display labels are not email copy.
+
 ## Data Access Effects
 
 - Project, linked-client, task, project-photo, cover, and photo-object access uses the central capability engine.
@@ -57,5 +62,5 @@ Invitations expire after seven days. Resend rotates the token, restarts expiry, 
 ## Verification
 
 - `supabase/tests/project_collaboration_rls.test.sql` verifies the seeded mapping, owner/admin/member/removed/outsider/archive resolution, RLS, and the one-row mapping regression.
-- `supabase/functions/tests/project-collaboration.test.ts` verifies token hashing, input validation, safe database error mapping, and fragment-based email links.
+- `supabase/functions/tests/project-collaboration.test.ts` verifies token hashing, input validation, safe database error mapping, localization, and fragment-based email links.
 - Jest covers access parsing, dynamic role codes, `can(permission)`, repository scope, and affected UI behavior.

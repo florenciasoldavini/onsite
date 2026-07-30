@@ -8,6 +8,9 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
+import { getProjectRoleLabel } from "@/features/projects/utils/project-role-label";
+import { useTranslation } from "react-i18next";
 
 export function ProjectInvitationCard({
   highlighted,
@@ -17,6 +20,8 @@ export function ProjectInvitationCard({
   invitation: MyProjectInvitation;
 }) {
   const router = useRouter();
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
   const response = useRespondProjectInvitation();
 
   const respond = async (nextResponse: "accept" | "decline") => {
@@ -43,13 +48,16 @@ export function ProjectInvitationCard({
           {invitation.projectName}
         </AppHeading>
         <AppText selectable tone="muted">
-          {invitation.inviterName} invited you as {invitation.roleCode}.
+          {t(($) => $["features/projects"].invitations.invitedAs, {
+            inviter: invitation.inviterName,
+            role: getProjectRoleLabel(invitation.roleCode, language)
+          })}
         </AppText>
         {response.isError ? (
           <AppText selectable tone="danger">
             {getUserFacingErrorMessage(
               response.error,
-              "We couldn't respond to this invitation. Try again."
+              t(($) => $["features/projects"].invitations.respondError)
             )}
           </AppText>
         ) : null}
@@ -66,7 +74,7 @@ export function ProjectInvitationCard({
             loading={response.isPending}
             onPress={() => void respond("accept")}
           >
-            Accept
+            {t(($) => $["features/projects"].invitations.accept)}
           </AppButton>
           <AppButton
             color="neutral"
@@ -75,7 +83,7 @@ export function ProjectInvitationCard({
             onPress={() => void respond("decline")}
             variant="bordered"
           >
-            Decline
+            {t(($) => $["features/projects"].invitations.decline)}
           </AppButton>
         </View>
       </View>

@@ -1,4 +1,5 @@
 import { getContractorDisplayName } from "@/features/contractors/schemas/contractor.schema";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { getTradeCategoryLabel } from "@/features/trade-categories/constants/trade-category-labels";
 import {
   useSoftDeleteWorker,
@@ -40,6 +41,7 @@ import type { AppIconComponent } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
 
 export function WorkerDetailContent({
@@ -48,6 +50,9 @@ export function WorkerDetailContent({
   worker: NonNullable<ReturnType<typeof useWorker>["data"]>;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/workers");
+  const { language } = useLocalization();
+  const { t: tShared } = useTranslation("shared");
   const { isCompact, isExpanded } = useLayoutMode();
   const toast = useAppToast();
   const deleteMutation = useSoftDeleteWorker();
@@ -61,8 +66,11 @@ export function WorkerDetailContent({
       await deleteMutation.mutateAsync(worker.id);
       deleteConfirmation.close();
       toast.show({
-        description: `${displayName} was removed from your worker catalog.`,
-        title: "Worker deleted",
+        description: t(
+          ($) => $["features/workers"].detail.deletedDescription,
+          { name: displayName }
+        ),
+        title: t(($) => $["features/workers"].detail.deletedTitle),
         tone: "success"
       });
       router.replace("/directory?section=workers" as never);
@@ -70,7 +78,7 @@ export function WorkerDetailContent({
       deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't delete this worker. Try again."
+          t(($) => $["features/workers"].errors.delete)
         )
       );
     }
@@ -91,11 +99,11 @@ export function WorkerDetailContent({
         <Breadcrumb
           items={[
             {
-              label: "Workers",
+              label: t(($) => $["features/workers"].breadcrumbs.workers),
               onPress: () =>
                 router.replace("/directory?section=workers" as never)
             },
-            { label: "Worker Detail" }
+            { label: t(($) => $["features/workers"].breadcrumbs.detail) }
           ]}
         />
 
@@ -114,11 +122,11 @@ export function WorkerDetailContent({
               </View>
               <View style={{ flex: 1, gap: atomSpacing[1] }}>
                 <AppText tone="accent" variant="eyebrow">
-                  WORKER PROFILE
+                  {t(($) => $["features/workers"].detail.profile)}
                 </AppText>
                 <AppHeading variant="hero">{displayName}</AppHeading>
                 <AppText tone="muted">
-                  Contact and trade record for your worker catalog
+                  {t(($) => $["features/workers"].detail.profileDescription)}
                 </AppText>
               </View>
             </View>
@@ -136,7 +144,7 @@ export function WorkerDetailContent({
                 size="sm"
                 variant="bordered"
               >
-                Edit
+                {tShared(($) => $.shared.actions.edit)}
               </AppButton>
               <AppButton
                 color="danger"
@@ -147,7 +155,7 @@ export function WorkerDetailContent({
                 size="sm"
                 variant="bordered"
               >
-                Delete
+                {tShared(($) => $.shared.actions.delete)}
               </AppButton>
             </View>
           </View>
@@ -161,40 +169,48 @@ export function WorkerDetailContent({
         >
           <AppCard padding="lg" style={{ flex: 1 }}>
             <View style={{ gap: atomSpacing[4] }}>
-              <AppHeading variant="section">Contact details</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/workers"].detail.contactDetails)}
+              </AppHeading>
               <DetailRow
                 action={
                   worker.phone_number
                     ? {
-                        label: "Call",
+                        label: t(($) => $["features/workers"].actions.call),
                         onPress: () =>
                           void openContactAction(
                             `tel:${worker.phone_number}`,
-                            "We couldn't open your phone app. Copy the number and try it there."
+                            t(($) => $["features/workers"].detail.phoneError)
                           )
                       }
                     : undefined
                 }
                 icon={PhoneIcon}
-                label="Phone"
-                value={worker.phone_number ?? "Not provided"}
+                label={t(($) => $["features/workers"].detail.phone)}
+                value={
+                  worker.phone_number ??
+                  t(($) => $["features/workers"].detail.notProvided)
+                }
               />
               <DetailRow
                 action={
                   worker.email
                     ? {
-                        label: "Email",
+                        label: t(($) => $["features/workers"].detail.email),
                         onPress: () =>
                           void openContactAction(
                             `mailto:${worker.email}`,
-                            "We couldn't open your email app. Copy the address and try it there."
+                            t(($) => $["features/workers"].detail.emailError)
                           )
                       }
                     : undefined
                 }
                 icon={MailIcon}
-                label="Email"
-                value={worker.email ?? "Not provided"}
+                label={t(($) => $["features/workers"].detail.email)}
+                value={
+                  worker.email ??
+                  t(($) => $["features/workers"].detail.notProvided)
+                }
               />
               {contactError ? (
                 <AppText selectable tone="danger">
@@ -206,12 +222,14 @@ export function WorkerDetailContent({
 
           <AppCard padding="lg" style={{ flex: 1 }}>
             <View style={{ gap: atomSpacing[4] }}>
-              <AppHeading variant="section">Catalog relationships</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/workers"].detail.relationships)}
+              </AppHeading>
               <DetailRow
                 action={
                   worker.contractor
                     ? {
-                        label: "Open",
+                        label: t(($) => $["features/workers"].actions.open),
                         onPress: () =>
                           router.push(
                             `/contractors/${worker.contractor!.id}` as never
@@ -220,27 +238,29 @@ export function WorkerDetailContent({
                     : undefined
                 }
                 icon={HardHatIcon}
-                label="Contractor"
+                label={t(($) => $["features/workers"].detail.contractor)}
                 value={
                   worker.contractor
                     ? getContractorDisplayName(worker.contractor)
-                    : "Independent worker"
+                    : t(($) => $["features/workers"].detail.independent)
                 }
               />
               <View style={{ gap: atomSpacing[2] }}>
                 <AppText tone="subtle" variant="meta">
-                  USUAL TRADES
+                  {t(($) => $["features/workers"].detail.tradeCategories)}
                 </AppText>
                 {worker.trade_categories.length > 0 ? (
                   worker.trade_categories.map((category) => (
                     <View key={category.id} style={styles.tradeChip}>
                       <AppText tone="accent" variant="bodySm">
-                        {getTradeCategoryLabel(category.code)}
+                        {getTradeCategoryLabel(category.code, language)}
                       </AppText>
                     </View>
                   ))
                 ) : (
-                  <AppText tone="muted">No trade categories selected</AppText>
+                  <AppText tone="muted">
+                    {t(($) => $["features/workers"].detail.noTrades)}
+                  </AppText>
                 )}
               </View>
             </View>
@@ -249,13 +269,17 @@ export function WorkerDetailContent({
       </View>
 
       <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting worker"
-        confirmLabel="Delete worker"
+        accessibilityLabel={t(
+          ($) => $["features/workers"].accessibility.cancelDelete
+        )}
+        confirmLabel={t(($) => $["features/workers"].actions.delete)}
         controller={deleteConfirmation}
-        description="This removes the worker from your active catalog. This action cannot be undone."
+        description={t(($) => $["features/workers"].delete.description)}
         isPending={deleteMutation.isPending}
         onConfirm={deleteWorker}
-        title={`Delete ${displayName}?`}
+        title={t(($) => $["features/workers"].delete.title, {
+          name: displayName
+        })}
       />
     </Screen>
   );

@@ -109,7 +109,11 @@ export function useProjectInvitationPreview(token?: string) {
 
 export function useInviteProjectMember(projectId: string) {
   return useCollaborationMutation(
-    (input: { email: string; roleCode: ProjectRoleCode }) =>
+    (input: {
+      email: string;
+      language: "es" | "en";
+      roleCode: ProjectRoleCode;
+    }) =>
       inviteProjectMember(projectId, input),
     projectId
   );

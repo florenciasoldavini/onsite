@@ -8,11 +8,8 @@ import {
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_TYPE_LABELS
-} from "@/features/projects/constants/project.constants";
+import { PROJECT_LABELS_BY_LANGUAGE } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { getProjectsMapViewport } from "@/features/projects/maps/map-points";
 import type {
   ProjectStatus,
@@ -34,6 +31,7 @@ import MapView, {
   type LatLng,
   type Region
 } from "react-native-maps";
+import { useTranslation } from "react-i18next";
 
 const statusColors: Record<ProjectStatus, string> = {
   cancelled: atomPalette.error,
@@ -55,6 +53,7 @@ export function ProjectsMapView({
   onOpenProject: (project: ProjectSummary) => void;
   projects: ProjectSummary[];
 }) {
+  const { t } = useTranslation("features/projects");
   const mapRef = useRef<MapView | null>(null);
   const hasCenteredOnUserRef = useRef(false);
   const userLocation = useLiveUserLocation();
@@ -171,10 +170,11 @@ export function ProjectsMapView({
           <MapPinIcon color={atomPalette.textSubtle} size={32} />
         </View>
         <View style={{ gap: atomSpacing[2] }}>
-          <AppHeading variant="section">No mapped projects</AppHeading>
+          <AppHeading variant="section">
+            {t(($) => $["features/projects"].map.noMappedTitle)}
+          </AppHeading>
           <AppText tone="muted">
-            Projects need a saved address with coordinates before they can
-            appear on the map.
+            {t(($) => $["features/projects"].map.noMappedDescription)}
           </AppText>
         </View>
       </AppCard>
@@ -248,7 +248,7 @@ export function ProjectsMapView({
                 latitude: userLocation.location.latitude,
                 longitude: userLocation.location.longitude
               }}
-              title="Your current location"
+              title={t(($) => $["features/projects"].map.userLocation)}
             >
               <View style={styles.userLocationHalo}>
                 <View style={styles.userLocationDot} />
@@ -261,8 +261,8 @@ export function ProjectsMapView({
           <AppButton
             accessibilityLabel={
               userLocation.isWatching
-                ? "Hide current location"
-                : "Show current location"
+                ? t(($) => $["features/projects"].map.hideLocation)
+                : t(($) => $["features/projects"].map.showLocation)
             }
             color={userLocation.isWatching ? "accent" : "neutral"}
             fullWidth={false}
@@ -299,6 +299,9 @@ function SelectedProjectCard({
   onOpenProject: () => void;
   project: ProjectSummary;
 }) {
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
   return (
     <AppCard padding="sm" style={styles.selectedCard}>
       <View style={styles.selectedCardContent}>
@@ -310,7 +313,7 @@ function SelectedProjectCard({
             ]}
           />
           <AppText tone="subtle" variant="formLabel">
-            {PROJECT_STATUS_LABELS[project.status]}
+            {labels.statuses[project.status]}
           </AppText>
         </View>
         <AppHeading numberOfLines={1} variant="card">
@@ -320,13 +323,14 @@ function SelectedProjectCard({
           {project.address}
         </AppText>
         <AppText tone="subtle" variant="caption">
-          {PROJECT_TYPE_LABELS[project.project_type]} -{" "}
-          {PROJECT_PHASE_LABELS[project.phase]}
+          {labels.types[project.project_type]} - {labels.phases[project.phase]}
         </AppText>
       </View>
       <View style={styles.selectedCardActions}>
         <Pressable
-          accessibilityLabel="Close project preview"
+          accessibilityLabel={t(
+            ($) => $["features/projects"].map.closePreview
+          )}
           hitSlop={8}
           onPress={onClose}
           style={styles.closeButton}
@@ -343,7 +347,7 @@ function SelectedProjectCard({
           onPress={onOpenProject}
           size="sm"
         >
-          Open
+          {t(($) => $["features/projects"].map.open)}
         </AppButton>
       </View>
     </AppCard>

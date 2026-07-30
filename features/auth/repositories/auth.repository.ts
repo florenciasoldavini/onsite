@@ -74,10 +74,12 @@ export async function signInWithEmailPassword({
 
 export async function signUpWithEmailPassword({
   email,
+  language = "es",
   next,
   password
 }: {
   email: string;
+  language?: "es" | "en";
   next?: string;
   password: string;
 }) {
@@ -88,7 +90,7 @@ export async function signUpWithEmailPassword({
       options: {
         emailRedirectTo: getAuthRedirectUrl(
           "callback",
-          next ? { next } : undefined
+          next ? { lang: language, next } : { lang: language }
         )
       }
     });
@@ -108,15 +110,22 @@ export function beginOAuthSignIn(
   return runAuthRequest(() => startOAuthSignIn(provider, next));
 }
 
-export function requestPasswordReset(email: string) {
-  return runAuthRequest(() => sendPasswordResetEmail(email));
+export function requestPasswordReset(
+  email: string,
+  language: "es" | "en" = "es"
+) {
+  return runAuthRequest(() => sendPasswordResetEmail(email, language));
 }
 
-export function resendVerificationEmail(email: string, next?: string) {
+export function resendVerificationEmail(
+  email: string,
+  language: "es" | "en" = "es",
+  next?: string
+) {
   return runAuthRequest(() =>
     next
-      ? resendSignUpConfirmationEmail(email, next)
-      : resendSignUpConfirmationEmail(email)
+      ? resendSignUpConfirmationEmail(email, language, next)
+      : resendSignUpConfirmationEmail(email, language)
   );
 }
 

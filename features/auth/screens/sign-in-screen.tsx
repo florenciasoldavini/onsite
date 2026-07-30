@@ -21,16 +21,17 @@ import {
   useOAuthSignIn
 } from "@/features/auth/hooks/use-auth-mutations";
 import {
-  loginSchema,
+  createLoginSchema,
   type LoginInput
 } from "@/features/auth/schemas/auth.schemas";
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
@@ -41,6 +42,7 @@ export default function SignInScreen({
   nextPath?: string;
 }) {
   const router = useRouter();
+  const { i18n, t } = useTranslation("features/auth");
   const hasNext = nextPath !== "/";
   const { authError, session } = useAuth();
   const emailSignIn = useEmailSignIn();
@@ -50,6 +52,10 @@ export default function SignInScreen({
   const [loadingAction, setLoadingAction] = useState<
     "apple" | "email" | "google" | null
   >(null);
+  const loginSchema = useMemo(
+    () => createLoginSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const form = useForm<LoginInput>({
     defaultValues: {
       email: "",
@@ -94,7 +100,7 @@ export default function SignInScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't sign you in. Check your details and try again."
+          t(($) => $["features/auth"].errors.signIn)
         )
       );
     } finally {
@@ -114,7 +120,7 @@ export default function SignInScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't start that sign-in method. Try again."
+          t(($) => $["features/auth"].errors.oauthStart)
         )
       );
     } finally {
@@ -124,9 +130,9 @@ export default function SignInScreen({
 
   return (
     <AuthShell
-      description="Access your workspace."
-      panelTag="Access / Sign In"
-      title="Welcome Back"
+      description={t(($) => $["features/auth"].signIn.description)}
+      panelTag={t(($) => $["features/auth"].signIn.panelTag)}
+      title={t(($) => $["features/auth"].signIn.title)}
     >
       <View style={{ gap: atomSpacing[6] }}>
         {authError ? (
@@ -142,7 +148,9 @@ export default function SignInScreen({
             }}
           >
             <AppButton
-              accessibilityLabel="Continue with Google"
+              accessibilityLabel={t(
+                ($) => $["features/auth"].common.google
+              )}
               fullWidth={false}
               imageSource={googleLogo}
               isDisabled={isBusy}
@@ -157,7 +165,9 @@ export default function SignInScreen({
               variant="bordered"
             />
             <AppButton
-              accessibilityLabel="Continue with Apple"
+              accessibilityLabel={t(
+                ($) => $["features/auth"].common.apple
+              )}
               fullWidth={false}
               imageSource={appleLogo}
               isDisabled={isBusy}
@@ -173,7 +183,9 @@ export default function SignInScreen({
             />
           </View>
 
-          <AuthDivider label="OR CONTINUE WITH EMAIL" />
+          <AuthDivider
+            label={t(($) => $["features/auth"].signIn.divider)}
+          />
 
           <Controller
             control={control}
@@ -184,7 +196,7 @@ export default function SignInScreen({
                 autoComplete="email"
                 errorText={fieldState.error?.message}
                 keyboardType="email-address"
-                label="Email Address"
+                label={t(($) => $["features/auth"].signIn.email)}
                 leftIcon={AtSignIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -206,11 +218,15 @@ export default function SignInScreen({
             name="password"
             render={({ field, fieldState }) => (
               <TextField
-                accessory={<AppLink href="/reset-password">Forgot?</AppLink>}
+                accessory={
+                  <AppLink href="/reset-password">
+                    {t(($) => $["features/auth"].signIn.forgot)}
+                  </AppLink>
+                }
                 autoCapitalize="none"
                 autoComplete="password"
                 errorText={fieldState.error?.message}
-                label="Secure Password"
+                label={t(($) => $["features/auth"].signIn.password)}
                 leftIcon={LockIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -246,7 +262,7 @@ export default function SignInScreen({
             }}
             size={authFieldSize}
           >
-            Sign In
+            {t(($) => $["features/auth"].signIn.action)}
           </AppButton>
           {formError ? (
             <FieldMessage tone="error">{formError}</FieldMessage>
@@ -254,13 +270,15 @@ export default function SignInScreen({
         </View>
 
         <AuthFooterLink
-          actionLabel="Create an Account"
+          actionLabel={t(
+            ($) => $["features/auth"].signIn.createAccount
+          )}
           href={
             hasNext
               ? (`/sign-up?next=${encodeURIComponent(nextPath)}` as never)
               : "/sign-up"
           }
-          prompt="New to the platform?"
+          prompt={t(($) => $["features/auth"].signIn.prompt)}
         />
       </View>
     </AuthShell>

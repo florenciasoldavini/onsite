@@ -1,6 +1,7 @@
 import { atomMotion } from "@/shared/ui/components/motion";
 import { atomPalette, atomRadii } from "@/shared/ui/components/theme";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useWindowDimensions, type ViewStyle } from "react-native";
 import Animated, {
   cancelAnimation,
@@ -21,6 +22,7 @@ export function SkeletonBlock({
   style?: ViewStyle;
   width?: ViewStyle["width"];
 }) {
+  const { t } = useTranslation("shared");
   const pulse = useSharedValue(0);
   const shimmer = useSharedValue(0);
   const { width: viewportWidth } = useWindowDimensions();
@@ -60,7 +62,7 @@ export function SkeletonBlock({
 
   return (
     <Animated.View
-      accessibilityLabel="Loading"
+      accessibilityLabel={t(($) => $.shared.accessibility.loading)}
       style={[
         {
           backgroundColor: atomPalette.surfaceStrong,

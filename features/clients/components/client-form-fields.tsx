@@ -2,6 +2,7 @@ import type { ClientFormValues } from "@/features/clients/types/client";
 import { TextField } from "@/shared/ui/components/input";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { Controller, type Control } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 export function ClientFormFields({
@@ -11,6 +12,8 @@ export function ClientFormFields({
   control: Control<ClientFormValues>;
   onChange?: () => void;
 }) {
+  const { t } = useTranslation("features/clients");
+
   return (
     <View style={{ gap: atomSpacing[5] }}>
       <Controller
@@ -20,7 +23,7 @@ export function ClientFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="First name"
+            label={t(($) => $["features/clients"].fields.firstName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -39,7 +42,7 @@ export function ClientFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="Last name"
+            label={t(($) => $["features/clients"].fields.lastName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -57,7 +60,7 @@ export function ClientFormFields({
           <TextField
             errorText={fieldState.error?.message}
             keyboardType="phone-pad"
-            label="Phone number"
+            label={t(($) => $["features/clients"].fields.phone)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -77,7 +80,7 @@ export function ClientFormFields({
             autoCorrect={false}
             errorText={fieldState.error?.message}
             keyboardType="email-address"
-            label="Email"
+            label={t(($) => $["features/clients"].fields.email)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);

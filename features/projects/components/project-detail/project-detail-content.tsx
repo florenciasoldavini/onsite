@@ -11,9 +11,11 @@ import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { Screen } from "@/shared/ui/components/screen";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectDetailContent({ project }: { project: Project }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
   const { isExpanded } = useLayoutMode();
   const accessQuery = useProjectAccess(project.id);
   const clientQuery = useClient(project.client_id ?? undefined);
@@ -24,11 +26,13 @@ export function ProjectDetailContent({ project }: { project: Project }) {
         <Breadcrumb
           items={[
             {
-              accessibilityLabel: "Back to projects",
-              label: "Projects",
+              accessibilityLabel: t(
+                ($) => $["features/projects"].actions.backProjects
+              ),
+              label: t(($) => $["features/projects"].list.title),
               onPress: () => router.replace("/projects" as never)
             },
-            { label: "Project Detail" }
+            { label: t(($) => $["features/projects"].detail.title) }
           ]}
         />
 

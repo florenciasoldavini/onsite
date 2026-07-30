@@ -9,6 +9,7 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { MailIcon, PhoneIcon } from "@/shared/ui/icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
 
 export function ClientCard({
@@ -19,11 +20,15 @@ export function ClientCard({
   onPress: () => void;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation("features/clients");
   const isWebHovered = Platform.OS === "web" && isHovered;
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${getClientDisplayName(client)}`}
+      accessibilityLabel={t(
+        ($) => $["features/clients"].accessibility.openClient,
+        { name: getClientDisplayName(client) }
+      )}
       accessibilityRole="button"
       onHoverIn={() => {
         if (Platform.OS === "web") {
@@ -84,11 +89,16 @@ export function ClientCard({
           </View>
           <ContactLine
             icon={PhoneIcon}
-            text={client.phone_number ?? "No phone number"}
+            text={
+              client.phone_number ??
+              t(($) => $["features/clients"].list.noPhone)
+            }
           />
           <ContactLine
             icon={MailIcon}
-            text={client.email ?? "No email address"}
+            text={
+              client.email ?? t(($) => $["features/clients"].list.noEmail)
+            }
           />
         </View>
       </AppCard>

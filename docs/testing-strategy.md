@@ -276,8 +276,16 @@ npm run test:e2e:web
 npm run test:e2e:native
 npm run functions:test
 npm run functions:verify
+npm run i18n:check
 npx supabase test db
 ```
+
+Localization changes must cover resource parity, interpolation and plural
+variants, startup detection and persistence, representative Spanish and English
+rendering, accessibility names, locale formatting, and both selector
+locations. Transactional-email changes additionally cover subjects, HTML
+language, safe interpolation, UTC date formatting, signed Auth hook payloads,
+token-link construction, idempotency, timeouts, and provider failure paths.
 
 The root package requires Node 22 or newer. Install Playwright Chromium with `npx playwright install chromium` before the first local web smoke run. Native smoke runs require Maestro plus an installed Onzait development build. A failure caused by missing required tooling is an environment failure, not evidence that the product behavior passed or failed.
 

@@ -10,6 +10,7 @@ import {
   type AppIconComponent
 } from "@/shared/ui/icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Pressable, View, type ViewStyle } from "react-native";
 
 export function SupplierCard({
@@ -19,12 +20,16 @@ export function SupplierCard({
   onPress: () => void;
   supplier: SupplierSummary;
 }) {
+  const { t } = useTranslation("features/suppliers");
   const [isHovered, setIsHovered] = useState(false);
   const isWebHovered = process.env.EXPO_OS === "web" && isHovered;
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${supplier.name}`}
+      accessibilityLabel={t(
+        ($) => $["features/suppliers"].accessibility.openSupplier,
+        { name: supplier.name }
+      )}
       accessibilityRole="button"
       onHoverIn={() => {
         if (process.env.EXPO_OS === "web") setIsHovered(true);
@@ -85,11 +90,17 @@ export function SupplierCard({
           </View>
           <InfoLine
             icon={MapPinIcon}
-            text={supplier.address ?? "No address"}
+            text={
+              supplier.address ??
+              t(($) => $["features/suppliers"].detail.noAddress)
+            }
           />
           <InfoLine
             icon={LinkIcon}
-            text={supplier.website_url ?? "No website"}
+            text={
+              supplier.website_url ??
+              t(($) => $["features/suppliers"].detail.noWebsite)
+            }
           />
         </View>
       </AppCard>

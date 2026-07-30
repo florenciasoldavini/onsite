@@ -6,11 +6,8 @@ import {
   atomRadii,
   atomSpacing
 } from "@/shared/ui/components/theme";
-import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_TYPE_LABELS
-} from "@/features/projects/constants/project.constants";
+import { PROJECT_LABELS_BY_LANGUAGE } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type {
   ProjectSummary,
   ProjectStatus
@@ -18,6 +15,8 @@ import type {
 import { getSansFontStyle } from "@/shared/theme/fonts";
 import { ChevronRightIcon } from "@/shared/ui/icons";
 import { Pressable, View, type ViewStyle } from "react-native";
+import { useTranslation } from "react-i18next";
+import { formatDateOnly } from "@/shared/utils/date-only";
 
 const columns = {
   dueDate: { flex: 0.85, minWidth: 108 },
@@ -34,6 +33,7 @@ export function ProjectsTable({
   onOpenProject: (project: ProjectSummary) => void;
   projects: ProjectSummary[];
 }) {
+  const { t } = useTranslation("features/projects");
   return (
     <View
       style={{
@@ -56,11 +56,26 @@ export function ProjectsTable({
           paddingHorizontal: atomSpacing[5]
         }}
       >
-        <ColumnLabel label="Project" style={columns.name} />
-        <ColumnLabel label="Status" style={columns.status} />
-        <ColumnLabel label="Phase" style={columns.phase} />
-        <ColumnLabel label="Progress" style={columns.progress} />
-        <ColumnLabel label="Due date" style={columns.dueDate} />
+        <ColumnLabel
+          label={t(($) => $["features/projects"].list.project)}
+          style={columns.name}
+        />
+        <ColumnLabel
+          label={t(($) => $["features/projects"].list.status)}
+          style={columns.status}
+        />
+        <ColumnLabel
+          label={t(($) => $["features/projects"].list.phase)}
+          style={columns.phase}
+        />
+        <ColumnLabel
+          label={t(($) => $["features/projects"].list.progress)}
+          style={columns.progress}
+        />
+        <ColumnLabel
+          label={t(($) => $["features/projects"].list.dueDate)}
+          style={columns.dueDate}
+        />
         <View style={{ width: 24 }} />
       </View>
 
@@ -130,11 +145,17 @@ function ProjectTableRow({
   onPress: () => void;
   project: ProjectSummary;
 }) {
+  const { formattingLocale, language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
   const progress = Math.min(Math.max(project.progress_percentage, 0), 100);
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${project.name}`}
+      accessibilityLabel={t(
+        ($) => $["features/projects"].accessibility.openProject,
+        { name: project.name }
+      )}
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => ({
@@ -154,19 +175,19 @@ function ProjectTableRow({
           {project.name}
         </AppText>
         <AppText numberOfLines={1} selectable tone="muted" variant="bodySm">
-          {PROJECT_TYPE_LABELS[project.project_type]} · {project.address}
+          {labels.types[project.project_type]} · {project.address}
         </AppText>
       </View>
 
       <View style={columns.status}>
         <AppBadge tone={getStatusTone(project.status)}>
-          {PROJECT_STATUS_LABELS[project.status]}
+          {labels.statuses[project.status]}
         </AppBadge>
       </View>
 
       <View style={columns.phase}>
         <AppText numberOfLines={1} selectable tone="muted" variant="bodySm">
-          {PROJECT_PHASE_LABELS[project.phase]}
+          {labels.phases[project.phase]}
         </AppText>
       </View>
 
@@ -200,7 +221,10 @@ function ProjectTableRow({
 
       <View style={columns.dueDate}>
         <AppText selectable tone="muted" variant="bodySm">
-          {formatProjectDate(project.estimated_end_date)}
+          {formatDateOnly(project.estimated_end_date, {
+            fallback: "—",
+            locale: formattingLocale
+          })}
         </AppText>
       </View>
 
@@ -234,31 +258,3 @@ function getStatusTone(status: ProjectStatus) {
 
   return "default" as const;
 }
-
-function formatProjectDate(value: string | null) {
-  if (!value) {
-    return "TBD";
-  }
-
-  const [year, month, day] = value.split("-");
-  const monthLabel = month ? shortMonthLabels[Number(month) - 1] : undefined;
-
-  return year && monthLabel && day
-    ? `${monthLabel} ${Number(day)}, ${year}`
-    : value;
-}
-
-const shortMonthLabels = [
-  "Jan",
-  "Feb",
-  "Mar",
-  "Apr",
-  "May",
-  "Jun",
-  "Jul",
-  "Aug",
-  "Sep",
-  "Oct",
-  "Nov",
-  "Dec"
-] as const;

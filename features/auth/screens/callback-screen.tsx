@@ -17,17 +17,19 @@ import * as Linking from "expo-linking";
 import { useRouter, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function AuthCallbackScreen() {
   const router = useRouter();
+  const { t } = useTranslation("features/auth");
   const linkingUrl = Linking.useURL();
   const { mutateAsync: completeCallback } = useAuthCallbackCompletion();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [callbackIntent, setCallbackIntent] = useState<AuthCallbackIntent>({
     kind: "sign-in"
   });
-  const [statusMessage, setStatusMessage] = useState(
-    "Finishing secure access..."
+  const [statusMessage, setStatusMessage] = useState<string>(
+    t(($) => $["features/auth"].callback.loading)
   );
 
   useEffect(() => {
@@ -59,15 +61,15 @@ export default function AuthCallbackScreen() {
         setCallbackIntent(intent);
         setStatusMessage(
           intent.kind === "identity-link"
-            ? "We couldn't finish linking your account."
-            : "We couldn't finish the sign-in redirect."
+            ? t(($) => $["features/auth"].callback.failureLink)
+            : t(($) => $["features/auth"].callback.failureSignIn)
         );
         setErrorMessage(
           getUserFacingErrorMessage(
             error,
             intent.kind === "identity-link"
-              ? "We couldn't finish linking this sign-in method. Return to your profile and try again."
-              : "We couldn't finish signing you in. Return to sign in and try again."
+              ? t(($) => $["features/auth"].callback.failureLinkAction)
+              : t(($) => $["features/auth"].callback.failureSignInAction)
           )
         );
       }
@@ -89,20 +91,24 @@ export default function AuthCallbackScreen() {
     <AuthShell
       description={
         isIdentityLink
-          ? "Return securely to your profile while the new sign-in method is confirmed."
-          : "The redirect handoff should still feel deliberate and structured while the session finalizes."
+          ? t(($) => $["features/auth"].callback.descriptionLink)
+          : t(($) => $["features/auth"].callback.descriptionSignIn)
       }
-      eyebrow="Auth Callback / Redirect"
-      panelTag="Auth / Callback"
-      title="Completing Your Access"
+      eyebrow={t(($) => $["features/auth"].callback.eyebrow)}
+      panelTag={t(($) => $["features/auth"].callback.panelTag)}
+      title={t(($) => $["features/auth"].callback.title)}
     >
       <View style={{ gap: atomSpacing[6] }}>
         <View style={{ gap: atomSpacing[2] }}>
           <AppText tone="muted" variant="eyebrow">
-            Redirect / Session Resolution
+            {t(($) => $["features/auth"].callback.resolution)}
           </AppText>
           <AppHeading variant="title">
-            {isIdentityLink ? `Linking ${providerLabel}` : "Signing You In"}
+            {isIdentityLink
+              ? t(($) => $["features/auth"].callback.linking, {
+                  provider: providerLabel ?? ""
+                })
+              : t(($) => $["features/auth"].callback.signingIn)}
           </AppHeading>
           <AppText tone="muted">{statusMessage}</AppText>
         </View>
@@ -112,7 +118,7 @@ export default function AuthCallbackScreen() {
         ) : (
           <AuthStatusMessage>
             <AppText variant="meta">
-              STATUS / HANDOFF IN PROGRESS / WAITING FOR SESSION CONFIRMATION
+              {t(($) => $["features/auth"].callback.status)}
             </AppText>
           </AuthStatusMessage>
         )}
@@ -124,7 +130,9 @@ export default function AuthCallbackScreen() {
             }}
             size={authFormControlSize}
           >
-            {isIdentityLink ? "Back to Profile" : "Back to Sign In"}
+            {isIdentityLink
+              ? t(($) => $["features/auth"].callback.backProfile)
+              : t(($) => $["features/auth"].callback.backSignIn)}
           </AppButton>
         ) : null}
       </View>

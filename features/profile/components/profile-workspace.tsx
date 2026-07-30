@@ -14,16 +14,18 @@ import {
   atomSpacing
 } from "@/shared/ui/components/theme";
 import { LogoutIcon } from "@/shared/ui/icons";
+import { LanguageSelector } from "@/features/localization/components/language-selector";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export type ProfileTab = "profile" | "security" | "methods";
 
 const profileTabs = [
-  { value: "profile", label: "Profile" },
-  { value: "security", label: "Security" },
-  { value: "methods", label: "Sign-In" }
-] satisfies { value: ProfileTab; label: string }[];
+  { value: "profile" },
+  { value: "security" },
+  { value: "methods" }
+] satisfies { value: ProfileTab }[];
 
 export function ProfileWorkspace({
   activeTab,
@@ -40,6 +42,17 @@ export function ProfileWorkspace({
   onLogout: () => void;
   returnedLinkProvider: SupportedOAuthProvider | null;
 }) {
+  const { t } = useTranslation("features/profile");
+  const localizedTabs = profileTabs.map((tab) => ({
+    label:
+      tab.value === "profile"
+        ? t(($) => $["features/profile"].workspace.profile)
+        : tab.value === "security"
+          ? t(($) => $["features/profile"].workspace.security)
+          : t(($) => $["features/profile"].workspace.methods),
+    value: tab.value
+  }));
+
   return (
     <Screen>
       <View
@@ -48,7 +61,11 @@ export function ProfileWorkspace({
           { maxWidth: isExpanded ? 1040 : authCardMaxWidth }
         ]}
       >
-        <NavScreenHeader description={email} title="Profile" />
+        <NavScreenHeader
+          action={<LanguageSelector compact />}
+          description={email}
+          title={t(($) => $["features/profile"].workspace.title)}
+        />
 
         <View
           style={[
@@ -67,7 +84,7 @@ export function ProfileWorkspace({
           ) : (
             <SegmentedTabs
               onChange={onChangeTab}
-              options={profileTabs}
+              options={localizedTabs}
               value={activeTab}
             />
           )}
@@ -100,6 +117,7 @@ function ProfileSectionNavigation({
   activeTab: ProfileTab;
   onChange: (tab: ProfileTab) => void;
 }) {
+  const { t } = useTranslation("features/profile");
   return (
     <View accessibilityRole="tablist" style={styles.navigation}>
       {profileTabs.map((tab) => {
@@ -118,7 +136,11 @@ function ProfileSectionNavigation({
             ]}
           >
             <AppText tone={selected ? "accent" : "muted"} variant="label">
-              {tab.label}
+              {tab.value === "profile"
+                ? t(($) => $["features/profile"].workspace.profile)
+                : tab.value === "security"
+                  ? t(($) => $["features/profile"].workspace.security)
+                  : t(($) => $["features/profile"].workspace.methods)}
             </AppText>
           </Pressable>
         );
@@ -152,6 +174,7 @@ function LogoutButton({
   onPress: () => void;
   size: "md" | "sm";
 }) {
+  const { t } = useTranslation("features/profile");
   return (
     <AppButton
       color="danger"
@@ -161,7 +184,7 @@ function LogoutButton({
       size={size}
       variant="bordered"
     >
-      Log Out
+      {t(($) => $["features/profile"].workspace.logout)}
     </AppButton>
   );
 }

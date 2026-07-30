@@ -6,9 +6,11 @@ import { AppText } from "@/shared/ui/components/text";
 import { useLayoutMode } from "@/shared/hooks/use-layout-mode";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function TasksScreen() {
   const { isExpanded } = useLayoutMode();
+  const { t } = useTranslation("features/tasks");
 
   return (
     <Screen>
@@ -20,7 +22,7 @@ export default function TasksScreen() {
           width: "100%"
         }}
       >
-        <NavScreenHeader title="Tasks" />
+        <NavScreenHeader title={t(($) => $["features/tasks"].title)} />
 
         <AppCard
           padding="lg"
@@ -28,12 +30,10 @@ export default function TasksScreen() {
         >
           <View style={{ gap: atomSpacing[3] }}>
             <AppHeading variant="section">
-              Task workspace coming next.
+              {t(($) => $["features/tasks"].heading)}
             </AppHeading>
             <AppText tone="muted">
-              This placeholder now uses the shared design-system primitives, so
-              future task UI can build on the same spacing, typography, and
-              surface rules as the rest of the app.
+              {t(($) => $["features/tasks"].description)}
             </AppText>
           </View>
         </AppCard>

@@ -8,6 +8,7 @@ import {
   type ProjectTeamPage
 } from "@/features/projects/types/project-participant";
 import type { ProjectPermissionCode } from "@/features/projects/types/project-participant";
+import { supportedLanguages } from "@/features/localization/types/language";
 import { z } from "zod";
 
 const roleCodeSchema = z.string().regex(/^[a-z][a-z0-9_]{1,39}$/);
@@ -15,6 +16,7 @@ const permissionSchema = z.enum(PROJECT_PERMISSION_CODES);
 
 export const projectInviteInputSchema = z.object({
   email: z.string().trim().toLowerCase().email().max(254),
+  language: z.enum(supportedLanguages),
   roleCode: roleCodeSchema
 });
 

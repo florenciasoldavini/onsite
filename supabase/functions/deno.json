@@ -7,9 +7,11 @@
   },
   "imports": {
     "@supabase/supabase-js": "npm:@supabase/supabase-js@2.50.3",
+    "i18next": "npm:i18next@26.3.6",
     "react": "npm:react@19.1.0",
     "react-dom": "npm:react-dom@19.1.0",
-    "react-email": "npm:react-email@6.6.6"
+    "react-email": "npm:react-email@6.6.6",
+    "standardwebhooks": "npm:standardwebhooks@1.0.0"
   },
   "lint": {
     "rules": {
@@ -17,9 +19,9 @@
     }
   },
   "tasks": {
-    "check": "deno check --frozen maps-static-preview/index.ts places-autocomplete/index.ts places-resolve/index.ts project-collaboration/index.ts welcome-to-onzait/index.ts",
+    "check": "deno check --frozen auth-send-email/index.ts maps-static-preview/index.ts places-autocomplete/index.ts places-resolve/index.ts project-collaboration/index.ts welcome-to-onzait/index.ts",
     "lint": "deno lint .",
-    "test": "deno test --frozen --allow-env=EMAIL_FROM,EMAIL_REPLY_TO,EXPO_PUBLIC_SITE_URL,NODE_ENV,RESEND_API_KEY,SITE_URL,SUPABASE_ANON_KEY,SUPABASE_PUBLISHABLE_KEY,SUPABASE_PUBLISHABLE_KEYS,SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL,WS_NO_BUFFER_UTIL,WS_NO_UTF_8_VALIDATE tests/",
+    "test": "deno test --frozen --allow-env=EMAIL_FROM,EMAIL_REPLY_TO,EXPO_PUBLIC_SITE_URL,NODE_ENV,RESEND_API_KEY,SEND_EMAIL_HOOK_SECRET,SITE_URL,SUPABASE_ANON_KEY,SUPABASE_PUBLISHABLE_KEY,SUPABASE_PUBLISHABLE_KEYS,SUPABASE_SERVICE_ROLE_KEY,SUPABASE_URL,WS_NO_BUFFER_UTIL,WS_NO_UTF_8_VALIDATE tests/",
     "verify": "deno task check && deno task lint && deno task test"
   }
 }

@@ -1,25 +1,29 @@
 import {
   createClient,
   type SupabaseClient,
-  type User
+  type User,
 } from "@supabase/supabase-js";
 import {
   AuthenticationError,
-  requireAuthenticatedUser
+  requireAuthenticatedUser,
 } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
-import { renderProjectInvitationEmail } from "../_shared/email/project-invitation.tsx";
+import { buildProjectInvitationEmail } from "../_shared/email/project-invitation.tsx";
+import {
+  createEmailTranslator,
+  resolveEmailLanguage,
+} from "../_shared/email/localization.ts";
 
 type JsonRecord = Record<string, unknown>;
 
 const resendApiKey = Deno.env.get("RESEND_API_KEY");
-const emailFrom =
-  Deno.env.get("EMAIL_FROM") ?? "Onzait <onboarding@resend.dev>";
+const emailFrom = Deno.env.get("EMAIL_FROM") ??
+  "Onzait <onboarding@resend.dev>";
 const emailReplyTo = Deno.env.get("EMAIL_REPLY_TO");
 const appUrl = (
   Deno.env.get("SITE_URL") ??
-  Deno.env.get("EXPO_PUBLIC_SITE_URL") ??
-  "https://onzait.vercel.app"
+    Deno.env.get("EXPO_PUBLIC_SITE_URL") ??
+    "https://onzait.vercel.app"
 ).replace(/\/+$/, "");
 const supabaseUrl = Deno.env.get("SUPABASE_URL");
 const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
@@ -39,7 +43,7 @@ async function handler(request: Request) {
     return failure(
       "COLLABORATION_INVALID_REQUEST",
       "The collaboration request is invalid.",
-      400
+      400,
     );
   }
 
@@ -52,7 +56,7 @@ async function handler(request: Request) {
         error instanceof PublicInputError
           ? error.message
           : "We couldn't load this invitation. Try again.",
-        error instanceof PublicInputError ? 400 : 500
+        error instanceof PublicInputError ? 400 : 500,
       );
     }
   }
@@ -62,7 +66,7 @@ async function handler(request: Request) {
   try {
     user = await requireAuthenticatedUser(
       request,
-      "Sign in to manage project collaboration."
+      "Sign in to manage project collaboration.",
     );
   } catch (error) {
     return failure(
@@ -70,7 +74,7 @@ async function handler(request: Request) {
       error instanceof AuthenticationError
         ? error.message
         : "We couldn't validate your account.",
-      error instanceof AuthenticationError ? 401 : 500
+      error instanceof AuthenticationError ? 401 : 500,
     );
   }
 
@@ -87,15 +91,15 @@ async function handler(request: Request) {
           await client.rpc("list_project_members", {
             p_limit: requirePageSize(body.pageSize),
             p_offset: requirePage(body.page) * requirePageSize(body.pageSize),
-            p_project_id: requireUuid(body.projectId)
-          })
+            p_project_id: requireUuid(body.projectId),
+          }),
         );
       case "list-invitations":
         return rpcResult(
           await client.rpc("list_my_project_invitations", {
             p_limit: requirePageSize(body.pageSize),
-            p_offset: requirePage(body.page) * requirePageSize(body.pageSize)
-          })
+            p_offset: requirePage(body.page) * requirePageSize(body.pageSize),
+          }),
         );
       case "invite":
         return createInvitation({ body, client, user });
@@ -107,53 +111,53 @@ async function handler(request: Request) {
         return rpcResult(
           await client.rpc("respond_project_invitation", {
             p_invitation_id: requireUuid(body.invitationId),
-            p_response: body.action === "accept" ? "accepted" : "declined"
-          })
+            p_response: body.action === "accept" ? "accepted" : "declined",
+          }),
         );
       case "revoke":
         return rpcResult(
           await client.rpc("revoke_project_invitation", {
-            p_invitation_id: requireUuid(body.invitationId)
-          })
+            p_invitation_id: requireUuid(body.invitationId),
+          }),
         );
       case "update-role":
         return rpcResult(
           await client.rpc("update_project_member_role", {
             p_membership_id: requireUuid(body.membershipId),
-            p_role_code: requireRoleCode(body.roleCode)
-          })
+            p_role_code: requireRoleCode(body.roleCode),
+          }),
         );
       case "remove-member":
         return rpcResult(
           await client.rpc("remove_project_member", {
-            p_membership_id: requireUuid(body.membershipId)
-          })
+            p_membership_id: requireUuid(body.membershipId),
+          }),
         );
       case "leave":
         return rpcResult(
           await client.rpc("leave_project", {
-            p_project_id: requireUuid(body.projectId)
-          })
+            p_project_id: requireUuid(body.projectId),
+          }),
         );
       default:
         return failure(
           "COLLABORATION_INVALID_ACTION",
           "That collaboration action is unavailable.",
-          400
+          400,
         );
     }
   } catch (error) {
     console.error("Project collaboration action failed.", {
       action: body.action,
       error,
-      userId: user.id
+      userId: user.id,
     });
     return failure(
       "COLLABORATION_REQUEST_FAILED",
       error instanceof PublicInputError
         ? error.message
         : "We couldn't complete that collaboration action. Try again.",
-      error instanceof PublicInputError ? 400 : 500
+      error instanceof PublicInputError ? 400 : 500,
     );
   }
 }
@@ -178,7 +182,7 @@ async function previewInvitation(body: JsonRecord) {
     return failure(
       "INVITATION_PREVIEW_UNAVAILABLE",
       "We couldn't load this invitation. Try again.",
-      500
+      500,
     );
   }
 
@@ -186,14 +190,14 @@ async function previewInvitation(body: JsonRecord) {
     return failure(
       "INVITATION_NOT_FOUND",
       "This invitation is invalid or no longer available.",
-      404
+      404,
     );
   }
 
   const [
     { data: project, error: projectError },
     { data: inviter, error: inviterError },
-    { data: role, error: roleError }
+    { data: role, error: roleError },
   ] = await Promise.all([
     admin
       .from("projects")
@@ -209,18 +213,18 @@ async function previewInvitation(body: JsonRecord) {
       .from("project_roles")
       .select("display_name")
       .eq("code", invitation.role_code)
-      .maybeSingle()
+      .maybeSingle(),
   ]);
   if (projectError || inviterError || roleError) {
     console.error("Invitation preview metadata lookup failed.", {
       inviterError,
       projectError,
-      roleError
+      roleError,
     });
     return failure(
       "INVITATION_PREVIEW_UNAVAILABLE",
       "We couldn't load this invitation. Try again.",
-      500
+      500,
     );
   }
   const expired = new Date(invitation.expires_at).getTime() <= Date.now();
@@ -233,21 +237,20 @@ async function previewInvitation(body: JsonRecord) {
       projectName: project?.name ?? "Project",
       roleCode: invitation.role_code,
       roleName: role?.display_name ?? invitation.role_code,
-      status:
-        !project || project.deleted_at
-          ? "revoked"
-          : expired && invitation.status === "pending"
-            ? "expired"
-            : invitation.status
+      status: !project || project.deleted_at
+        ? "revoked"
+        : expired && invitation.status === "pending"
+        ? "expired"
+        : invitation.status,
     },
-    ok: true
+    ok: true,
   });
 }
 
 async function createInvitation({
   body,
   client,
-  user
+  user,
 }: {
   body: JsonRecord;
   client: SupabaseClient;
@@ -256,14 +259,16 @@ async function createInvitation({
   const projectId = requireUuid(body.projectId);
   const email = requireEmail(body.email);
   const roleCode = requireRoleCode(body.roleCode);
+  const language = resolveEmailLanguage(body.language);
   const token = createToken();
   const expiresAt = sevenDaysFromNow();
   const { data, error } = await client.rpc("create_project_invitation", {
     p_email: email,
     p_expires_at: expiresAt,
+    p_language_code: language,
     p_project_id: projectId,
     p_role_code: roleCode,
-    p_token_hash: await sha256(token)
+    p_token_hash: await sha256(token),
   });
 
   if (error || !isRecord(data)) {
@@ -276,7 +281,7 @@ async function createInvitation({
 async function resendInvitation({
   body,
   client,
-  user
+  user,
 }: {
   body: JsonRecord;
   client: SupabaseClient;
@@ -286,7 +291,7 @@ async function resendInvitation({
   const { data, error } = await client.rpc("resend_project_invitation", {
     p_expires_at: sevenDaysFromNow(),
     p_invitation_id: requireUuid(body.invitationId),
-    p_token_hash: await sha256(token)
+    p_token_hash: await sha256(token),
   });
 
   if (error || !isRecord(data)) {
@@ -300,7 +305,7 @@ async function deliverInvitation({
   client,
   invitation,
   token,
-  user
+  user,
 }: {
   client: SupabaseClient;
   invitation: JsonRecord;
@@ -314,59 +319,63 @@ async function deliverInvitation({
 
   const projectId = requireUuid(invitation.project_id);
   const roleCode = requireRoleCode(invitation.role_code);
-  const [{ data: project }, { data: role }] = await Promise.all([
-    client.from("projects").select("name").eq("id", projectId).single(),
-    client
-      .from("project_roles")
-      .select("display_name")
-      .eq("code", roleCode)
-      .single()
-  ]);
-  const acceptUrl = `${appUrl}/invitations/accept#token=${encodeURIComponent(
-    token
-  )}`;
+  const { data: project } = await client
+    .from("projects")
+    .select("name")
+    .eq("id", projectId)
+    .single();
+  const acceptUrl = `${appUrl}/invitations/accept#token=${
+    encodeURIComponent(
+      token,
+    )
+  }`;
   const invitationId = requireUuid(invitation.id);
   const deliveryVersion = requirePositiveInteger(invitation.delivery_version);
+  const language = resolveEmailLanguage(invitation.language_code);
 
   try {
+    const { t } = await createEmailTranslator(language);
+    const projectName = typeof project?.name === "string"
+      ? project.name
+      : t("invitation.fallbackProject");
+    const inviterName = displayName(user.user_metadata) ||
+      user.email?.split("@")[0] ||
+      t("invitation.fallbackInviter");
+    const email = await buildProjectInvitationEmail({
+      acceptUrl,
+      expiresAt: String(invitation.expires_at),
+      inviterName,
+      language,
+      projectName,
+      roleCode,
+    });
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${resendApiKey}`,
         "Content-Type": "application/json",
-        "Idempotency-Key": `project-invitation-${invitationId}-${deliveryVersion}`
+        "Idempotency-Key":
+          `project-invitation-${invitationId}-${deliveryVersion}`,
       },
       body: JSON.stringify({
         from: emailFrom,
         to: requireEmail(invitation.invited_email),
-        subject: `You're invited to ${project?.name ?? "an Onzait project"}`,
-        html: await renderProjectInvitationEmail({
-          acceptUrl,
-          expiresAt: new Date(String(invitation.expires_at)).toLocaleString(
-            "en",
-            { dateStyle: "long", timeStyle: "short", timeZone: "UTC" }
-          ),
-          inviterName:
-            displayName(user.user_metadata) ||
-            user.email?.split("@")[0] ||
-            "A project owner",
-          projectName: project?.name ?? "Onzait project",
-          roleName: role?.display_name ?? roleCode
-        }),
-        ...(emailReplyTo ? { reply_to: emailReplyTo } : {})
-      })
+        subject: email.subject,
+        html: email.html,
+        ...(emailReplyTo ? { reply_to: emailReplyTo } : {}),
+      }),
     });
 
     if (!response.ok) {
       console.error("Invitation email provider request failed.", {
         invitationId,
-        status: response.status
+        status: response.status,
       });
       await markDelivery(client, invitation, "failed");
       return failure(
         "INVITATION_DELIVERY_FAILED",
         "The invitation was saved, but the email could not be sent. You can retry from the Team screen.",
-        502
+        502,
       );
     }
 
@@ -378,7 +387,7 @@ async function deliverInvitation({
     return failure(
       "INVITATION_DELIVERY_FAILED",
       "The invitation was saved, but the email could not be sent. You can retry from the Team screen.",
-      502
+      502,
     );
   }
 }
@@ -386,12 +395,12 @@ async function deliverInvitation({
 async function markDelivery(
   client: SupabaseClient,
   invitation: JsonRecord,
-  status: "failed" | "sent"
+  status: "failed" | "sent",
 ) {
   const { error } = await client.rpc("set_project_invitation_delivery", {
     p_delivery_status: status,
     p_delivery_version: requirePositiveInteger(invitation.delivery_version),
-    p_invitation_id: requireUuid(invitation.id)
+    p_invitation_id: requireUuid(invitation.id),
   });
 
   if (error) {
@@ -409,8 +418,8 @@ function createUserClient(request: Request) {
   return createClient(supabaseUrl, publishableKey, {
     auth: { autoRefreshToken: false, persistSession: false },
     global: {
-      headers: { Authorization: request.headers.get("Authorization") ?? "" }
-    }
+      headers: { Authorization: request.headers.get("Authorization") ?? "" },
+    },
   });
 }
 
@@ -420,7 +429,7 @@ function createAdminClient() {
   }
 
   return createClient(supabaseUrl, serviceRoleKey, {
-    auth: { autoRefreshToken: false, persistSession: false }
+    auth: { autoRefreshToken: false, persistSession: false },
   });
 }
 
@@ -431,7 +440,7 @@ function getPublishableKey() {
     try {
       return (
         Object.values(JSON.parse(namedKeys)).find(
-          (value): value is string => typeof value === "string"
+          (value): value is string => typeof value === "string",
         ) ?? null
       );
     } catch {
@@ -441,8 +450,8 @@ function getPublishableKey() {
 
   return (
     Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ??
-    Deno.env.get("SUPABASE_ANON_KEY") ??
-    null
+      Deno.env.get("SUPABASE_ANON_KEY") ??
+      null
   );
 }
 
@@ -453,19 +462,19 @@ function rpcResult({ data, error }: { data: unknown; error: unknown }) {
 function rpcError(error: unknown) {
   console.error("Project collaboration database request failed.", error);
   const message = databasePublicMessage(error);
-  const status =
-    message.includes("cannot") || message.includes("unavailable")
-      ? 403
-      : message.includes("limit") || message.includes("Wait")
-        ? 429
-        : 400;
+  const status = message.includes("cannot") || message.includes("unavailable")
+    ? 403
+    : message.includes("limit") || message.includes("Wait")
+    ? 429
+    : 400;
 
   return failure("COLLABORATION_DATABASE_REJECTED", message, status);
 }
 
 export function databasePublicMessage(error: unknown) {
-  const message =
-    isRecord(error) && typeof error.message === "string" ? error.message : "";
+  const message = isRecord(error) && typeof error.message === "string"
+    ? error.message
+    : "";
   const allowed = [
     "You cannot invite members to this project.",
     "This person is already a project member.",
@@ -477,7 +486,7 @@ export function databasePublicMessage(error: unknown) {
     "The daily invitation email limit has been reached.",
     "This invitation has already been resolved.",
     "This project member is unavailable.",
-    "You are not an active member of this project."
+    "You are not an active member of this project.",
   ];
 
   return allowed.includes(message)
@@ -493,7 +502,7 @@ function configurationFailure() {
   return failure(
     "COLLABORATION_UNAVAILABLE",
     "Project collaboration is temporarily unavailable. Try again later.",
-    503
+    503,
   );
 }
 
@@ -502,9 +511,10 @@ class PublicInputError extends Error {}
 function requireUuid(value: unknown) {
   if (
     typeof value !== "string" ||
-    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
-      value
-    )
+    !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+      .test(
+        value,
+      )
   ) {
     throw new PublicInputError("A valid identifier is required.");
   }
@@ -563,7 +573,7 @@ function requirePageSize(value: unknown) {
 function requireVerifiedEmail(user: User) {
   if (!user.email || !user.email_confirmed_at) {
     throw new PublicInputError(
-      "Verify your email address before responding to this invitation."
+      "Verify your email address before responding to this invitation.",
     );
   }
 }
@@ -579,7 +589,7 @@ function createToken() {
 export async function sha256(value: string) {
   const digest = await crypto.subtle.digest(
     "SHA-256",
-    new TextEncoder().encode(value)
+    new TextEncoder().encode(value),
   );
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -592,12 +602,11 @@ function sevenDaysFromNow() {
 
 function displayName(value: unknown) {
   if (!isRecord(value)) return "";
-  const first =
-    typeof value.first_name === "string"
-      ? value.first_name
-      : typeof value.full_name === "string"
-        ? value.full_name
-        : "";
+  const first = typeof value.first_name === "string"
+    ? value.first_name
+    : typeof value.full_name === "string"
+    ? value.full_name
+    : "";
   const last = typeof value.last_name === "string" ? value.last_name : "";
   return `${first} ${last}`.trim();
 }

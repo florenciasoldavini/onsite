@@ -76,6 +76,11 @@ describe("ProfileScreen", () => {
     });
 
     expect(view.getByRole("button", { name: "Profile" })).toBeSelected();
+    expect(
+      view.getByRole("button", {
+        name: "App language, currently English"
+      })
+    ).toBeOnTheScreen();
     await user.press(view.getByRole("button", { name: "Security" }));
     expect(view.getByRole("button", { name: "Security" })).toBeSelected();
 
@@ -92,6 +97,11 @@ describe("ProfileScreen", () => {
     });
 
     expect(view.getByRole("tab", { name: "Profile" })).toBeSelected();
+    expect(
+      view.getByRole("button", {
+        name: "App language, currently English"
+      })
+    ).toBeOnTheScreen();
     await user.press(view.getByRole("tab", { name: "Sign-In" }));
     expect(view.getByRole("tab", { name: "Sign-In" })).toBeSelected();
   });

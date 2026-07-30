@@ -1,0 +1,11 @@
+{
+  "ios": {
+    "CFBundleDisplayName": "onzait",
+    "NSCameraUsageDescription": "Allow onzait to use your camera to take project photos.",
+    "NSLocationWhenInUseUsageDescription": "Allow onzait to show your current location on the projects map while you are using the app.",
+    "NSPhotoLibraryUsageDescription": "Allow onzait to access your photo library so you can choose profile photos, project covers, and project photos."
+  },
+  "android": {
+    "app_name": "onzait"
+  }
+}

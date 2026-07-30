@@ -1,8 +1,5 @@
-import {
-  PROJECT_PHASE_LABELS,
-  PROJECT_STATUS_LABELS,
-  PROJECT_TYPE_LABELS
-} from "@/features/projects/constants/project.constants";
+import { PROJECT_LABELS_BY_LANGUAGE } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type {
   ProjectStatus,
   ProjectSummary
@@ -27,6 +24,7 @@ import { formatDateOnly } from "@/shared/utils/date-only";
 import { Image } from "expo-image";
 import { useState } from "react";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectCard({
   isDeleting = false,
@@ -37,6 +35,9 @@ export function ProjectCard({
   onPress: () => void;
   project: ProjectSummary;
 }) {
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const labels = PROJECT_LABELS_BY_LANGUAGE[language];
   const [isHovered, setIsHovered] = useState(false);
   const { pressStyle, handleMotionPressIn, handleMotionPressOut } =
     useProjectCardPressMotion();
@@ -111,7 +112,7 @@ export function ProjectCard({
               )}
               <ProjectStatusCornerLabel
                 borderColor={cardBorderColor}
-                label={PROJECT_STATUS_LABELS[project.status]}
+                label={labels.statuses[project.status]}
                 status={project.status}
               />
             </View>
@@ -127,7 +128,7 @@ export function ProjectCard({
               >
                 <View style={{ flex: 1, gap: atomSpacing[2] }}>
                   <AppText variant="eyebrow">
-                    {PROJECT_TYPE_LABELS[project.project_type]}
+                    {labels.types[project.project_type]}
                   </AppText>
                   <AppHeading variant="card">{project.name}</AppHeading>
                 </View>
@@ -160,12 +161,12 @@ export function ProjectCard({
                 >
                   <ProjectMetaLabel
                     value={`PHASE_${formatMonoLabel(
-                      PROJECT_PHASE_LABELS[project.phase]
+                      labels.phases[project.phase]
                     )}`}
                   />
                   <ProjectMetaLabel
                     value={`ETA · ${formatDateOnly(project.estimated_end_date, {
-                      fallback: "TBD"
+                      fallback: "—"
                     })}`}
                   />
                 </View>
@@ -197,6 +198,7 @@ function ProjectMetaLabel({ value }: { value: string }) {
 }
 
 export function ProjectProgressIndicator({ progress }: { progress: number }) {
+  const { t } = useTranslation("features/projects");
   const clampedProgress = Math.min(Math.max(progress, 0), 100);
 
   return (
@@ -209,7 +211,7 @@ export function ProjectProgressIndicator({ progress }: { progress: number }) {
         }}
       >
         <AppText tone="subtle" variant="meta">
-          PROGRESS
+          {t(($) => $["features/projects"].list.progress).toUpperCase()}
         </AppText>
         <AppText
           tone="accent"
@@ -225,10 +227,14 @@ export function ProjectProgressIndicator({ progress }: { progress: number }) {
 }
 
 function ProjectProgressBar({ progress }: { progress: number }) {
+  const { t } = useTranslation("features/projects");
   const [trackWidth, setTrackWidth] = useState(0);
   return (
     <View
-      accessibilityLabel={`Project progress ${progress}%`}
+      accessibilityLabel={t(
+        ($) => $["features/projects"].accessibility.progress,
+        { progress }
+      )}
       onLayout={(event) => {
         setTrackWidth(event.nativeEvent.layout.width);
       }}

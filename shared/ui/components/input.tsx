@@ -32,6 +32,7 @@ import {
   type ReactNode
 } from "react";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Platform,
   Pressable,
@@ -301,7 +302,7 @@ export function TextField({
 }
 
 export function SearchField({
-  clearAccessibilityLabel = "Clear search",
+  clearAccessibilityLabel,
   leftIcon = SearchIcon,
   onChangeText,
   onClear,
@@ -315,6 +316,9 @@ export function SearchField({
   onClear?: () => void;
   value: string;
 }) {
+  const { t } = useTranslation("shared");
+  const resolvedClearAccessibilityLabel =
+    clearAccessibilityLabel ?? t(($) => $.shared.accessibility.clearSearch);
   const hasValue = value.length > 0;
 
   return (
@@ -335,7 +339,7 @@ export function SearchField({
             {rightSlot}
             {hasValue ? (
               <Pressable
-                accessibilityLabel={clearAccessibilityLabel}
+                accessibilityLabel={resolvedClearAccessibilityLabel}
                 accessibilityRole="button"
                 hitSlop={8}
                 onPress={() => {
@@ -662,9 +666,15 @@ export function PasswordVisibilityToggle({
   onPress: () => void;
   visible: boolean;
 }) {
+  const { t } = useTranslation("shared");
+
   return (
     <Pressable
-      accessibilityLabel={visible ? "Hide password" : "Show password"}
+      accessibilityLabel={
+        visible
+          ? t(($) => $.shared.accessibility.hidePassword)
+          : t(($) => $.shared.accessibility.showPassword)
+      }
       onPress={onPress}
       style={
         Platform.OS === "web"

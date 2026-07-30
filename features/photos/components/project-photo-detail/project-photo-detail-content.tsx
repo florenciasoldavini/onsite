@@ -1,6 +1,6 @@
 import { PhotoMarketingField } from "@/features/photos/components/photo-marketing-field";
 import {
-  PROJECT_PHOTO_KIND_LABELS,
+  PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE,
   PROJECT_PHOTO_KINDS
 } from "@/features/photos/constants/photo.constants";
 import {
@@ -15,6 +15,7 @@ import type {
   ProjectPhoto,
   ProjectPhotoKind
 } from "@/features/photos/types/photo";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { AppBadge } from "@/shared/ui/components/badge";
 import { Breadcrumb } from "@/shared/ui/components/breadcrumb";
 import { AppButton } from "@/shared/ui/components/button";
@@ -36,16 +37,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
 import { z } from "zod";
 
 type EditValues = z.infer<typeof projectPhotoEditSchema>;
-
-const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
-  label: PROJECT_PHOTO_KIND_LABELS[kind],
-  value: kind
-}));
 
 export function ProjectPhotoDetailContent({
   canWrite,
@@ -59,6 +56,12 @@ export function ProjectPhotoDetailContent({
   projectId: string;
 }) {
   const router = useRouter();
+  const { formattingLocale, language } = useLocalization();
+  const { t } = useTranslation("features/photos");
+  const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
+    label: PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][kind],
+    value: kind
+  }));
   const toast = useAppToast();
   const updateMutation = useUpdateProjectPhoto(photoId);
   const deleteMutation = useSoftDeleteProjectPhoto();
@@ -85,7 +88,7 @@ export function ProjectPhotoDetailContent({
       await updateMutation.mutateAsync(toProjectPhotoUpdateInput(values));
       form.reset(values);
       toast.show({
-        title: "Photo details updated",
+        title: t(($) => $["features/photos"].detail.updatedTitle),
         tone: "success"
       });
     } catch {
@@ -98,13 +101,16 @@ export function ProjectPhotoDetailContent({
     try {
       await deleteMutation.mutateAsync(photoId);
       deleteConfirmation.close();
-      toast.show({ title: "Photo deleted", tone: "success" });
+      toast.show({
+        title: t(($) => $["features/photos"].detail.deletedTitle),
+        tone: "success"
+      });
       router.replace(`/projects/${projectId}/photos` as never);
     } catch (error) {
       deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't delete this photo. Check your connection and try again."
+          t(($) => $["features/photos"].errors.delete)
         )
       );
     }
@@ -116,11 +122,11 @@ export function ProjectPhotoDetailContent({
         <Breadcrumb
           items={[
             {
-              label: "Photos",
+              label: t(($) => $["features/photos"].gallery.title),
               onPress: () =>
                 router.replace(`/projects/${projectId}/photos` as never)
             },
-            { label: "Photo details" }
+            { label: t(($) => $["features/photos"].detail.photoDetails) }
           ]}
         />
 
@@ -134,20 +140,28 @@ export function ProjectPhotoDetailContent({
             }}
           >
             <AppText tone="accent" variant="eyebrow">
-              PROJECT PHOTO
+              {t(($) => $["features/photos"].detail.eyebrow)}
             </AppText>
             {photo.is_marketing ? (
-              <AppBadge tone="accent">Marketing</AppBadge>
+              <AppBadge tone="accent">
+                {t(($) => $["features/photos"].gallery.marketing)}
+              </AppBadge>
             ) : null}
           </View>
           <AppHeading variant="hero">
-            {PROJECT_PHOTO_KIND_LABELS[photo.kind]}
+            {PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][photo.kind]}
           </AppHeading>
         </View>
 
         <Image
-          accessibilityLabel={photo.caption ?? "Full project photo"}
-          alt={photo.caption ?? "Full project photo"}
+          accessibilityLabel={
+            photo.caption ??
+            t(($) => $["features/photos"].accessibility.fullPhoto)
+          }
+          alt={
+            photo.caption ??
+            t(($) => $["features/photos"].accessibility.fullPhoto)
+          }
           contentFit="contain"
           source={photo.full_url ? { uri: photo.full_url } : undefined}
           style={{
@@ -168,17 +182,27 @@ export function ProjectPhotoDetailContent({
               gap: atomSpacing[5]
             }}
           >
-            <Metadata label="Captured" value={formatDate(photo.captured_at)} />
             <Metadata
-              label="Dimensions"
+              label={t(($) => $["features/photos"].detail.captured)}
+              value={formatDate(
+                photo.captured_at,
+                formattingLocale,
+                t(($) => $["features/photos"].detail.unavailable)
+              )}
+            />
+            <Metadata
+              label={t(($) => $["features/photos"].detail.dimensions)}
               value={`${photo.width} × ${photo.height}`}
             />
             <Metadata
-              label="Location"
+              label={t(($) => $["features/photos"].detail.location)}
               value={
                 photo.latitude === null
-                  ? "Not available"
-                  : `${photo.latitude.toFixed(5)}, ${photo.longitude?.toFixed(5)} (photo EXIF)`
+                  ? t(($) => $["features/photos"].detail.notAvailable)
+                  : t(($) => $["features/photos"].detail.locationExif, {
+                      latitude: photo.latitude.toFixed(5),
+                      longitude: photo.longitude?.toFixed(5) ?? ""
+                    })
               }
             />
           </View>
@@ -186,7 +210,9 @@ export function ProjectPhotoDetailContent({
 
         <AppCard padding="md">
           <View style={{ gap: atomSpacing[5] }}>
-            <AppHeading variant="section">Photo details</AppHeading>
+            <AppHeading variant="section">
+              {t(($) => $["features/photos"].detail.photoDetails)}
+            </AppHeading>
             <Controller
               control={form.control}
               name="kind"
@@ -194,7 +220,7 @@ export function ProjectPhotoDetailContent({
                 <SelectField<ProjectPhotoKind>
                   disabled={!canWrite || updateMutation.isPending}
                   errorText={form.formState.errors.kind?.message}
-                  label="Category"
+                  label={t(($) => $["features/photos"].detail.category)}
                   onChange={field.onChange}
                   options={kindOptions}
                   value={field.value}
@@ -208,8 +234,10 @@ export function ProjectPhotoDetailContent({
                 <TextAreaField
                   editable={canWrite && !updateMutation.isPending}
                   errorText={form.formState.errors.caption?.message}
-                  helperText="Add context that will help the team understand the photo."
-                  label="Caption (optional)"
+                  helperText={t(
+                    ($) => $["features/photos"].detail.captionHelper
+                  )}
+                  label={t(($) => $["features/photos"].detail.caption)}
                   maxLength={1000}
                   onBlur={field.onBlur}
                   onChangeText={field.onChange}
@@ -232,7 +260,7 @@ export function ProjectPhotoDetailContent({
               <AppText selectable tone="danger">
                 {getUserFacingErrorMessage(
                   updateMutation.error,
-                  "We couldn't update this photo. Check your connection and try again."
+                  t(($) => $["features/photos"].errors.update)
                 )}
               </AppText>
             ) : null}
@@ -250,7 +278,7 @@ export function ProjectPhotoDetailContent({
                   loading={updateMutation.isPending}
                   onPress={() => void save()}
                 >
-                  Save changes
+                  {t(($) => $["features/photos"].actions.save)}
                 </AppButton>
                 <AppButton
                   color="danger"
@@ -259,7 +287,7 @@ export function ProjectPhotoDetailContent({
                   onPress={deleteConfirmation.open}
                   variant="bordered"
                 >
-                  Delete photo
+                  {t(($) => $["features/photos"].actions.delete)}
                 </AppButton>
               </View>
             ) : null}
@@ -269,12 +297,16 @@ export function ProjectPhotoDetailContent({
 
       {canWrite ? (
         <DestructiveConfirmationDialog
-          accessibilityLabel="Cancel deleting photo"
+          accessibilityLabel={t(
+            ($) => $["features/photos"].detail.cancelDelete
+          )}
           controller={deleteConfirmation}
-          description="This photo will be removed from the project gallery. This action cannot currently be undone in the app."
+          description={t(
+            ($) => $["features/photos"].detail.deleteDescription
+          )}
           isPending={deleteMutation.isPending}
           onConfirm={deletePhoto}
-          title="Delete photo?"
+          title={t(($) => $["features/photos"].detail.deleteTitle)}
         />
       ) : null}
     </Screen>
@@ -294,7 +326,12 @@ function Metadata({ label, value }: { label: string; value: string }) {
   );
 }
 
-function formatDate(value: string) {
+function formatDate(value: string, locale: string, fallback: string) {
   const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? "Unavailable" : date.toLocaleString();
+  return Number.isNaN(date.getTime())
+    ? fallback
+    : new Intl.DateTimeFormat(locale, {
+        dateStyle: "medium",
+        timeStyle: "short"
+      }).format(date);
 }

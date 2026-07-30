@@ -1,7 +1,7 @@
 import { ClientFormFields } from "@/features/clients/components/client-form-fields";
 import { useAuth } from "@/features/auth/hooks/use-auth";
 import {
-  clientFormSchema,
+  createClientFormSchema,
   getClientDisplayName,
   toClientInput
 } from "@/features/clients/schemas/client.schema";
@@ -26,8 +26,9 @@ import { RefreshIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 const defaultValues: ClientFormValues = {
@@ -45,16 +46,22 @@ export default function ClientFormScreen({
   mode: "create" | "edit";
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/clients");
+  const { i18n, t: tShared } = useTranslation("shared");
   const toast = useAppToast();
   const { user } = useAuth();
   const clientQuery = useClient(mode === "edit" ? clientId : undefined);
   const createMutation = useCreateClient();
   const updateMutation = useUpdateClient(clientId ?? "");
   const [formError, setFormError] = useState<string | null>(null);
+  const formSchema = useMemo(
+    () => createClientFormSchema(tShared),
+    [i18n.resolvedLanguage, tShared]
+  );
   const form = useForm<ClientFormValues>({
     defaultValues,
     mode: "onChange",
-    resolver: zodResolver(clientFormSchema)
+    resolver: zodResolver(formSchema)
   });
   const {
     control,
@@ -80,10 +87,18 @@ export default function ClientFormScreen({
           ? await createMutation.mutateAsync(toClientInput(values))
           : await updateMutation.mutateAsync(toClientInput(values));
       toast.show({
-        description: `${getClientDisplayName(saved)} was ${
-          mode === "create" ? "created" : "updated"
-        } successfully.`,
-        title: `Client ${mode === "create" ? "created" : "updated"}`,
+        description:
+          mode === "create"
+            ? t(($) => $["features/clients"].toast.createdDescription, {
+                name: getClientDisplayName(saved)
+              })
+            : t(($) => $["features/clients"].toast.updatedDescription, {
+                name: getClientDisplayName(saved)
+              }),
+        title:
+          mode === "create"
+            ? t(($) => $["features/clients"].toast.createdTitle)
+            : t(($) => $["features/clients"].toast.updatedTitle),
         tone: "success"
       });
       router.replace(`/clients/${saved.id}` as never);
@@ -91,7 +106,7 @@ export default function ClientFormScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't save this client. Check your connection and try again."
+          t(($) => $["features/clients"].errors.save)
         )
       );
     }
@@ -103,7 +118,7 @@ export default function ClientFormScreen({
     user?.role === "admin" ||
     user?.id === existingClient?.owner_id;
   const backToClients = {
-    label: "Back to clients",
+    label: t(($) => $["features/clients"].accessibility.backToClients),
     onPress: () => router.replace("/directory?section=clients" as never)
   };
 
@@ -113,25 +128,27 @@ export default function ClientFormScreen({
         forbidden: {
           action: existingClient
             ? {
-                label: "Back to client",
+                label: t(
+                  ($) => $["features/clients"].accessibility.backToClient
+                ),
                 onPress: () =>
                   router.replace(`/clients/${existingClient.id}` as never)
               }
             : undefined,
-          description: "You don't have permission to edit this client.",
+          description: t(($) => $["features/clients"].errors.editForbidden),
           icon: UserIcon,
-          title: "Client editing unavailable"
+          title: t(($) => $["features/clients"].errors.editUnavailable)
         },
         invalidParams: { action: backToClients, icon: UserIcon },
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void clientQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             clientQuery.error,
-            "We couldn't load this client. Try again."
+            t(($) => $["features/clients"].errors.load)
           ),
           icon: UserIcon
         },
@@ -150,7 +167,7 @@ export default function ClientFormScreen({
           </View>
         </Screen>
       }
-      resourceName="client"
+      resourceName={t(($) => $["features/clients"].fields.client)}
     >
       <Screen keyboardSafe>
         <View
@@ -165,39 +182,50 @@ export default function ClientFormScreen({
             <Breadcrumb
               items={[
                 {
-                  accessibilityLabel: "Back to clients",
-                  label: "Client",
+                  accessibilityLabel: t(
+                    ($) => $["features/clients"].accessibility.backToClients
+                  ),
+                  label: t(($) => $["features/clients"].breadcrumbs.client),
                   onPress: () =>
                     router.replace("/directory?section=clients" as never)
                 },
                 {
-                  accessibilityLabel: "Back to client detail",
-                  label: "Client Detail",
+                  accessibilityLabel: t(
+                    ($) =>
+                      $["features/clients"].accessibility.backToClientDetail
+                  ),
+                  label: t(($) => $["features/clients"].breadcrumbs.detail),
                   onPress: () => router.replace(`/clients/${clientId}` as never)
                 },
-                { label: "Edit" }
+                { label: t(($) => $["features/clients"].breadcrumbs.edit) }
               ]}
             />
           ) : (
             <Breadcrumb
               items={[
                 {
-                  accessibilityLabel: "Back to clients",
-                  label: "Client",
+                  accessibilityLabel: t(
+                    ($) => $["features/clients"].accessibility.backToClients
+                  ),
+                  label: t(($) => $["features/clients"].breadcrumbs.client),
                   onPress: () =>
                     router.replace("/directory?section=clients" as never)
                 },
-                { label: "New" }
+                { label: t(($) => $["features/clients"].breadcrumbs.new) }
               ]}
             />
           )}
           <NavScreenHeader
             description={
               mode === "create"
-                ? "Add contact details now and link the client to projects when needed."
-                : "Update the contact details stored in your client catalog."
+                ? t(($) => $["features/clients"].form.createDescription)
+                : t(($) => $["features/clients"].form.editDescription)
             }
-            title={mode === "create" ? "New client" : "Edit client"}
+            title={
+              mode === "create"
+                ? t(($) => $["features/clients"].form.createTitle)
+                : t(($) => $["features/clients"].form.editTitle)
+            }
           />
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[6] }}>
@@ -220,7 +248,7 @@ export default function ClientFormScreen({
                   onPress={() => router.back()}
                   variant="bordered"
                 >
-                  Cancel
+                  {tShared(($) => $.shared.actions.cancel)}
                 </AppButton>
                 <AppButton
                   fullWidth={false}
@@ -232,7 +260,9 @@ export default function ClientFormScreen({
                   loading={isSubmitting}
                   onPress={() => void submit()}
                 >
-                  {mode === "create" ? "Create client" : "Save changes"}
+                  {mode === "create"
+                    ? t(($) => $["features/clients"].actions.create)
+                    : t(($) => $["features/clients"].actions.save)}
                 </AppButton>
               </View>
             </View>

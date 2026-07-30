@@ -11,9 +11,9 @@ import type { User } from "@/features/auth/types/auth.types";
 import {
   act,
   fireEvent,
-  render,
   waitFor
 } from "@testing-library/react-native";
+import { renderWithAppProviders as render } from "@/tests/support/render";
 import type { Session } from "@supabase/supabase-js";
 import { Pressable, Text } from "react-native";
 

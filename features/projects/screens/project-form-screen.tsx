@@ -18,7 +18,7 @@ import {
 } from "@/features/projects/hooks/use-projects";
 import { useProjectAccess } from "@/features/projects/hooks/use-project-collaboration";
 import {
-  projectFormSchema,
+  createProjectFormSchema,
   toCreateProjectInput,
   toUpdateProjectInput
 } from "@/features/projects/schemas/project.schema";
@@ -39,8 +39,9 @@ import { useAppToast } from "@/shared/ui/components/toast";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 const defaultValues: ProjectFormValues = {
@@ -68,6 +69,8 @@ export function ProjectFormScreen({
   projectId?: string;
 }) {
   const router = useRouter();
+  const { i18n, t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const appToast = useAppToast();
   const { session } = useAuth();
   const { isCompact, isExpanded } = useLayoutMode();
@@ -81,11 +84,15 @@ export function ProjectFormScreen({
     mode === "create" || accessQuery.can("project.cover.write");
   const createMutation = useCreateProject();
   const updateMutation = useUpdateProject(projectId ?? "");
+  const validationSchema = useMemo(
+    () => createProjectFormSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const { control, handleSubmit, reset, setValue, trigger } =
     useForm<ProjectFormValues>({
       defaultValues,
       mode: "onChange",
-      resolver: zodResolver(projectFormSchema)
+      resolver: zodResolver(validationSchema)
     });
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
   const clearFormError = useCallback(() => setFormError(null), []);
@@ -98,12 +105,12 @@ export function ProjectFormScreen({
 
   const submitProject = handleSubmit(async (formValues) => {
     if (!session) {
-      setFormError("You must be signed in to save projects.");
+      setFormError(t(($) => $["features/projects"].validation.signIn));
       return;
     }
 
     if (!formValues.address) {
-      setFormError("Review the highlighted fields before saving.");
+      setFormError(t(($) => $["features/projects"].validation.review));
       return;
     }
 
@@ -125,7 +132,7 @@ export function ProjectFormScreen({
           })
         });
 
-        showProjectSaveToast({ appToast, mode, outcome });
+        showProjectSaveToast({ appToast, mode, outcome, t });
         router.replace(`/projects/${outcome.project.id}` as never);
         return;
       }
@@ -139,20 +146,20 @@ export function ProjectFormScreen({
         input: toUpdateProjectInput(projectValues)
       });
 
-      showProjectSaveToast({ appToast, mode, outcome });
+      showProjectSaveToast({ appToast, mode, outcome, t });
       router.replace(`/projects/${projectId}` as never);
     } catch (error) {
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't save this project. Review your connection and try again."
+          t(($) => $["features/projects"].errors.save)
         )
       );
     }
   });
 
   const backToProjects = {
-    label: "Back to projects",
+    label: t(($) => $["features/projects"].actions.backProjects),
     onPress: () => router.replace("/projects" as never)
   };
 
@@ -162,24 +169,26 @@ export function ProjectFormScreen({
         forbidden: {
           action: projectId
             ? {
-                label: "Back to project",
+                label: t(($) => $["features/projects"].actions.backProject),
                 onPress: () => router.replace(`/projects/${projectId}` as never)
               }
             : undefined,
-          description: "You don't have permission to edit this project.",
-          title: "Project editing unavailable"
+          description: t(
+            ($) => $["features/projects"].errors.editForbidden
+          ),
+          title: t(($) => $["features/projects"].errors.editUnavailable)
         },
         invalidParams: { action: backToProjects },
         loadError: {
           action: {
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => {
               void Promise.all([projectQuery.refetch(), accessQuery.refetch()]);
             }
           },
           description: getUserFacingErrorMessage(
             projectQuery.error ?? accessQuery.error,
-            "We couldn't load this project for editing. Check your connection and try again."
+            t(($) => $["features/projects"].errors.editLoad)
           )
         },
         notFound: { action: backToProjects }

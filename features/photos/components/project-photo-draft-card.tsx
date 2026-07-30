@@ -1,7 +1,8 @@
 import {
-  PROJECT_PHOTO_KIND_LABELS,
+  PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE,
   PROJECT_PHOTO_KINDS
 } from "@/features/photos/constants/photo.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { PhotoMarketingField } from "@/features/photos/components/photo-marketing-field";
 import type { ProjectPhotoDraft } from "@/features/photos/types/photo";
 import type { ProjectPhotoUploadStage } from "@/features/photos/services/photos.service";
@@ -22,11 +23,7 @@ import {
 import { Image } from "expo-image";
 import { Controller, type Control, type FieldErrors } from "react-hook-form";
 import { View } from "react-native";
-
-const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
-  label: PROJECT_PHOTO_KIND_LABELS[kind],
-  value: kind
-}));
+import { useTranslation } from "react-i18next";
 
 export function ProjectPhotoDraftCard({
   control,
@@ -59,7 +56,13 @@ export function ProjectPhotoDraftCard({
   selected: boolean;
   stage?: ProjectPhotoUploadStage;
 }) {
-  const statusLabel = getStageLabel(stage);
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/photos");
+  const kindOptions = PROJECT_PHOTO_KINDS.map((kind) => ({
+    label: PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][kind],
+    value: kind
+  }));
+  const statusLabel = getStageLabel(stage, t);
 
   return (
     <AppCard padding="md">
@@ -72,8 +75,14 @@ export function ProjectPhotoDraftCard({
           }}
         >
           <Image
-            accessibilityLabel={`Selected photo ${index + 1}`}
-            alt={`Selected photo ${index + 1}`}
+            accessibilityLabel={t(
+              ($) => $["features/photos"].accessibility.selectedPhoto,
+              { number: index + 1 }
+            )}
+            alt={t(
+              ($) => $["features/photos"].accessibility.selectedPhoto,
+              { number: index + 1 }
+            )}
             contentFit="cover"
             source={{ uri: photo.asset.uri }}
             style={{
@@ -101,13 +110,23 @@ export function ProjectPhotoDraftCard({
                 justifyContent: "space-between"
               }}
             >
-              <AppText variant="label">{`PHOTO ${String(index + 1).padStart(2, "0")}`}</AppText>
+              <AppText variant="label">
+                {t(($) => $["features/photos"].upload.photoNumber, {
+                  number: String(index + 1).padStart(2, "0")
+                })}
+              </AppText>
               <View style={{ flexDirection: "row", gap: atomSpacing[1] }}>
                 <AppButton
                   accessibilityLabel={
                     selected
-                      ? "Remove photo from batch selection"
-                      : "Select photo for batch changes"
+                      ? t(
+                          ($) =>
+                            $["features/photos"].accessibility.removeSelection
+                        )
+                      : t(
+                          ($) =>
+                            $["features/photos"].accessibility.selectBatch
+                        )
                   }
                   color={selected ? "accent" : "neutral"}
                   fullWidth={false}
@@ -116,10 +135,14 @@ export function ProjectPhotoDraftCard({
                   size="sm"
                   variant={selected ? "solid" : "bordered"}
                 >
-                  {selected ? "Selected" : "Select"}
+                  {selected
+                    ? t(($) => $["features/photos"].actions.selected)
+                    : t(($) => $["features/photos"].actions.select)}
                 </AppButton>
                 <AppButton
-                  accessibilityLabel="Move photo earlier"
+                  accessibilityLabel={t(
+                    ($) => $["features/photos"].accessibility.moveEarlier
+                  )}
                   color="neutral"
                   fullWidth={false}
                   icon={ChevronUpIcon}
@@ -130,7 +153,9 @@ export function ProjectPhotoDraftCard({
                   variant="ghost"
                 />
                 <AppButton
-                  accessibilityLabel="Move photo later"
+                  accessibilityLabel={t(
+                    ($) => $["features/photos"].accessibility.moveLater
+                  )}
                   color="neutral"
                   fullWidth={false}
                   icon={ChevronDownIcon}
@@ -141,7 +166,9 @@ export function ProjectPhotoDraftCard({
                   variant="ghost"
                 />
                 <AppButton
-                  accessibilityLabel="Remove selected photo"
+                  accessibilityLabel={t(
+                    ($) => $["features/photos"].accessibility.remove
+                  )}
                   color="danger"
                   fullWidth={false}
                   icon={TrashIcon}
@@ -177,8 +204,10 @@ export function ProjectPhotoDraftCard({
             <SelectField
               disabled={disabled}
               errorText={errors.kind?.message}
-              helperText="Choose the primary reason this photo belongs in the project record."
-              label="Category"
+              helperText={t(
+                ($) => $["features/photos"].upload.categoryHelper
+              )}
+              label={t(($) => $["features/photos"].upload.category)}
               onChange={field.onChange}
               options={kindOptions}
               value={field.value}
@@ -193,12 +222,16 @@ export function ProjectPhotoDraftCard({
             <TextAreaField
               editable={!disabled}
               errorText={errors.caption?.message}
-              helperText="Add context that will help the team understand the photo."
-              label="Caption (optional)"
+              helperText={t(
+                ($) => $["features/photos"].detail.captionHelper
+              )}
+              label={t(($) => $["features/photos"].detail.caption)}
               maxLength={1000}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
-              placeholder="What should the team know about this photo?"
+              placeholder={t(
+                ($) => $["features/photos"].upload.captionPlaceholder
+              )}
               value={field.value}
             />
           )}
@@ -220,18 +253,21 @@ export function ProjectPhotoDraftCard({
   );
 }
 
-function getStageLabel(stage?: ProjectPhotoUploadStage) {
+function getStageLabel(
+  stage: ProjectPhotoUploadStage | undefined,
+  t: ReturnType<typeof useTranslation<"features/photos">>["t"]
+) {
   switch (stage) {
     case "preparing":
-      return "Preparing and converting photo…";
+      return t(($) => $["features/photos"].stage.preparing);
     case "retrying":
-      return "Retrying photo…";
+      return t(($) => $["features/photos"].stage.retrying);
     case "uploading":
-      return "Uploading full image and thumbnail…";
+      return t(($) => $["features/photos"].stage.uploading);
     case "saved":
-      return "Photo saved.";
+      return t(($) => $["features/photos"].stage.saved);
     case "failed":
-      return "Photo could not be uploaded.";
+      return t(($) => $["features/photos"].stage.failed);
     default:
       return null;
   }

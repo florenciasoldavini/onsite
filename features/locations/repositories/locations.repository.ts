@@ -1,4 +1,8 @@
-import { getMapsFunctionErrorMessage } from "@/features/locations/maps/map-errors";
+import {
+  getMapsFunctionErrorCode,
+  LocationRepositoryError,
+  type LocationErrorCode
+} from "@/features/locations/maps/map-errors";
 import {
   mapAddressSuggestions,
   mapResolvedAddress,
@@ -12,7 +16,6 @@ import type {
   StaticMapViewport
 } from "@/features/locations/types/location";
 import { requireSupabase } from "@/infrastructure/supabase/repository";
-import { UserFacingError } from "@/shared/utils/user-facing-errors";
 
 export async function autocompleteAddressRows({
   input,
@@ -29,7 +32,7 @@ export async function autocompleteAddressRows({
   if (error) {
     throw toMapsFunctionError(
       error,
-      "Address suggestions are unavailable right now. Try again shortly."
+      "addressSuggestions"
     );
   }
 
@@ -51,7 +54,7 @@ export async function resolveAddressRow({
   if (error) {
     throw toMapsFunctionError(
       error,
-      "We couldn't load that address. Select it again and retry."
+      "addressResolve"
     );
   }
 
@@ -87,7 +90,7 @@ export async function getStaticMapPreviewRow({
   if (error) {
     throw toMapsFunctionError(
       error,
-      "Map preview is unavailable right now. Try again shortly."
+      "mapPreview"
     );
   }
 
@@ -109,9 +112,12 @@ function getMapCenter(points: StaticMapPoint[]) {
   };
 }
 
-export function toMapsFunctionError(error: unknown, fallback: string) {
-  return new UserFacingError(
-    getMapsFunctionErrorMessage(error, fallback),
+export function toMapsFunctionError(
+  error: unknown,
+  fallback: LocationErrorCode
+) {
+  return new LocationRepositoryError(
+    getMapsFunctionErrorCode(error, fallback),
     error
   );
 }

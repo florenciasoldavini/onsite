@@ -9,13 +9,18 @@ import {
   updateAccountPassword
 } from "@/features/auth/services/auth.service";
 import { useMutation } from "@tanstack/react-query";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 
 export function useEmailSignIn() {
   return useMutation({ mutationFn: signInWithEmail });
 }
 
 export function useEmailSignUp() {
-  return useMutation({ mutationFn: signUpWithEmail });
+  const { language } = useLocalization();
+  return useMutation({
+    mutationFn: (input: Omit<Parameters<typeof signUpWithEmail>[0], "language">) =>
+      signUpWithEmail({ ...input, language })
+  });
 }
 
 export function useOAuthSignIn() {
@@ -23,7 +28,10 @@ export function useOAuthSignIn() {
 }
 
 export function usePasswordResetRequest() {
-  return useMutation({ mutationFn: sendPasswordReset });
+  const { language } = useLocalization();
+  return useMutation({
+    mutationFn: (email: string) => sendPasswordReset(email, language)
+  });
 }
 
 export function usePasswordRecoveryPreparation() {
@@ -35,7 +43,11 @@ export function usePasswordUpdate() {
 }
 
 export function useEmailVerificationResend() {
-  return useMutation({ mutationFn: resendEmailVerification });
+  const { language } = useLocalization();
+  return useMutation({
+    mutationFn: (input: Parameters<typeof resendEmailVerification>[0]) =>
+      resendEmailVerification(input, language)
+  });
 }
 
 export function useAuthCallbackCompletion() {

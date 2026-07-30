@@ -7,6 +7,8 @@ import type { AppIconComponent } from "@/shared/ui/icons";
 import { AlertIcon } from "@/shared/ui/icons";
 import type { PropsWithChildren, ReactNode } from "react";
 import { View } from "react-native";
+import type { TFunction } from "i18next";
+import { useTranslation } from "react-i18next";
 
 export type RouteFeedbackKind =
   | "forbidden"
@@ -45,36 +47,53 @@ export interface RouteStateBoundaryProps extends PropsWithChildren {
   resourceName: string;
 }
 
-function displayName(resourceName: string) {
-  return `${resourceName.charAt(0).toUpperCase()}${resourceName.slice(1)}`;
-}
-
 function getDefaultContent(
   kind: RouteFeedbackKind,
-  resourceName: string
+  resourceName: string,
+  t: TFunction<"shared">
 ): { description: string; title: string } {
-  const display = displayName(resourceName);
+  const titledResourceName =
+    resourceName.charAt(0).toUpperCase() + resourceName.slice(1);
+  const untitledResourceName =
+    resourceName.charAt(0).toLowerCase() + resourceName.slice(1);
 
   switch (kind) {
     case "invalid-params":
       return {
-        description: `This ${resourceName} link is incomplete or invalid.`,
-        title: `Invalid ${resourceName} link`
+        description: t(
+          ($) => $.shared.feedback.resourceInvalidDescription,
+          { resource: resourceName }
+        ),
+        title: t(($) => $.shared.feedback.resourceInvalidTitle, {
+          resource: untitledResourceName
+        })
       };
     case "not-found":
       return {
-        description: `This ${resourceName} may have been removed or you may not have access.`,
-        title: `${display} not found`
+        description: t(($) => $.shared.feedback.resourceNotFound, {
+          resource: resourceName
+        }),
+        title: t(($) => $.shared.feedback.resourceNotFoundTitle, {
+          resource: titledResourceName
+        })
       };
     case "forbidden":
       return {
-        description: `You don't have permission to access this ${resourceName}.`,
-        title: `${display} unavailable`
+        description: t(($) => $.shared.feedback.resourceForbidden, {
+          resource: resourceName
+        }),
+        title: t(($) => $.shared.feedback.resourceUnavailableTitle, {
+          resource: titledResourceName
+        })
       };
     case "load-error":
       return {
-        description: `We couldn't load this ${resourceName}. Check your connection and try again.`,
-        title: `${display} unavailable`
+        description: t(($) => $.shared.feedback.resourceLoadError, {
+          resource: resourceName
+        }),
+        title: t(($) => $.shared.feedback.resourceUnavailableTitle, {
+          resource: titledResourceName
+        })
       };
   }
 }
@@ -87,7 +106,8 @@ export function RouteFeedback({
   resourceName,
   title
 }: RouteFeedbackProps) {
-  const defaults = getDefaultContent(kind, resourceName);
+  const { t } = useTranslation("shared");
+  const defaults = getDefaultContent(kind, resourceName, t);
   const Icon = icon;
 
   return (

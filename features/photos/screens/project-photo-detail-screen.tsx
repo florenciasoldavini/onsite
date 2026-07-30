@@ -9,6 +9,7 @@ import { RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function ProjectPhotoDetailScreen({
   photoId,
@@ -18,6 +19,8 @@ export default function ProjectPhotoDetailScreen({
   projectId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/photos");
+  const { t: tShared } = useTranslation("shared");
   const photoQuery = useProjectPhoto(photoId);
   const writePermission = useProjectPermission(
     projectId,
@@ -31,14 +34,14 @@ export default function ProjectPhotoDetailScreen({
       feedback={{
         invalidParams: {
           action: {
-            label: "Back to projects",
+            label: t(($) => $["features/photos"].actions.backProjects),
             onPress: () => router.replace("/projects" as never)
           }
         },
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => {
               void Promise.all([
                 photoQuery.refetch(),
@@ -49,20 +52,19 @@ export default function ProjectPhotoDetailScreen({
           description: photoQuery.isError
             ? getUserFacingErrorMessage(
                 photoQuery.error,
-                "We couldn't load this photo. Check your connection and try again."
+                t(($) => $["features/photos"].errors.load)
               )
-            : "We couldn't verify your photo access. Check your connection and try again."
+            : t(($) => $["features/photos"].errors.access)
         },
         notFound: {
           action: projectId
             ? {
-                label: "Back to photos",
+                label: t(($) => $["features/photos"].actions.backPhotos),
                 onPress: () =>
                   router.replace(`/projects/${projectId}/photos` as never)
               }
             : undefined,
-          description:
-            "This photo may have been removed or you may not have access."
+          description: t(($) => $["features/photos"].errors.notFound)
         }
       }}
       isError={

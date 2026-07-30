@@ -1,6 +1,7 @@
 import { InlineErrorState } from "@/shared/ui/components/inline-error-state";
 import { AlertIcon, RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
+import { useTranslation } from "react-i18next";
 
 export function ProjectPhotosError({
   error,
@@ -9,15 +10,21 @@ export function ProjectPhotosError({
   error: unknown;
   onRetry: () => void;
 }) {
+  const { t } = useTranslation("features/photos");
+  const { t: tShared } = useTranslation("shared");
   return (
     <InlineErrorState
-      action={{ icon: RefreshIcon, label: "Retry", onPress: onRetry }}
+      action={{
+        icon: RefreshIcon,
+        label: tShared(($) => $.shared.actions.retry),
+        onPress: onRetry
+      }}
       description={getUserFacingErrorMessage(
         error,
-        "We couldn't load the project photos. Check your connection and try again."
+        t(($) => $["features/photos"].errors.loadList)
       )}
       icon={AlertIcon}
-      title="Photos unavailable"
+      title={t(($) => $["features/photos"].errors.listUnavailable)}
     />
   );
 }

@@ -2,7 +2,7 @@ import { useAuth } from "@/features/auth/hooks/use-auth";
 import { useProfileAvatarUrl } from "@/features/profile/hooks/use-profile-avatar";
 import type { ProfileAvatarAsset } from "@/features/profile/repositories/profile-avatar.repository";
 import {
-  profileInfoSchema,
+  createProfileInfoSchema,
   type ProfileInfoInput
 } from "@/features/profile/schemas/profile.schemas";
 import { getSupabaseErrorMessage } from "@/infrastructure/supabase/client";
@@ -21,7 +21,7 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import {
   ActivityIndicator,
@@ -31,6 +31,7 @@ import {
   View,
   type ViewStyle
 } from "react-native";
+import { useTranslation } from "react-i18next";
 
 function getProfileInfoDefaults(
   profile:
@@ -52,6 +53,8 @@ function getProfileInfoDefaults(
 }
 
 export function ProfileInfoTab() {
+  const { t } = useTranslation("features/profile");
+  const { i18n, t: tShared } = useTranslation("shared");
   const { session, updateUserProfile, user } = useAuth();
   const [avatarAsset, setAvatarAsset] = useState<ProfileAvatarAsset | null>(
     null
@@ -59,6 +62,10 @@ export function ProfileInfoTab() {
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const profileInfoSchema = useMemo(
+    () => createProfileInfoSchema(tShared),
+    [i18n.resolvedLanguage, tShared]
+  );
   const form = useForm<ProfileInfoInput>({
     defaultValues: getProfileInfoDefaults(user),
     mode: "onChange",
@@ -102,7 +109,7 @@ export function ProfileInfoTab() {
 
   const saveProfile = handleSubmit(async (values) => {
     if (!user) {
-      setFormError("You must be signed in to update your profile.");
+      setFormError(t(($) => $["features/profile"].info.signInError));
       return;
     }
 
@@ -123,7 +130,7 @@ export function ProfileInfoTab() {
       if (updatedUser) {
         setAvatarAsset(null);
         reset(getProfileInfoDefaults(updatedUser));
-        setStatusMessage("Profile updated");
+        setStatusMessage(t(($) => $["features/profile"].info.updated));
       }
     } catch (error) {
       setFormError(getSupabaseErrorMessage(error));
@@ -136,8 +143,12 @@ export function ProfileInfoTab() {
     <AppCard padding="lg">
       <View style={styles.content}>
         <View style={styles.heading}>
-          <AppText variant="label">Profile</AppText>
-          <AppText tone="muted">Personal details</AppText>
+          <AppText variant="label">
+            {t(($) => $["features/profile"].info.profile)}
+          </AppText>
+          <AppText tone="muted">
+            {t(($) => $["features/profile"].info.personalDetails)}
+          </AppText>
         </View>
 
         <View style={styles.fields}>
@@ -153,7 +164,7 @@ export function ProfileInfoTab() {
             />
             {avatarDisplayError ? (
               <FieldMessage tone="error">
-                Profile photo unavailable. Try refreshing the page.
+                {t(($) => $["features/profile"].info.avatarError)}
               </FieldMessage>
             ) : null}
           </View>
@@ -164,14 +175,14 @@ export function ProfileInfoTab() {
             render={({ field, fieldState }) => (
               <TextField
                 errorText={fieldState.error?.message}
-                label="First Name"
+                label={t(($) => $["features/profile"].info.firstName)}
                 leftIcon={UserIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
                   field.onChange(value);
                   clearMessages();
                 }}
-                placeholder="First name"
+                placeholder={t(($) => $["features/profile"].info.firstName)}
                 required
                 size="md"
                 value={field.value}
@@ -184,14 +195,14 @@ export function ProfileInfoTab() {
             name="lastName"
             render={({ field }) => (
               <TextField
-                label="Last Name"
+                label={t(($) => $["features/profile"].info.lastName)}
                 leftIcon={UserIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
                   field.onChange(value);
                   clearMessages();
                 }}
-                placeholder="Last name"
+                placeholder={t(($) => $["features/profile"].info.lastName)}
                 size="md"
                 value={field.value}
               />
@@ -205,14 +216,14 @@ export function ProfileInfoTab() {
               <TextField
                 autoComplete="tel"
                 keyboardType="phone-pad"
-                label="Phone"
+                label={t(($) => $["features/profile"].info.phone)}
                 leftIcon={PhoneIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
                   field.onChange(value);
                   clearMessages();
                 }}
-                placeholder="Phone number"
+                placeholder={t(($) => $["features/profile"].info.phone)}
                 size="md"
                 textContentType="telephoneNumber"
                 value={field.value}
@@ -228,7 +239,7 @@ export function ProfileInfoTab() {
             onPress={() => void saveProfile()}
             size="md"
           >
-            Save Profile
+            {t(($) => $["features/profile"].info.save)}
           </AppButton>
           {statusMessage ? (
             <FieldMessage tone="success">{statusMessage}</FieldMessage>
@@ -253,6 +264,7 @@ function AvatarPicker({
   onChange: (asset: ProfileAvatarAsset) => void;
   value: ProfileAvatarAsset | null;
 }) {
+  const { t } = useTranslation("features/profile");
   const previewUri = value?.uri ?? currentUrl.trim();
   const [pickerError, setPickerError] = useState<string | null>(null);
 
@@ -266,8 +278,8 @@ function AvatarPicker({
       if (!permission.granted) {
         setPickerError(
           permission.canAskAgain
-            ? "Photo access is required to choose a profile picture. Allow access and try again."
-            : "Photo access is disabled. Enable it in your device settings, then try again."
+            ? t(($) => $["features/profile"].info.photoPermission)
+            : t(($) => $["features/profile"].info.photoDenied)
         );
         return;
       }
@@ -293,7 +305,7 @@ function AvatarPicker({
       setPickerError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't open your photo library. Try again."
+          t(($) => $["features/profile"].info.photoError)
         )
       );
     }
@@ -302,7 +314,9 @@ function AvatarPicker({
   return (
     <View style={styles.avatarPickerRoot}>
       <Pressable
-        accessibilityLabel="Change profile photo"
+        accessibilityLabel={t(
+          ($) => $["features/profile"].info.avatarAccessibility
+        )}
         accessibilityRole="button"
         onPress={() => void pickImage()}
         style={StyleSheet.flatten([

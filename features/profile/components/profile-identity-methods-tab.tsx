@@ -23,32 +23,19 @@ import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 
 type IdentityProvider = "apple" | "email" | "google";
 
-const providerCopy = {
-  apple: {
-    label: "Apple",
-    supporting: "Apple account"
-  },
-  email: {
-    label: "Email",
-    supporting: "Password access"
-  },
-  google: {
-    label: "Google",
-    supporting: "Google account"
-  }
-} satisfies Record<IdentityProvider, { label: string; supporting: string }>;
-
 export function ProfileIdentityMethodsTab({
   returnedLinkProvider
 }: {
   returnedLinkProvider: SupportedOAuthProvider | null;
 }) {
+  const { t } = useTranslation("features/profile");
   const { session } = useAuth();
   const router = useRouter();
   const [identityError, setIdentityError] = useState<string | null>(null);
@@ -120,11 +107,15 @@ export function ProfileIdentityMethodsTab({
         isIdentityProviderLinked(refreshedIdentities, returnedLinkProvider)
       ) {
         setIdentityStatus(
-          `${getOAuthProviderLabel(returnedLinkProvider)} sign-in linked.`
+          t(($) => $["features/profile"].methods.linkedStatus, {
+            provider: getOAuthProviderLabel(returnedLinkProvider)
+          })
         );
       } else if (refreshedIdentities) {
         setIdentityError(
-          `We couldn't confirm the ${getOAuthProviderLabel(returnedLinkProvider)} link. Try again.`
+          t(($) => $["features/profile"].methods.linkError, {
+            provider: getOAuthProviderLabel(returnedLinkProvider)
+          })
         );
       }
 
@@ -136,7 +127,7 @@ export function ProfileIdentityMethodsTab({
     return () => {
       isMounted = false;
     };
-  }, [refreshIdentities, returnedLinkProvider, router]);
+  }, [refreshIdentities, returnedLinkProvider, router, t]);
 
   const linkOAuthProvider = async (provider: SupportedOAuthProvider) => {
     if (linkedProviders.has(provider) || linkingProvider) {
@@ -155,10 +146,16 @@ export function ProfileIdentityMethodsTab({
       }
 
       if (isIdentityProviderLinked(refreshedIdentities, provider)) {
-        setIdentityStatus(`${getOAuthProviderLabel(provider)} sign-in linked.`);
+        setIdentityStatus(
+          t(($) => $["features/profile"].methods.linkedStatus, {
+            provider: getOAuthProviderLabel(provider)
+          })
+        );
       } else {
         setIdentityError(
-          `We couldn't confirm the ${getOAuthProviderLabel(provider)} link. Try again.`
+          t(($) => $["features/profile"].methods.linkError, {
+            provider: getOAuthProviderLabel(provider)
+          })
         );
       }
     } catch (error) {
@@ -170,8 +167,12 @@ export function ProfileIdentityMethodsTab({
     <AppCard padding="lg">
       <View style={styles.content}>
         <View style={styles.heading}>
-          <AppText variant="label">Sign-In Methods</AppText>
-          <AppText tone="muted">Connected access</AppText>
+          <AppText variant="label">
+            {t(($) => $["features/profile"].methods.title)}
+          </AppText>
+          <AppText tone="muted">
+            {t(($) => $["features/profile"].methods.connected)}
+          </AppText>
         </View>
 
         <View style={styles.methods}>
@@ -197,10 +198,14 @@ export function ProfileIdentityMethodsTab({
 
         {linkingProvider ? (
           <FieldMessage>
-            Connecting {getOAuthProviderLabel(linkingProvider)}...
+            {t(($) => $["features/profile"].methods.connecting, {
+              provider: getOAuthProviderLabel(linkingProvider)
+            })}
           </FieldMessage>
         ) : identityLoading ? (
-          <FieldMessage>Checking linked methods...</FieldMessage>
+          <FieldMessage>
+            {t(($) => $["features/profile"].methods.checking)}
+          </FieldMessage>
         ) : null}
         {identityStatus ? (
           <FieldMessage tone="success">{identityStatus}</FieldMessage>
@@ -226,7 +231,28 @@ function IdentityMethodRow({
   onLink?: () => void;
   provider: IdentityProvider;
 }) {
-  const copy = providerCopy[provider];
+  const { t } = useTranslation("features/profile");
+  const copy =
+    provider === "apple"
+      ? {
+          label: t(($) => $["features/profile"].methods.apple),
+          supporting: t(
+            ($) => $["features/profile"].methods.appleSupporting
+          )
+        }
+      : provider === "google"
+        ? {
+            label: t(($) => $["features/profile"].methods.google),
+            supporting: t(
+              ($) => $["features/profile"].methods.googleSupporting
+            )
+          }
+        : {
+            label: t(($) => $["features/profile"].methods.email),
+            supporting: t(
+              ($) => $["features/profile"].methods.emailSupporting
+            )
+          };
 
   return (
     <View style={styles.method}>
@@ -244,12 +270,15 @@ function IdentityMethodRow({
         <View style={styles.linked}>
           <CheckCircleIcon color={atomPalette.successText} size="sm" />
           <AppText tone="success" variant="label">
-            Linked
+            {t(($) => $["features/profile"].methods.linked)}
           </AppText>
         </View>
       ) : onLink && provider !== "email" ? (
         <AppButton
-          accessibilityLabel={`Link ${copy.label} sign-in`}
+          accessibilityLabel={t(
+            ($) => $["features/profile"].methods.linkAccessibility,
+            { provider: copy.label }
+          )}
           fullWidth={false}
           isDisabled={isActionDisabled}
           loading={isLoading}
@@ -257,7 +286,7 @@ function IdentityMethodRow({
           size="sm"
           variant="bordered"
         >
-          Link
+          {t(($) => $["features/profile"].methods.link)}
         </AppButton>
       ) : null}
     </View>
