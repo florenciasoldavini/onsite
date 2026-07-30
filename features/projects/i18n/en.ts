@@ -2,7 +2,6 @@ export default {
   accessibility: {
     closeFilters: "Close project filters",
     datePicker: "{{label}} date picker",
-    invitations: "Project invitations",
     newProject: "New project",
     nextMonth: "Next month",
     openProject: "Open {{name}}",

@@ -6,7 +6,7 @@ import { NavScreenHeader } from "@/shared/ui/components/nav-screen-header";
 import { Screen } from "@/shared/ui/components/screen";
 import { SelectMenu } from "@/shared/ui/components/select-menu";
 import { SegmentedTabs } from "@/shared/ui/components/tabs";
-import { atomLayout, atomSpacing } from "@/shared/ui/components/theme";
+import { atomLayout } from "@/shared/ui/components/theme";
 import { ProjectCardSkeleton } from "@/features/projects/components/project-card-skeleton";
 import {
   ProjectsTable,
@@ -35,7 +35,6 @@ import type {
 import {
   FilterIcon,
   FolderPlusIcon,
-  MailIcon,
   RefreshIcon,
   SortIcon
 } from "@/shared/ui/icons";
@@ -172,31 +171,17 @@ export default function ProjectsScreen() {
     <View style={styles.listHeader}>
       <NavScreenHeader
         action={
-          <View style={{ flexDirection: "row", gap: atomSpacing[2] }}>
+          !isCompact ? (
             <AppButton
-              accessibilityLabel={t(
-                ($) => $["features/projects"].accessibility.invitations
-              )}
-              color="neutral"
               fullWidth={false}
-              icon={MailIcon}
-              layout="icon"
-              onPress={() => router.push("/invitations" as never)}
+              icon={FolderPlusIcon}
+              iconAfter={false}
+              onPress={() => router.push("/projects/new" as never)}
               size="sm"
-              variant="bordered"
-            />
-            {!isCompact ? (
-              <AppButton
-                fullWidth={false}
-                icon={FolderPlusIcon}
-                iconAfter={false}
-                onPress={() => router.push("/projects/new" as never)}
-                size="sm"
-              >
-                {t(($) => $["features/projects"].actions.new)}
-              </AppButton>
-            ) : null}
-          </View>
+            >
+              {t(($) => $["features/projects"].actions.new)}
+            </AppButton>
+          ) : null
         }
         title={t(($) => $["features/projects"].list.title)}
       />
