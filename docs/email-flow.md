@@ -1,9 +1,17 @@
 # Product Email Flow
 
-Purpose: test and document the first non-auth email path
-Source of truth for: product email boundaries, Edge Function secrets, and the current welcome-email example
+Purpose: document and verify Onzait's current transactional email paths
+Source of truth for: localized product and Auth email boundaries, Edge Function secrets, and rollout
 Update when: product email providers, function names, secrets, or invocation rules change
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-29
+
+## Language Contract
+
+Current transactional emails support `es` and `en` with bundled Deno-safe
+i18next resources. Missing or invalid language input resolves to Spanish and a
+missing Spanish key falls back to English. Builders return localized
+`{ subject, html }`, preserve user-authored values, set `<html lang>`, and
+format dates as `es-AR` or `en-US` in UTC with the time zone stated.
 
 ## Current Example
 
@@ -11,12 +19,12 @@ The first product email example is `welcome-to-onzait`.
 
 Flow:
 
-1. App code calls `sendWelcomeToOnzaitEmail` from `features/auth/services/welcome-email.service.ts`.
+1. App code calls `sendWelcomeToOnzaitEmail` with the active app language from `features/auth/services/welcome-email.service.ts`.
 2. The service calls `invokeWelcomeToOnzaitEmail` from `features/auth/repositories/welcome-email.repository.ts`.
 3. The repository invokes the Supabase Edge Function `welcome-to-onzait`.
 4. The Edge Function validates the signed-in user with Supabase Auth.
 5. The Edge Function uses its service-role Supabase client to reserve `public.users.welcome_email_sent_at` only when the marker is still empty.
-6. Only the request that successfully reserves the marker renders the Onzait-styled React Email template to HTML and sends it through Resend.
+6. Only the request that successfully reserves the marker renders the localized Onzait-styled React Email template to HTML and sends it through Resend.
 
 The client does not send a recipient email address. The function chooses the recipient from the authenticated user's `public.users` row.
 The client also does not write the sent marker; that belongs to the Edge Function so repeated app launches cannot repeatedly send the same product email.
@@ -33,6 +41,24 @@ Invitation links use `/invitations/accept#token=…`; the raw token is never
 stored and is not placed in an HTTP path or query string. Resends rotate the
 token, restart the seven-day expiry, enforce a 60-second cooldown, and share a
 20-email rolling 24-hour actor cap with new invitations.
+
+The invitation form requires a recipient language and defaults it to the
+sender's current UI language. `project_invitations.language_code` persists the
+validated choice, and every resend reuses it. Role names are localized from
+stable role codes.
+
+## Supabase Auth Send Email Hook
+
+`auth-send-email` implements the signed Supabase Send Email Hook for current
+signup confirmation/resend and password recovery actions. The app adds `lang`
+to the trusted redirect URL. The hook uses that parameter only to render the
+email and constructs the verification URL from signed hook fields and the token
+hash.
+
+The function verifies Standard Webhooks signatures before parsing, uses the
+webhook delivery identifier as the Resend idempotency key where available, and
+limits the provider request to four seconds. JWT verification is disabled for
+this function because the signed webhook is authoritative.
 
 ## Failure Contract
 
@@ -58,6 +84,10 @@ The email is intentionally not sent at raw signup time because email/password us
 - `supabase/functions/_shared/email/welcome-to-onzait.tsx`
 - `supabase/functions/project-collaboration/index.ts`
 - `supabase/functions/_shared/email/project-invitation.tsx`
+- `supabase/functions/auth-send-email/index.ts`
+- `supabase/functions/_shared/email/auth-email.tsx`
+- `supabase/functions/_shared/email/localization.ts`
+- `supabase/functions/_shared/email/i18n/`
 - `supabase/functions/_shared/cors.ts`
 
 ## Template Development
@@ -89,6 +119,7 @@ RESEND_API_KEY
 EMAIL_FROM
 EMAIL_REPLY_TO
 SITE_URL
+SEND_EMAIL_HOOK_SECRET
 ```
 
 `RESEND_API_KEY` is required. Supabase provides `SUPABASE_URL` and server-side API key variables to deployed Edge Functions. The shared auth helper accepts named/current publishable-key variables and the legacy `SUPABASE_ANON_KEY` fallback; privileged email state updates continue to use `SUPABASE_SERVICE_ROLE_KEY`. The other values have development fallbacks, but should be set before production.
@@ -109,13 +140,25 @@ npx supabase secrets set EMAIL_FROM="Onzait <onboarding@resend.dev>"
 npx supabase secrets set SITE_URL="https://onzait.vercel.app"
 ```
 
-Then deploy the function:
+Apply `20260729193000_add_project_invitation_language.sql` before deploying the
+updated collaboration function. Deploy the email functions before activating
+the hosted Auth hook:
 
 ```sh
 npx supabase functions deploy welcome-to-onzait --use-api
+npx supabase functions deploy project-collaboration --use-api
+npx supabase functions deploy auth-send-email --no-verify-jwt --use-api
 ```
 
-After deployment, test with a verified user whose `public.users.welcome_email_sent_at` value is empty.
+Before activating the Auth hook, configure `SEND_EMAIL_HOOK_SECRET`, confirm
+hosted Auth security notifications and unused Auth email flows are disabled,
+and prove signed staging delivery for confirmation and recovery in both
+languages. Magic link, Auth invite, email change, reauthentication, and
+security-notification templates remain deferred.
+
+After deployment, test welcome delivery with a verified user whose
+`public.users.welcome_email_sent_at` value is empty, plus invitation creation
+and resend in both languages.
 
 ## Sender Defaults
 
@@ -138,7 +181,7 @@ The pending domain, DNS, and branded sender checklist lives in [docs/pending-lau
 From app code, call:
 
 ```ts
-await sendWelcomeToOnzaitEmail({ name: "Flor" });
+await sendWelcomeToOnzaitEmail({ language: "es", name: "Flor" });
 ```
 
 The user must be signed in. Supabase will include the current session JWT when invoking the Edge Function.

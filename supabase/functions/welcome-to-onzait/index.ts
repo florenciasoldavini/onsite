@@ -4,10 +4,12 @@ import {
   requireAuthenticatedUser,
 } from "../_shared/auth.ts";
 import { corsHeaders, jsonResponse } from "../_shared/cors.ts";
-import { renderWelcomeToOnzaitEmail } from "../_shared/email/welcome-to-onzait.tsx";
+import { buildWelcomeToOnzaitEmail } from "../_shared/email/welcome-to-onzait.tsx";
+import { resolveEmailLanguage } from "../_shared/email/localization.ts";
 import { welcomeEmailFailureResponse } from "./errors.ts";
 
 type WelcomeRequestBody = {
+  language?: unknown;
   name?: string;
 };
 
@@ -106,6 +108,15 @@ async function handler(req: Request) {
     );
   }
 
+  let body: WelcomeRequestBody = {};
+
+  try {
+    body = (await req.json()) as WelcomeRequestBody;
+  } catch {
+    body = {};
+  }
+
+  const language = resolveEmailLanguage(body.language);
   const sentAt = new Date().toISOString();
   const { data: claimedUser, error: claimError } = await adminSupabase
     .from("users")
@@ -154,19 +165,16 @@ async function handler(req: Request) {
     return welcomeEmailFailureResponse("state-conflict");
   }
 
-  let body: WelcomeRequestBody = {};
-
-  try {
-    body = (await req.json()) as WelcomeRequestBody;
-  } catch {
-    body = {};
-  }
-
   const name = body.name?.trim() ||
     claimedEmailState.first_name ||
     getFirstName(authUser, body);
 
   try {
+    const email = await buildWelcomeToOnzaitEmail({
+      appUrl,
+      language,
+      name,
+    });
     const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -177,8 +185,8 @@ async function handler(req: Request) {
       body: JSON.stringify({
         from: emailFrom,
         to: claimedEmailState.email,
-        subject: "Welcome to onzait",
-        html: await renderWelcomeToOnzaitEmail({ appUrl, name }),
+        subject: email.subject,
+        html: email.html,
         ...(emailReplyTo ? { reply_to: emailReplyTo } : {}),
       }),
     });

@@ -19,14 +19,8 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FlatList, View, type ListRenderItemInfo } from "react-native";
-
-const supplierSortOptions = [
-  { label: "Newest", value: "created_desc" },
-  { label: "Oldest", value: "created_asc" },
-  { label: "A-Z", value: "name_asc" },
-  { label: "Z-A", value: "name_desc" }
-] satisfies { label: string; value: SupplierSort }[];
 
 export default function SuppliersScreen({
   directoryHeader
@@ -34,9 +28,33 @@ export default function SuppliersScreen({
   directoryHeader?: ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/suppliers");
+  const { t: tShared } = useTranslation("shared");
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<SupplierSort>("created_desc");
+  const supplierSortOptions = useMemo(
+    () =>
+      [
+        {
+          label: t(($) => $["features/suppliers"].sort.newest),
+          value: "created_desc"
+        },
+        {
+          label: t(($) => $["features/suppliers"].sort.oldest),
+          value: "created_asc"
+        },
+        {
+          label: t(($) => $["features/suppliers"].sort.ascending),
+          value: "name_asc"
+        },
+        {
+          label: t(($) => $["features/suppliers"].sort.descending),
+          value: "name_desc"
+        }
+      ] satisfies { label: string; value: SupplierSort }[],
+    [t]
+  );
   const suppliersQuery = useSuppliers({ query, sort });
   const suppliers = useMemo(
     () => suppliersQuery.data?.pages.flatMap((page) => page.items) ?? [],
@@ -81,12 +99,12 @@ export default function SuppliersScreen({
                 onPress={() => router.push("/suppliers/new" as never)}
                 size="sm"
               >
-                New supplier
+                {t(($) => $["features/suppliers"].actions.new)}
               </AppButton>
             ) : null
           }
-          description="Keep supplier contact and location details ready for your projects."
-          title="Suppliers"
+          description={t(($) => $["features/suppliers"].list.description)}
+          title={t(($) => $["features/suppliers"].list.title)}
         />
       )}
       <View
@@ -99,14 +117,18 @@ export default function SuppliersScreen({
         <View style={{ flex: 1 }}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search suppliers"
+            placeholder={t(
+              ($) => $["features/suppliers"].list.searchPlaceholder
+            )}
             value={query}
           />
         </View>
         <SelectMenu
-          accessibilityLabel="Sort suppliers"
+          accessibilityLabel={t(
+            ($) => $["features/suppliers"].accessibility.sort
+          )}
           icon={SortIcon}
-          labelPrefix="Sort"
+          labelPrefix={t(($) => $["features/suppliers"].sort.label)}
           onChange={setSort}
           options={supplierSortOptions}
           value={sort}
@@ -125,34 +147,43 @@ export default function SuppliersScreen({
     <InlineErrorState
       action={{
         icon: RefreshIcon,
-        label: "Retry",
+        label: tShared(($) => $.shared.actions.retry),
         onPress: () => void suppliersQuery.refetch()
       }}
       description={getUserFacingErrorMessage(
         suppliersQuery.error,
-        "We couldn't load your suppliers. Check your connection and try again."
+        t(($) => $["features/suppliers"].errors.listLoad)
       )}
       icon={StoreIcon}
-      title="Suppliers unavailable"
+      title={t(($) => $["features/suppliers"].errors.listUnavailable)}
     />
   ) : (
     <EmptyState
       action={
         hasSearch
-          ? { label: "Clear search", onPress: () => setQuery("") }
+          ? {
+              label: t(
+                ($) => $["features/suppliers"].actions.clearSearch
+              ),
+              onPress: () => setQuery("")
+            }
           : {
               icon: PlusIcon,
-              label: "New supplier",
+              label: t(($) => $["features/suppliers"].actions.new),
               onPress: () => router.push("/suppliers/new" as never)
             }
       }
       description={
         hasSearch
-          ? "Try another name, contact, website, or address."
-          : "Add your first supplier to start building your directory."
+          ? t(($) => $["features/suppliers"].search.noMatchDescription)
+          : t(($) => $["features/suppliers"].search.emptyDescription)
       }
       icon={StoreIcon}
-      title={hasSearch ? "No matching suppliers" : "No suppliers yet"}
+      title={
+        hasSearch
+          ? t(($) => $["features/suppliers"].search.noMatchTitle)
+          : t(($) => $["features/suppliers"].search.emptyTitle)
+      }
     />
   );
 
@@ -161,7 +192,9 @@ export default function SuppliersScreen({
       floatingAction={
         suppliers.length > 0 && isCompact ? (
           <AppButton
-            accessibilityLabel="New supplier"
+            accessibilityLabel={t(
+              ($) => $["features/suppliers"].accessibility.newSupplier
+            )}
             icon={PlusIcon}
             layout="icon"
             onPress={() => router.push("/suppliers/new" as never)}
@@ -191,7 +224,7 @@ export default function SuppliersScreen({
                 size="sm"
                 variant="bordered"
               >
-                Load more suppliers
+                {t(($) => $["features/suppliers"].actions.loadMore)}
               </AppButton>
             </View>
           ) : null

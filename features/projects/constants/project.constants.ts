@@ -69,3 +69,45 @@ export const PROJECT_BUILDING_TYPE_LABELS = {
   mixed_use: "Mixed use",
   residential: "Residential"
 } as const;
+
+export const PROJECT_LABELS_BY_LANGUAGE = {
+  en: {
+    buildingTypes: PROJECT_BUILDING_TYPE_LABELS,
+    phases: PROJECT_PHASE_LABELS,
+    statuses: PROJECT_STATUS_LABELS,
+    types: PROJECT_TYPE_LABELS
+  },
+  es: {
+    buildingTypes: {
+      commercial: "Comercial",
+      industrial: "Industrial",
+      infrastructure: "Infraestructura",
+      institutional: "Institucional",
+      mixed_use: "Uso mixto",
+      residential: "Residencial"
+    },
+    phases: {
+      concept: "Concepto",
+      construction: "Construcción",
+      design: "Diseño",
+      permits: "Permisos",
+      post_construction: "Posconstrucción",
+      preconstruction: "Preconstrucción",
+      procurement: "Compras"
+    },
+    statuses: {
+      cancelled: "Cancelado",
+      completed: "Completado",
+      in_progress: "En curso",
+      on_hold: "En pausa",
+      planned: "Planificado"
+    },
+    types: {
+      expansion: "Ampliación",
+      maintenance: "Mantenimiento",
+      new_build: "Obra nueva",
+      remodel: "Remodelación",
+      renovation: "Renovación"
+    }
+  }
+} as const;

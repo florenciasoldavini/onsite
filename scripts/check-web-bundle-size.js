@@ -6,7 +6,7 @@ const { gzipSync } = require("zlib");
 
 const budgets = {
   initialJavaScriptGzip: 900_000,
-  initialJavaScriptRaw: 3_500_000,
+  initialJavaScriptRaw: 3_600_000,
   stylesheetRaw: 100_000
 };
 const distDirectory = resolve(process.cwd(), "dist");

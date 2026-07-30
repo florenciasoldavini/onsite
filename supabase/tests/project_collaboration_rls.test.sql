@@ -2,7 +2,7 @@ begin;
 
 create extension if not exists pgtap with schema extensions;
 
-select plan(44);
+select plan(46);
 
 select is(
   (select count(*) from public.project_roles),
@@ -251,10 +251,35 @@ select lives_ok(
       ' Collab-Invitee@Example.com ',
       'manager',
       repeat('a', 64),
-      current_timestamp + interval '7 days'
+      current_timestamp + interval '7 days',
+      'en'
     )
   $$,
   'the owner can atomically create an invitation'
+);
+select is(
+  (
+    select language_code
+    from public.project_invitations
+    where token_hash = repeat('a', 64)
+  ),
+  'en',
+  'the selected invitation language is persisted'
+);
+select throws_ok(
+  $$
+    select public.create_project_invitation(
+      '10000000-0000-4000-8000-000000000101',
+      'invalid-language@example.com',
+      'viewer',
+      repeat('e', 64),
+      current_timestamp + interval '7 days',
+      'pt'
+    )
+  $$,
+  '22023',
+  null,
+  'unsupported invitation languages are rejected'
 );
 select is(
   (
@@ -281,7 +306,8 @@ select throws_ok(
       'other-invitee@example.com',
       'owner',
       repeat('b', 64),
-      current_timestamp + interval '7 days'
+      current_timestamp + interval '7 days',
+      'es'
     )
   $$,
   '22023',
@@ -306,7 +332,8 @@ select throws_ok(
       'outsider-target@example.com',
       'viewer',
       repeat('c', 64),
-      current_timestamp + interval '7 days'
+      current_timestamp + interval '7 days',
+      'es'
     )
   $$,
   '42501',
@@ -394,7 +421,8 @@ select lives_ok(
       'cooldown@example.com',
       'viewer',
       repeat('d', 64),
-      current_timestamp + interval '7 days'
+      current_timestamp + interval '7 days',
+      'es'
     )
   $$,
   'the owner can create another pending invitation'

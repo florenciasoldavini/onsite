@@ -14,6 +14,7 @@ import {
   normalizeNullableText
 } from "@/shared/utils/contact";
 import { z } from "zod";
+import type { TFunction } from "i18next";
 
 export const SupplierSchema: z.ZodType<Supplier> = z.object({
   address: z.string().nullable(),
@@ -67,6 +68,68 @@ export const supplierFormSchema = z.object({
   phone_number: optionalPhoneSchema,
   website_url: optionalWebsiteSchema
 });
+
+export function createSupplierFormSchema(
+  t: TFunction<"features/suppliers">,
+  tShared: TFunction<"shared">
+) {
+  const email = z
+    .string()
+    .trim()
+    .refine(
+      (value) =>
+        value.length === 0 ||
+        z.string().email().max(254).safeParse(value).success,
+      { message: tShared(($) => $.shared.validation.email) }
+    );
+  const phone = z
+    .string()
+    .trim()
+    .refine((value) => value.length === 0 || value.length >= 3, {
+      message: tShared(($) => $.shared.validation.phone)
+    })
+    .refine((value) => value.length <= 40, {
+      message: tShared(($) => $.shared.validation.phoneMax)
+    });
+  const website = z
+    .string()
+    .trim()
+    .max(
+      2048,
+      t(($) => $["features/suppliers"].validation.websiteMax)
+    )
+    .refine(
+      (value) => value.length === 0 || normalizeWebsiteUrl(value) !== null,
+      {
+        message: t(
+          ($) => $["features/suppliers"].validation.websiteInvalid
+        )
+      }
+    );
+
+  return z.object({
+    address: resolvedAddressSchema,
+    contact_name: z
+      .string()
+      .trim()
+      .max(
+        160,
+        t(($) => $["features/suppliers"].validation.contactMax)
+      ),
+    email,
+    name: z
+      .string()
+      .trim()
+      .min(2, t(($) => $["features/suppliers"].validation.nameMin))
+      .max(120, t(($) => $["features/suppliers"].validation.nameMax)),
+    notes: z
+      .string()
+      .trim()
+      .max(2000, t(($) => $["features/suppliers"].validation.notesMax)),
+    phone_number: phone,
+    website_url: website
+  });
+}
 
 export function toSupplierInput(
   values: SupplierFormValues

@@ -8,6 +8,7 @@ import { RefreshIcon, StoreIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function SupplierDetailScreen({
   supplierId
@@ -15,9 +16,11 @@ export default function SupplierDetailScreen({
   supplierId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/suppliers");
+  const { t: tShared } = useTranslation("shared");
   const supplierQuery = useSupplier(supplierId);
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/suppliers"].actions.backToDirectory),
     onPress: () => router.replace("/directory?section=suppliers" as never)
   };
 
@@ -28,12 +31,12 @@ export default function SupplierDetailScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void supplierQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             supplierQuery.error,
-            "We couldn't load this supplier. Try again."
+            t(($) => $["features/suppliers"].errors.load)
           ),
           icon: StoreIcon
         },

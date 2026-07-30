@@ -14,7 +14,9 @@ import {
   ChevronRightIcon
 } from "@/shared/ui/icons";
 import { formatDateOnly } from "@/shared/utils/date-only";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Platform,
@@ -25,30 +27,6 @@ import {
   type GestureResponderEvent,
   type ViewStyle
 } from "react-native";
-
-const calendarWeekdayLabels = [
-  "Sun",
-  "Mon",
-  "Tue",
-  "Wed",
-  "Thu",
-  "Fri",
-  "Sat"
-];
-const calendarMonthLabels = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December"
-];
 
 export function ProjectFormCalendarField({
   errorText,
@@ -61,6 +39,13 @@ export function ProjectFormCalendarField({
   onChange: (date: string) => void;
   value: string;
 }) {
+  const { formattingLocale } = useLocalization();
+  const { t } = useTranslation("features/projects");
+  const calendarWeekdayLabels = Array.from({ length: 7 }, (_, weekday) =>
+    new Intl.DateTimeFormat(formattingLocale, { weekday: "short" }).format(
+      new Date(2026, 7, 2 + weekday)
+    )
+  );
   const [isOpen, setIsOpen] = useState(false);
   const [visibleMonth, setVisibleMonth] = useState(() =>
     getCalendarMonth(value)
@@ -82,7 +67,10 @@ export function ProjectFormCalendarField({
   return (
     <FormField errorText={errorText} label={label}>
       <Pressable
-        accessibilityLabel={`${label} date picker`}
+        accessibilityLabel={t(
+          ($) => $["features/projects"].accessibility.datePicker,
+          { label }
+        )}
         accessibilityRole="button"
         onPress={() => setIsOpen(true)}
         style={StyleSheet.flatten([
@@ -96,7 +84,10 @@ export function ProjectFormCalendarField({
           size={18}
         />
         <AppText tone={value ? "default" : "subtle"} variant="body">
-          {formatDateOnly(value, { fallback: "Select date" })}
+          {formatDateOnly(value, {
+            fallback: t(($) => $["features/projects"].form.selectDate),
+            locale: formattingLocale
+          })}
         </AppText>
       </Pressable>
 
@@ -110,7 +101,9 @@ export function ProjectFormCalendarField({
           <View style={styles.calendarModal}>
             <View style={styles.calendarHeader}>
               <CalendarIconButton
-                accessibilityLabel="Previous month"
+                accessibilityLabel={t(
+                  ($) => $["features/projects"].accessibility.previousMonth
+                )}
                 icon={ChevronLeftIcon}
                 onPress={() =>
                   setVisibleMonth(
@@ -120,10 +113,12 @@ export function ProjectFormCalendarField({
                 }
               />
               <AppHeading variant="section">
-                {formatCalendarMonth(visibleMonth)}
+                {formatCalendarMonth(visibleMonth, formattingLocale)}
               </AppHeading>
               <CalendarIconButton
-                accessibilityLabel="Next month"
+                accessibilityLabel={t(
+                  ($) => $["features/projects"].accessibility.nextMonth
+                )}
                 icon={ChevronRightIcon}
                 onPress={() =>
                   setVisibleMonth(
@@ -151,9 +146,15 @@ export function ProjectFormCalendarField({
 
                 return (
                   <Pressable
-                    accessibilityLabel={`Select ${formatDateOnly(
-                      toCalendarDateValue(day.date)
-                    )}`}
+                    accessibilityLabel={t(
+                      ($) => $["features/projects"].accessibility.selectDate,
+                      {
+                        date: formatDateOnly(
+                          toCalendarDateValue(day.date),
+                          { locale: formattingLocale }
+                        )
+                      }
+                    )}
                     accessibilityRole="button"
                     key={day.key}
                     onPress={() => selectDate(day.date)}
@@ -191,14 +192,14 @@ export function ProjectFormCalendarField({
                 size="sm"
                 variant="bordered"
               >
-                Clear
+                {t(($) => $["features/projects"].actions.clear)}
               </AppButton>
               <AppButton
                 fullWidth={false}
                 onPress={() => setIsOpen(false)}
                 size="sm"
               >
-                Done
+                {t(($) => $["features/projects"].actions.done)}
               </AppButton>
             </View>
           </View>
@@ -283,8 +284,11 @@ function parseCalendarDate(value: string) {
   return date;
 }
 
-function formatCalendarMonth(date: Date) {
-  return `${calendarMonthLabels[date.getMonth()]} ${date.getFullYear()}`;
+function formatCalendarMonth(date: Date, locale: string) {
+  return new Intl.DateTimeFormat(locale, {
+    month: "long",
+    year: "numeric"
+  }).format(date);
 }
 
 function toCalendarDateValue(date: Date) {

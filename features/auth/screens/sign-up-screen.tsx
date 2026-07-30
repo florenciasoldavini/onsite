@@ -20,16 +20,17 @@ import {
   useOAuthSignIn
 } from "@/features/auth/hooks/use-auth-mutations";
 import {
-  emailSignupSchema,
+  createEmailSignupSchema,
   type EmailSignupInput
 } from "@/features/auth/schemas/auth.schemas";
 import { AtSignIcon, LockIcon } from "@/shared/ui/icons";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const googleLogo = require("@/assets/images/auth/google-logo.png");
 const appleLogo = require("@/assets/images/auth/apple-logo.png");
@@ -40,6 +41,7 @@ export default function SignUpScreen({
   nextPath?: string;
 }) {
   const router = useRouter();
+  const { i18n, t } = useTranslation("features/auth");
   const hasNext = nextPath !== "/";
   const { authError, session } = useAuth();
   const emailSignUp = useEmailSignUp();
@@ -49,6 +51,10 @@ export default function SignUpScreen({
   const [loadingAction, setLoadingAction] = useState<
     "apple" | "email" | "google" | null
   >(null);
+  const emailSignupSchema = useMemo(
+    () => createEmailSignupSchema(t),
+    [i18n.resolvedLanguage, t]
+  );
   const form = useForm<EmailSignupInput>({
     defaultValues: {
       email: "",
@@ -103,7 +109,7 @@ export default function SignUpScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't create your account. Check your details and try again."
+          t(($) => $["features/auth"].errors.signUp)
         )
       );
     } finally {
@@ -123,7 +129,7 @@ export default function SignUpScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't start that sign-up method. Try again."
+          t(($) => $["features/auth"].errors.oauthStartSignUp)
         )
       );
     } finally {
@@ -133,9 +139,9 @@ export default function SignUpScreen({
 
   return (
     <AuthShell
-      description="Create your workspace access."
-      panelTag="Access / New Session"
-      title="Create Account"
+      description={t(($) => $["features/auth"].signUp.description)}
+      panelTag={t(($) => $["features/auth"].signUp.panelTag)}
+      title={t(($) => $["features/auth"].signUp.title)}
     >
       <View style={{ gap: atomSpacing[6] }}>
         {authError ? (
@@ -151,7 +157,9 @@ export default function SignUpScreen({
             }}
           >
             <AppButton
-              accessibilityLabel="Continue with Google"
+              accessibilityLabel={t(
+                ($) => $["features/auth"].common.google
+              )}
               fullWidth={false}
               imageSource={googleLogo}
               isDisabled={isBusy}
@@ -166,7 +174,9 @@ export default function SignUpScreen({
               variant="bordered"
             />
             <AppButton
-              accessibilityLabel="Continue with Apple"
+              accessibilityLabel={t(
+                ($) => $["features/auth"].common.apple
+              )}
               fullWidth={false}
               imageSource={appleLogo}
               isDisabled={isBusy}
@@ -182,7 +192,9 @@ export default function SignUpScreen({
             />
           </View>
 
-          <AuthDivider label="OR CREATE WITH EMAIL" />
+          <AuthDivider
+            label={t(($) => $["features/auth"].signUp.divider)}
+          />
 
           <Controller
             control={control}
@@ -193,7 +205,7 @@ export default function SignUpScreen({
                 autoComplete="email"
                 errorText={fieldState.error?.message}
                 keyboardType="email-address"
-                label="Email"
+                label={t(($) => $["features/auth"].common.email)}
                 leftIcon={AtSignIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -219,10 +231,10 @@ export default function SignUpScreen({
                 errorText={fieldState.error?.message}
                 helperText={
                   !fieldState.error
-                    ? "Use 8+ chars with uppercase, number, and symbol."
+                    ? t(($) => $["features/auth"].common.passwordHint)
                     : null
                 }
-                label="Password"
+                label={t(($) => $["features/auth"].common.password)}
                 leftIcon={LockIcon}
                 onBlur={field.onBlur}
                 onChangeText={(value) => {
@@ -257,7 +269,7 @@ export default function SignUpScreen({
             }}
             size={authFieldSize}
           >
-            Create Account
+            {t(($) => $["features/auth"].signUp.title)}
           </AppButton>
           {formError ? (
             <FieldMessage tone="error">{formError}</FieldMessage>
@@ -265,13 +277,13 @@ export default function SignUpScreen({
         </View>
 
         <AuthFooterLink
-          actionLabel="Sign In"
+          actionLabel={t(($) => $["features/auth"].signUp.signIn)}
           href={
             hasNext
               ? (`/sign-in?next=${encodeURIComponent(nextPath)}` as never)
               : "/sign-in"
           }
-          prompt="Already have an account?"
+          prompt={t(($) => $["features/auth"].signUp.prompt)}
         />
       </View>
     </AuthShell>

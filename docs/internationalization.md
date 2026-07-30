@@ -4,19 +4,20 @@ Purpose: define Onzait's approved product, architecture, authoring, security, an
 Source of truth for: supported app languages, locale selection, i18next integration, translation ownership, and localization quality
 Update when: supported languages, locale persistence, translation loading, namespace ownership, formatting, localization tooling, or localized product surfaces change
 Last reviewed: 2026-07-29
-Status: approved implementation contract for GitHub issue #58; not yet implemented
+Status: active implementation contract for GitHub issue #58
 
 ## Current state
 
-Onzait does not currently initialize i18next or ship localized application resources. The dependencies and runtime behavior in this document describe the approved target for issue #58, not existing behavior.
+Onzait initializes i18next before authentication and ships bundled Spanish and
+English resources for the active application on web, iOS, and Android. The
+public-auth shell and Profile header expose the language selector with the
+complete bilingual resource set present.
 
-Until that implementation lands:
-
-- do not describe the app as fully bilingual;
-- inspect the repository before relying on any planned module, hook, test helper, or command;
-- update this status in the same change that makes the contract active.
-
-This contract covers user-facing application UI on web, iOS, and Android. Transactional email localization is deferred because those messages run through a separate trusted-server workflow.
+Current welcome, project-invitation, signup-confirmation, verification-resend,
+and password-recovery emails are bilingual. Email functions use a separate
+Deno-safe i18next instance and bundled resources under
+`supabase/functions/_shared/email`; they never import React application state or
+load translations over the network.
 
 ## Product language policy
 
@@ -37,7 +38,7 @@ English is the missing-translation fallback. Unsupported device languages still 
 
 ### Runtime dependencies
 
-The issue #58 implementation should introduce compatible current releases of:
+The issue #58 implementation uses compatible releases of:
 
 - `i18next` 26.3 or later;
 - `react-i18next`;
@@ -131,6 +132,30 @@ Issue #58 is complete only when current user-facing application copy is accounte
 
 Do not translate product data entered by users, proper names, stable database codes, route paths, telemetry event names, log messages, or provider identifiers. Translate the presentation mapped from stable codes.
 
+## Transactional email localization
+
+- Validate every email language at the trusted function boundary. Only `es` and
+  `en` are accepted; missing or invalid values resolve to Spanish.
+- Use English as the email missing-key fallback, matching the app.
+- Builders return localized `{ subject, html }` and set the HTML `lang`
+  attribute, preview, body, CTA, fallback-link instructions, and footer.
+- Preserve and safely interpolate recipient names, project names, addresses,
+  and other user-authored values.
+- Format email dates with `es-AR` or `en-US` in UTC and state the time zone.
+- The welcome request carries the active app language and validates it before
+  reserving `welcome_email_sent_at`.
+- Project invitations persist `language_code`; resend always reuses that
+  language even if the sender later changes their UI language.
+- Invitation roles are translated from stable role codes, not database display
+  labels.
+- Auth redirect URLs carry a validated `lang` parameter for email rendering
+  only. They do not replace or persist the device-local app preference.
+- `auth-send-email` verifies the Standard Webhooks signature before parsing,
+  builds trusted token-hash verification links, and uses the webhook delivery
+  identifier as the Resend idempotency key when present.
+- Auth-hook provider calls have a bounded timeout. Provider and signature
+  diagnostics remain in trusted logs and never appear in public responses.
+
 ## Platform behavior
 
 - Web, iOS, and Android must expose the same supported language choices and fallback behavior.
@@ -189,7 +214,7 @@ Do not add these capabilities as part of issue #58:
 - over-the-air translation changes;
 - cross-device language preference synchronization;
 - region-specific Spanish or English resource variants;
-- translation of transactional emails, legal content, or user-authored product data;
+- unused Auth email actions, security notifications, legal content, or user-authored product data;
 - ICU, Fluent, sprintf, interval-plural, or other postprocessors without a concrete product requirement.
 
 Revisit a translation management system when multiple translators need concurrent workflows, translation-only releases become necessary, or Git-managed resources become operationally costly.

@@ -1,4 +1,5 @@
 import { useContractors } from "@/features/contractors/hooks/use-contractors";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { getContractorDisplayName } from "@/features/contractors/schemas/contractor.schema";
 import { getTradeCategoryLabel } from "@/features/trade-categories/constants/trade-category-labels";
 import { useTradeCategories } from "@/features/trade-categories/hooks/use-trade-categories";
@@ -24,14 +25,8 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import type { ReactNode } from "react";
 import { useCallback, useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FlatList, View, type ListRenderItemInfo } from "react-native";
-
-const workerSortOptions = [
-  { label: "Newest", value: "created_desc" },
-  { label: "Oldest", value: "created_asc" },
-  { label: "A-Z", value: "name_asc" },
-  { label: "Z-A", value: "name_desc" }
-] satisfies { label: string; value: WorkerSort }[];
 
 export default function WorkersScreen({
   directoryHeader
@@ -39,9 +34,34 @@ export default function WorkersScreen({
   directoryHeader?: ReactNode;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/workers");
+  const { language } = useLocalization();
+  const { t: tShared } = useTranslation("shared");
   const { isCompact, isExpanded } = useLayoutMode();
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<WorkerSort>("created_desc");
+  const workerSortOptions = useMemo(
+    () =>
+      [
+        {
+          label: t(($) => $["features/workers"].sort.newest),
+          value: "created_desc"
+        },
+        {
+          label: t(($) => $["features/workers"].sort.oldest),
+          value: "created_asc"
+        },
+        {
+          label: t(($) => $["features/workers"].sort.ascending),
+          value: "name_asc"
+        },
+        {
+          label: t(($) => $["features/workers"].sort.descending),
+          value: "name_desc"
+        }
+      ] satisfies { label: string; value: WorkerSort }[],
+    [t]
+  );
   const [contractorId, setContractorId] = useState("all");
   const [tradeCategoryIds, setTradeCategoryIds] = useState<string[]>([]);
   const workersQuery = useWorkers({
@@ -106,12 +126,12 @@ export default function WorkersScreen({
                 onPress={() => router.push("/workers/new" as never)}
                 size="sm"
               >
-                New worker
+                {t(($) => $["features/workers"].actions.new)}
               </AppButton>
             ) : null
           }
-          description="Manage worker contacts, contractors, and usual trades."
-          title="Workers"
+          description={t(($) => $["features/workers"].list.description)}
+          title={t(($) => $["features/workers"].list.title)}
         />
       )}
       <View
@@ -124,16 +144,23 @@ export default function WorkersScreen({
         <View style={{ flex: 1 }}>
           <SearchField
             onChangeText={setQuery}
-            placeholder="Search workers"
+            placeholder={t(
+              ($) => $["features/workers"].list.searchPlaceholder
+            )}
             value={query}
           />
         </View>
         <SelectMenu
-          accessibilityLabel="Filter workers by contractor"
-          labelPrefix="Contractor"
+          accessibilityLabel={t(
+            ($) => $["features/workers"].accessibility.filterContractor
+          )}
+          labelPrefix={t(($) => $["features/workers"].filters.contractor)}
           onChange={setContractorId}
           options={[
-            { label: "All", value: "all" },
+            {
+              label: t(($) => $["features/workers"].filters.all),
+              value: "all"
+            },
             ...contractors.map((contractor) => ({
               label: getContractorDisplayName(contractor),
               value: contractor.id
@@ -142,9 +169,11 @@ export default function WorkersScreen({
           value={contractorId}
         />
         <SelectMenu
-          accessibilityLabel="Sort workers"
+          accessibilityLabel={t(
+            ($) => $["features/workers"].accessibility.sort
+          )}
           icon={SortIcon}
-          labelPrefix="Sort"
+          labelPrefix={t(($) => $["features/workers"].sort.label)}
           onChange={setSort}
           options={workerSortOptions}
           value={sort}
@@ -159,16 +188,16 @@ export default function WorkersScreen({
           size="sm"
           variant="ghost"
         >
-          Load more contractor filters
+          {t(($) => $["features/workers"].filters.loadMoreContractors)}
         </AppButton>
       ) : null}
       {tradeCategories.length > 0 ? (
         <MultiSelectField
-          helperText="Workers matching any selected trade will be shown."
-          label="Filter by trade"
+          helperText={t(($) => $["features/workers"].filters.tradeHelper)}
+          label={t(($) => $["features/workers"].filters.trade)}
           onChange={setTradeCategoryIds}
           options={tradeCategories.map((category) => ({
-            label: getTradeCategoryLabel(category.code),
+            label: getTradeCategoryLabel(category.code, language),
             value: category.id
           }))}
           value={tradeCategoryIds}
@@ -183,7 +212,7 @@ export default function WorkersScreen({
           size="sm"
           variant="ghost"
         >
-          Load more trade filters
+          {t(($) => $["features/workers"].filters.loadMoreTrades)}
         </AppButton>
       ) : null}
     </View>
@@ -205,34 +234,41 @@ export default function WorkersScreen({
     <InlineErrorState
       action={{
         icon: RefreshIcon,
-        label: "Retry",
+        label: tShared(($) => $.shared.actions.retry),
         onPress: () => void workersQuery.refetch()
       }}
       description={getUserFacingErrorMessage(
         workersQuery.error,
-        "We couldn't load your workers. Check your connection and try again."
+        t(($) => $["features/workers"].errors.loadList)
       )}
       icon={UserIcon}
-      title="Workers unavailable"
+      title={t(($) => $["features/workers"].errors.listUnavailable)}
     />
   ) : (
     <EmptyState
       action={
         hasFilters
-          ? { label: "Clear filters", onPress: clearFilters }
+          ? {
+              label: t(($) => $["features/workers"].actions.clearFilters),
+              onPress: clearFilters
+            }
           : {
               icon: PlusIcon,
-              label: "New worker",
+              label: t(($) => $["features/workers"].actions.new),
               onPress: () => router.push("/workers/new" as never)
             }
       }
       description={
         hasFilters
-          ? "Try another name, contractor, or trade category."
-          : "Add your first worker to start building your directory."
+          ? t(($) => $["features/workers"].search.noMatchDescription)
+          : t(($) => $["features/workers"].search.emptyDescription)
       }
       icon={UserIcon}
-      title={hasFilters ? "No matching workers" : "No workers yet"}
+      title={
+        hasFilters
+          ? t(($) => $["features/workers"].search.noMatchTitle)
+          : t(($) => $["features/workers"].search.emptyTitle)
+      }
     />
   );
 
@@ -241,7 +277,9 @@ export default function WorkersScreen({
       floatingAction={
         workers.length > 0 && isCompact ? (
           <AppButton
-            accessibilityLabel="New worker"
+            accessibilityLabel={t(
+              ($) => $["features/workers"].accessibility.new
+            )}
             icon={PlusIcon}
             layout="icon"
             onPress={() => router.push("/workers/new" as never)}
@@ -271,7 +309,7 @@ export default function WorkersScreen({
                 size="sm"
                 variant="bordered"
               >
-                Load more workers
+                {t(($) => $["features/workers"].actions.loadMore)}
               </AppButton>
             </View>
           ) : null

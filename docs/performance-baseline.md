@@ -167,16 +167,19 @@ Baseline rules:
 
 Current enforced export budgets:
 
-- initial JavaScript: at most 3,500,000 raw bytes and 900,000 gzip bytes
+- initial JavaScript: at most 3,600,000 raw bytes and 900,000 gzip bytes
 - initial CSS: at most 100,000 raw bytes
 - authenticated feature screens and heavy optional integrations should use route or interaction-level code splitting when it reduces the initial graph
 
 Current production-export baseline after project-photo processing was added:
 
-- initial JavaScript: 3,189.9 KiB raw and 811.9 KiB gzip
+- initial JavaScript: 3,444.6 KiB raw and 875.7 KiB gzip
 - web uses Google-hosted Geist and JetBrains Mono from `global.css`; iOS and Android load the tracked local TTF files through the platform-specific app-font hook
 - web must not register or preload the native TTF assets
 - screens and components import named app icons and icon types only from `@/shared/ui/icons`; the central registry alone imports Lucide's individual ESM icon modules so Metro does not bundle the complete catalog
+- Spanish and English resources are intentionally bundled for offline,
+  synchronous language switching; the raw budget includes both complete locale
+  trees while the gzip budget remains unchanged
 - Sentry Session Replay is excluded from Metro's web graph because the product does not enable replay; core error and performance monitoring remain enabled
 - web animation adapters use React Native Animated or CSS transitions while iOS and Android retain Reanimated and Worklets
 - route modules should import shared components from their owning files instead of the aggregate `@/shared/ui/components` barrel when the barrel would promote optional component dependencies into the initial web graph

@@ -9,6 +9,9 @@ import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { MailIcon } from "@/shared/ui/icons";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
+import { getProjectRoleLabel } from "@/features/projects/utils/project-role-label";
+import { useTranslation } from "react-i18next";
 
 export function ProjectInvitationLandingContent({
   invitation
@@ -18,6 +21,8 @@ export function ProjectInvitationLandingContent({
   >;
 }) {
   const router = useRouter();
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
   const { session } = useAuth();
   const available = invitation.status === "pending";
 
@@ -27,14 +32,30 @@ export function ProjectInvitationLandingContent({
         <View style={{ gap: atomSpacing[4] }}>
           <MailIcon color={atomPalette.accent} size="lg" />
           <AppHeading selectable variant="hero">
-            Join {invitation.projectName}
+            {t(($) => $["features/projects"].invitations.join, {
+              project: invitation.projectName
+            })}
           </AppHeading>
           <AppText selectable tone="muted">
-            {invitation.inviterName} invited you as {invitation.roleName}.
+            {t(($) => $["features/projects"].invitations.invitedAs, {
+              inviter: invitation.inviterName,
+              role: getProjectRoleLabel(
+                invitation.roleCode,
+                language,
+                invitation.roleName
+              )
+            })}
           </AppText>
           {!available ? (
             <AppText selectable tone="danger">
-              This invitation is {invitation.status}.
+              {t(($) => $["features/projects"].invitations.invalidStatus, {
+                status: t(
+                  ($) =>
+                    $["features/projects"].invitationStatuses[
+                      invitation.status
+                    ]
+                )
+              })}
             </AppText>
           ) : session ? (
             <AppButton
@@ -45,12 +66,15 @@ export function ProjectInvitationLandingContent({
                 )
               }
             >
-              Review in Onzait
+              {t(($) => $["features/projects"].invitations.review)}
             </AppButton>
           ) : (
             <View style={{ gap: atomSpacing[3] }}>
               <AppText tone="muted" variant="bodySm">
-                Sign in or create an account with the invited email address.
+                {t(
+                  ($) =>
+                    $["features/projects"].invitations.signInDescription
+                )}
               </AppText>
               <AppButton
                 onPress={() =>
@@ -61,7 +85,7 @@ export function ProjectInvitationLandingContent({
                   )
                 }
               >
-                Sign in
+                {t(($) => $["features/projects"].invitations.signIn)}
               </AppButton>
               <AppButton
                 color="neutral"
@@ -74,7 +98,9 @@ export function ProjectInvitationLandingContent({
                 }
                 variant="bordered"
               >
-                Create account
+                {t(
+                  ($) => $["features/projects"].invitations.createAccount
+                )}
               </AppButton>
             </View>
           )}

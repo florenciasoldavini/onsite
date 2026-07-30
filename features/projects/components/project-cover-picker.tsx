@@ -8,6 +8,7 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { Image } from "expo-image";
 import * as ImagePicker from "expo-image-picker";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Platform,
   Pressable,
@@ -27,6 +28,7 @@ export function ProjectCoverPicker({
   onChange: (asset: ProjectFormValues["coverAsset"]) => void;
   value: ProjectFormValues["coverAsset"];
 }) {
+  const { t } = useTranslation("features/projects");
   const previewUri = value?.uri ?? currentUrl;
   const [pickerError, setPickerError] = useState<string | null>(null);
 
@@ -40,8 +42,8 @@ export function ProjectCoverPicker({
       if (!permission.granted) {
         setPickerError(
           permission.canAskAgain
-            ? "Photo access is required to choose a project cover. Allow access and try again."
-            : "Photo access is disabled. Enable it in your device settings, then try again."
+            ? t(($) => $["features/projects"].form.coverAccessRequired)
+            : t(($) => $["features/projects"].form.coverAccessDenied)
         );
         return;
       }
@@ -66,7 +68,7 @@ export function ProjectCoverPicker({
       setPickerError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't open your photo library. Try again."
+          t(($) => $["features/projects"].form.coverLibraryError)
         )
       );
     }
@@ -74,9 +76,11 @@ export function ProjectCoverPicker({
 
   return (
     <View style={styles.root}>
-      <FieldLabel>Cover Image</FieldLabel>
+      <FieldLabel>{t(($) => $["features/projects"].form.cover)}</FieldLabel>
       <Pressable
-        accessibilityLabel="Choose project cover image"
+        accessibilityLabel={t(
+          ($) => $["features/projects"].form.chooseCoverAccessibility
+        )}
         accessibilityRole="button"
         accessibilityState={{ disabled }}
         disabled={disabled}
@@ -96,7 +100,9 @@ export function ProjectCoverPicker({
         ) : (
           <View style={styles.placeholder}>
             <ImagePlusIcon color={atomPalette.textMuted} size={24} />
-            <AppText tone="muted">Choose a cover image</AppText>
+            <AppText tone="muted">
+              {t(($) => $["features/projects"].form.chooseCover)}
+            </AppText>
           </View>
         )}
       </Pressable>

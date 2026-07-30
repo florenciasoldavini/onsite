@@ -10,6 +10,7 @@ import { AppText } from "@/shared/ui/components/text";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import type { ReactNode } from "react";
 import { useReducer } from "react";
+import { useTranslation } from "react-i18next";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 
 export interface DestructiveConfirmationController {
@@ -39,7 +40,7 @@ export function useDestructiveConfirmation(): DestructiveConfirmationController 
 
 export function DestructiveConfirmationDialog({
   accessibilityLabel,
-  confirmLabel = "Delete",
+  confirmLabel,
   controller,
   description,
   isConfirmDisabled = false,
@@ -56,6 +57,9 @@ export function DestructiveConfirmationDialog({
   onConfirm: () => void | Promise<void>;
   title: ReactNode;
 }) {
+  const { t } = useTranslation("shared");
+  const resolvedConfirmLabel =
+    confirmLabel ?? t(($) => $.shared.feedback.destructiveConfirm);
   const requestClose = () => {
     if (canDismissDestructiveConfirmation(isPending)) {
       controller.close();
@@ -103,7 +107,7 @@ export function DestructiveConfirmationDialog({
                 size="md"
                 variant="bordered"
               >
-                Cancel
+                {t(($) => $.shared.actions.cancel)}
               </AppButton>
               <AppButton
                 color="danger"
@@ -113,7 +117,7 @@ export function DestructiveConfirmationDialog({
                 onPress={() => void onConfirm()}
                 size="md"
               >
-                {confirmLabel}
+                {resolvedConfirmLabel}
               </AppButton>
             </View>
           </View>

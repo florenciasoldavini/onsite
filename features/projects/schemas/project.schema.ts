@@ -12,6 +12,7 @@ import type {
   UpdateProjectInput
 } from "@/features/projects/types/project.types";
 import { z } from "zod";
+import type { TFunction } from "i18next";
 
 const optionalDateSchema = z
   .string()
@@ -94,6 +95,80 @@ export const projectFormSchema = z
       });
     }
   });
+
+export function createProjectFormSchema(t: TFunction<"features/projects">) {
+  const translatedDate = z
+    .string()
+    .trim()
+    .refine((value) => !value || /^\d{4}-\d{2}-\d{2}$/.test(value), {
+      message: t(($) => $["features/projects"].validation.date)
+    });
+
+  return z
+    .object({
+      address: addressSchema.nullable(),
+      building_type: z.enum(PROJECT_BUILDING_TYPES),
+      client_id: z.string().nullable(),
+      coverAsset: coverAssetSchema,
+      description: z.string().max(2000),
+      end_date: translatedDate,
+      estimated_end_date: translatedDate,
+      estimated_start_date: translatedDate,
+      name: z.string().trim().min(2).max(120),
+      phase: z.enum(PROJECT_PHASES),
+      progress_percentage: z
+        .number()
+        .int({
+          message: t(
+            ($) => $["features/projects"].validation.progressInteger
+          )
+        })
+        .min(0, {
+          message: t(($) => $["features/projects"].validation.progressRange)
+        })
+        .max(100, {
+          message: t(($) => $["features/projects"].validation.progressRange)
+        }),
+      project_type: z.enum(PROJECT_TYPES),
+      start_date: translatedDate,
+      status: z.enum(PROJECT_STATUSES)
+    })
+    .superRefine((value, context) => {
+      if (!value.address) {
+        context.addIssue({
+          code: "custom",
+          message: t(($) => $["features/projects"].validation.address),
+          path: ["address"]
+        });
+      }
+      if (
+        value.estimated_start_date &&
+        value.estimated_end_date &&
+        value.estimated_start_date > value.estimated_end_date
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: t(
+            ($) => $["features/projects"].validation.estimatedDates
+          ),
+          path: ["estimated_end_date"]
+        });
+      }
+      if (
+        value.start_date &&
+        value.end_date &&
+        value.start_date > value.end_date
+      ) {
+        context.addIssue({
+          code: "custom",
+          message: t(
+            ($) => $["features/projects"].validation.actualDates
+          ),
+          path: ["end_date"]
+        });
+      }
+    });
+}
 
 export type ProjectFormErrors = Partial<
   Record<keyof ProjectFormValues, string>

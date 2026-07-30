@@ -12,6 +12,7 @@ import {
   type AppIconComponent
 } from "@/shared/ui/icons";
 import { useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Modal,
   Platform,
@@ -45,6 +46,7 @@ export function SelectMenu<TValue extends string>({
   options: SelectMenuOption<TValue>[];
   value: TValue;
 }) {
+  const { t } = useTranslation("shared");
   const triggerRef = useRef<View>(null);
   const { height, width } = useWindowDimensions();
   const [isOpen, setIsOpen] = useState(false);
@@ -79,6 +81,7 @@ export function SelectMenu<TValue extends string>({
         );
 
   const openMenu = () => {
+    setIsOpen(true);
     triggerRef.current?.measureInWindow(
       (x, y, measuredWidth, measuredHeight) => {
         setTriggerLayout({
@@ -87,7 +90,6 @@ export function SelectMenu<TValue extends string>({
           x,
           y
         });
-        setIsOpen(true);
       }
     );
   };
@@ -144,7 +146,9 @@ export function SelectMenu<TValue extends string>({
       >
         <View style={StyleSheet.absoluteFill}>
           <Pressable
-            accessibilityLabel="Close select menu"
+            accessibilityLabel={t(
+              ($) => $.shared.accessibility.closeSelectMenu
+            )}
             onPress={() => setIsOpen(false)}
             style={StyleSheet.absoluteFill}
           />

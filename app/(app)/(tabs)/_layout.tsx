@@ -10,8 +10,10 @@ import { getMonoFontStyle } from "@/shared/theme/fonts";
 import { designTokens } from "@/shared/theme/tokens";
 import { BottomTabBar } from "@react-navigation/bottom-tabs";
 import { Tabs } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function TabsLayout() {
+  const { t } = useTranslation("features/localization");
   const { isCompact } = useLayoutMode();
   const tabLabelToken = designTokens.typeScale.tabLabelMono;
   const tabIconSize = "md" as const;
@@ -65,7 +67,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="projects"
         options={{
-          title: "Projects",
+          title: t(($) => $["features/localization"].navigation.projects),
           tabBarIcon: ({ color }) => (
             <ProjectsIcon color={color} size={tabIconSize} />
           )
@@ -80,7 +82,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="directory"
         options={{
-          title: "Directory",
+          title: t(($) => $["features/localization"].navigation.directory),
           tabBarIcon: ({ color }) => (
             <UserIcon color={color} size={tabIconSize} />
           )
@@ -89,7 +91,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="tasks"
         options={{
-          title: "Tasks",
+          title: t(($) => $["features/localization"].navigation.tasks),
           tabBarIcon: ({ color }) => (
             <ToDoIcon color={color} size={tabIconSize} />
           )
@@ -98,7 +100,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Profile",
+          title: t(($) => $["features/localization"].navigation.profile),
           tabBarIcon: ({ color }) => (
             <ProfileIcon color={color} size={tabIconSize} />
           )

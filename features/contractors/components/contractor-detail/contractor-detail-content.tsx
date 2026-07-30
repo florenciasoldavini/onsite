@@ -25,6 +25,7 @@ import { MailIcon, PencilIcon, PhoneIcon, TrashIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Linking, StyleSheet, View } from "react-native";
 
 export function ContractorDetailContent({
@@ -33,6 +34,8 @@ export function ContractorDetailContent({
   contractor: Contractor;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/contractors");
+  const { t: tShared } = useTranslation("shared");
   const { isCompact } = useLayoutMode();
   const toast = useAppToast();
   const deleteMutation = useSoftDeleteContractor();
@@ -46,8 +49,11 @@ export function ContractorDetailContent({
       await deleteMutation.mutateAsync(contractor.id);
       deleteConfirmation.close();
       toast.show({
-        description: `${displayName} was removed from your contractor catalog.`,
-        title: "Contractor deleted",
+        description: t(
+          ($) => $["features/contractors"].detail.deletedDescription,
+          { name: displayName }
+        ),
+        title: t(($) => $["features/contractors"].detail.deletedTitle),
         tone: "success"
       });
       router.replace("/directory?section=contractors" as never);
@@ -55,7 +61,7 @@ export function ContractorDetailContent({
       deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't delete this contractor. Try again."
+          t(($) => $["features/contractors"].errors.delete)
         )
       );
     }
@@ -76,12 +82,21 @@ export function ContractorDetailContent({
         <Breadcrumb
           items={[
             {
-              accessibilityLabel: "Back to contractor directory",
-              label: "Contractors",
+              accessibilityLabel: t(
+                ($) =>
+                  $["features/contractors"].accessibility.backToDirectory
+              ),
+              label: t(
+                ($) => $["features/contractors"].breadcrumbs.contractors
+              ),
               onPress: () =>
                 router.replace("/directory?section=contractors" as never)
             },
-            { label: "Contractor Detail" }
+            {
+              label: t(
+                ($) => $["features/contractors"].breadcrumbs.detail
+              )
+            }
           ]}
         />
 
@@ -100,11 +115,14 @@ export function ContractorDetailContent({
               </View>
               <View style={styles.identityCopy}>
                 <AppText tone="accent" variant="eyebrow">
-                  CONTRACTOR PROFILE
+                  {t(($) => $["features/contractors"].detail.profile)}
                 </AppText>
                 <AppHeading variant="hero">{displayName}</AppHeading>
                 <AppText tone="muted">
-                  Contact record for your contractor catalog
+                  {t(
+                    ($) =>
+                      $["features/contractors"].detail.profileDescription
+                  )}
                 </AppText>
               </View>
             </View>
@@ -126,7 +144,7 @@ export function ContractorDetailContent({
                 size="sm"
                 variant="bordered"
               >
-                Edit
+                {tShared(($) => $.shared.actions.edit)}
               </AppButton>
               <AppButton
                 color="danger"
@@ -137,7 +155,7 @@ export function ContractorDetailContent({
                 size="sm"
                 variant="bordered"
               >
-                Delete
+                {tShared(($) => $.shared.actions.delete)}
               </AppButton>
             </View>
           </View>
@@ -146,44 +164,62 @@ export function ContractorDetailContent({
         <AppCard padding="lg">
           <View style={{ gap: atomSpacing[4] }}>
             <View style={styles.sectionHeading}>
-              <AppHeading variant="section">Contact details</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/contractors"].detail.contactDetails)}
+              </AppHeading>
               <AppText tone="subtle" variant="meta">
-                PRIMARY
+                {t(($) => $["features/contractors"].detail.primary)}
               </AppText>
             </View>
             <ContactRow
               action={
                 contractor.phone_number
                   ? {
-                      label: "Call",
+                      label: t(
+                        ($) => $["features/contractors"].actions.call
+                      ),
                       onPress: () =>
                         void openContactAction(
                           `tel:${contractor.phone_number}`,
-                          "We couldn't open your phone app. Copy the number and try it there."
+                          t(
+                            ($) =>
+                              $["features/contractors"].detail.phoneError
+                          )
                         )
                     }
                   : undefined
               }
               icon={PhoneIcon}
-              label="Phone"
-              value={contractor.phone_number ?? "Not provided"}
+              label={t(($) => $["features/contractors"].detail.phone)}
+              value={
+                contractor.phone_number ??
+                t(($) => $["features/contractors"].detail.notProvided)
+              }
             />
             <ContactRow
               action={
                 contractor.email
                   ? {
-                      label: "Email",
+                      label: t(
+                        ($) => $["features/contractors"].detail.email
+                      ),
                       onPress: () =>
                         void openContactAction(
                           `mailto:${contractor.email}`,
-                          "We couldn't open your email app. Copy the address and try it there."
+                          t(
+                            ($) =>
+                              $["features/contractors"].detail.emailError
+                          )
                         )
                     }
                   : undefined
               }
               icon={MailIcon}
-              label="Email"
-              value={contractor.email ?? "Not provided"}
+              label={t(($) => $["features/contractors"].detail.email)}
+              value={
+                contractor.email ??
+                t(($) => $["features/contractors"].detail.notProvided)
+              }
             />
             {contactError ? (
               <AppText selectable tone="danger">
@@ -195,13 +231,17 @@ export function ContractorDetailContent({
       </View>
 
       <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting contractor"
-        confirmLabel="Delete contractor"
+        accessibilityLabel={t(
+          ($) => $["features/contractors"].accessibility.cancelDelete
+        )}
+        confirmLabel={t(($) => $["features/contractors"].actions.delete)}
         controller={deleteConfirmation}
-        description="This removes the contractor from your active catalog. This action cannot be undone."
+        description={t(($) => $["features/contractors"].delete.description)}
         isPending={deleteMutation.isPending}
         onConfirm={deleteContractor}
-        title={`Delete ${displayName}?`}
+        title={t(($) => $["features/contractors"].delete.title, {
+          name: displayName
+        })}
       />
     </Screen>
   );

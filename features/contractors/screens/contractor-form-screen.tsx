@@ -5,7 +5,7 @@ import {
   useUpdateContractor
 } from "@/features/contractors/hooks/use-contractors";
 import {
-  contractorFormSchema,
+  createContractorFormSchema,
   getContractorDisplayName,
   toContractorInput
 } from "@/features/contractors/schemas/contractor.schema";
@@ -25,8 +25,9 @@ import { HardHatIcon, RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 const defaultValues: ContractorFormValues = {
@@ -44,6 +45,8 @@ export default function ContractorFormScreen({
   mode: "create" | "edit";
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/contractors");
+  const { i18n, t: tShared } = useTranslation("shared");
   const toast = useAppToast();
   const contractorQuery = useContractor(
     mode === "edit" ? contractorId : undefined
@@ -51,10 +54,14 @@ export default function ContractorFormScreen({
   const createMutation = useCreateContractor();
   const updateMutation = useUpdateContractor(contractorId ?? "");
   const [formError, setFormError] = useState<string | null>(null);
+  const formSchema = useMemo(
+    () => createContractorFormSchema(tShared),
+    [i18n.resolvedLanguage, tShared]
+  );
   const form = useForm<ContractorFormValues>({
     defaultValues,
     mode: "onChange",
-    resolver: zodResolver(contractorFormSchema)
+    resolver: zodResolver(formSchema)
   });
   const {
     control,
@@ -80,10 +87,18 @@ export default function ContractorFormScreen({
           ? await createMutation.mutateAsync(toContractorInput(values))
           : await updateMutation.mutateAsync(toContractorInput(values));
       toast.show({
-        description: `${getContractorDisplayName(saved)} was ${
-          mode === "create" ? "created" : "updated"
-        } successfully.`,
-        title: `Contractor ${mode === "create" ? "created" : "updated"}`,
+        description:
+          mode === "create"
+            ? t(($) => $["features/contractors"].toast.createdDescription, {
+                name: getContractorDisplayName(saved)
+              })
+            : t(($) => $["features/contractors"].toast.updatedDescription, {
+                name: getContractorDisplayName(saved)
+              }),
+        title:
+          mode === "create"
+            ? t(($) => $["features/contractors"].toast.createdTitle)
+            : t(($) => $["features/contractors"].toast.updatedTitle),
         tone: "success"
       });
       router.replace(`/contractors/${saved.id}` as never);
@@ -91,14 +106,14 @@ export default function ContractorFormScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't save this contractor. Check your connection and try again."
+          t(($) => $["features/contractors"].errors.save)
         )
       );
     }
   });
 
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/contractors"].accessibility.backToDirectory),
     onPress: () => router.replace("/directory?section=contractors" as never)
   };
 
@@ -109,12 +124,12 @@ export default function ContractorFormScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void contractorQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             contractorQuery.error,
-            "We couldn't load this contractor. Try again."
+            t(($) => $["features/contractors"].errors.load)
           ),
           icon: HardHatIcon
         },
@@ -132,7 +147,7 @@ export default function ContractorFormScreen({
           </View>
         </Screen>
       }
-      resourceName="contractor"
+      resourceName={t(($) => $["features/contractors"].fields.contractor)}
     >
       <Screen keyboardSafe>
         <View
@@ -148,41 +163,70 @@ export default function ContractorFormScreen({
               mode === "edit" && contractorId
                 ? [
                     {
-                      accessibilityLabel: "Back to contractor directory",
-                      label: "Contractors",
+                      accessibilityLabel: t(
+                        ($) =>
+                          $["features/contractors"].accessibility.backToDirectory
+                      ),
+                      label: t(
+                        ($) =>
+                          $["features/contractors"].breadcrumbs.contractors
+                      ),
                       onPress: () =>
                         router.replace(
                           "/directory?section=contractors" as never
                         )
                     },
                     {
-                      accessibilityLabel: "Back to contractor detail",
-                      label: "Contractor Detail",
+                      accessibilityLabel: t(
+                        ($) =>
+                          $["features/contractors"].accessibility.backToDetail
+                      ),
+                      label: t(
+                        ($) => $["features/contractors"].breadcrumbs.detail
+                      ),
                       onPress: () =>
                         router.replace(`/contractors/${contractorId}` as never)
                     },
-                    { label: "Edit" }
+                    {
+                      label: t(
+                        ($) => $["features/contractors"].breadcrumbs.edit
+                      )
+                    }
                   ]
                 : [
                     {
-                      accessibilityLabel: "Back to contractor directory",
-                      label: "Contractors",
+                      accessibilityLabel: t(
+                        ($) =>
+                          $["features/contractors"].accessibility.backToDirectory
+                      ),
+                      label: t(
+                        ($) =>
+                          $["features/contractors"].breadcrumbs.contractors
+                      ),
                       onPress: () =>
                         router.replace(
                           "/directory?section=contractors" as never
                         )
                     },
-                    { label: "New" }
+                    {
+                      label: t(
+                        ($) => $["features/contractors"].breadcrumbs.new
+                      )
+                    }
                   ]
             }
           />
           <NavScreenHeader
             description={
               mode === "create"
-                ? "Add a contractor contact now and assign workers later."
-                : "Update the contact details stored in your contractor catalog."
+                ? t(($) => $["features/contractors"].form.createDescription)
+                : t(($) => $["features/contractors"].form.editDescription)
             }
-            title={mode === "create" ? "New contractor" : "Edit contractor"}
+            title={
+              mode === "create"
+                ? t(($) => $["features/contractors"].form.createTitle)
+                : t(($) => $["features/contractors"].form.editTitle)
+            }
           />
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[6] }}>
@@ -209,7 +253,7 @@ export default function ContractorFormScreen({
                   onPress={() => router.back()}
                   variant="bordered"
                 >
-                  Cancel
+                  {tShared(($) => $.shared.actions.cancel)}
                 </AppButton>
                 <AppButton
                   fullWidth={false}
@@ -221,7 +265,9 @@ export default function ContractorFormScreen({
                   loading={isSubmitting}
                   onPress={() => void submit()}
                 >
-                  {mode === "create" ? "Create contractor" : "Save changes"}
+                  {mode === "create"
+                    ? t(($) => $["features/contractors"].actions.create)
+                    : t(($) => $["features/contractors"].actions.save)}
                 </AppButton>
               </View>
             </View>

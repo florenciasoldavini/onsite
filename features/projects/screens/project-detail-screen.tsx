@@ -5,6 +5,7 @@ import { RouteStateBoundary } from "@/shared/ui/components/route-feedback";
 import { RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 type ProjectDetailScreenProps = {
   projectId?: string;
@@ -14,9 +15,11 @@ export default function ProjectDetailScreen({
   projectId
 }: ProjectDetailScreenProps) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const projectQuery = useProject(projectId);
   const backToProjects = {
-    label: "Back to projects",
+    label: t(($) => $["features/projects"].actions.backProjects),
     onPress: () => router.replace("/projects" as never)
   };
 
@@ -27,12 +30,12 @@ export default function ProjectDetailScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void projectQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             projectQuery.error,
-            "We couldn't load this project. Check your connection and try again."
+            t(($) => $["features/projects"].errors.load)
           )
         },
         notFound: { action: backToProjects }

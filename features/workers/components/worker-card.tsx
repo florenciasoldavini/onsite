@@ -10,7 +10,9 @@ import { AppHeading } from "@/shared/ui/components/heading";
 import { AppText } from "@/shared/ui/components/text";
 import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { HardHatIcon } from "@/shared/ui/icons";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Platform, Pressable, View, type ViewStyle } from "react-native";
 
 export function WorkerCard({
@@ -21,11 +23,16 @@ export function WorkerCard({
   worker: WorkerSummary;
 }) {
   const [isHovered, setIsHovered] = useState(false);
+  const { t } = useTranslation("features/workers");
+  const { language } = useLocalization();
   const isWebHovered = Platform.OS === "web" && isHovered;
 
   return (
     <Pressable
-      accessibilityLabel={`Open ${getWorkerDisplayName(worker)}`}
+      accessibilityLabel={t(
+        ($) => $["features/workers"].accessibility.open,
+        { name: getWorkerDisplayName(worker) }
+      )}
       accessibilityRole="button"
       onHoverIn={() => {
         if (Platform.OS === "web") setIsHovered(true);
@@ -86,15 +93,17 @@ export function WorkerCard({
             <AppText numberOfLines={1} style={{ flex: 1 }} tone="muted">
               {worker.contractor
                 ? getContractorDisplayName(worker.contractor)
-                : "Independent worker"}
+                : t(($) => $["features/workers"].list.independent)}
             </AppText>
           </View>
           <AppText numberOfLines={2} tone="muted" variant="bodySm">
             {worker.trade_categories.length > 0
               ? worker.trade_categories
-                  .map((category) => getTradeCategoryLabel(category.code))
+                  .map((category) =>
+                    getTradeCategoryLabel(category.code, language)
+                  )
                   .join(" · ")
-              : "No trade categories selected"}
+              : t(($) => $["features/workers"].list.noTrades)}
           </AppText>
         </View>
       </AppCard>

@@ -10,15 +10,27 @@ import {
   Preview,
   render,
   Section,
-  Text
+  Text,
 } from "react-email";
+import {
+  createEmailTranslator,
+  type EmailLanguage,
+  formatEmailDate,
+} from "./localization.ts";
 
 export type ProjectInvitationEmailProps = {
   acceptUrl: string;
-  expiresAt: string;
-  inviterName: string;
-  projectName: string;
-  roleName: string;
+  language: EmailLanguage;
+  strings: {
+    cta: string;
+    eyebrow: string;
+    expires: string;
+    fallbackLink: string;
+    footer: string;
+    heading: string;
+    paragraph: string;
+    preview: string;
+  };
 };
 
 const styles = {
@@ -28,7 +40,7 @@ const styles = {
     fontFamily:
       "Geist, Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
     margin: "0",
-    padding: "0"
+    padding: "0",
   },
   page: { margin: "0 auto", maxWidth: "560px", padding: "40px 20px" },
   wordmark: {
@@ -37,13 +49,13 @@ const styles = {
     fontSize: "12px",
     letterSpacing: "0.08em",
     margin: "0 0 20px",
-    textTransform: "uppercase" as const
+    textTransform: "uppercase" as const,
   },
   card: {
     backgroundColor: "#ffffff",
     border: "1px solid #e4e2e2",
     borderRadius: "18px",
-    padding: "32px"
+    padding: "32px",
   },
   eyebrow: {
     color: "#0055ff",
@@ -51,20 +63,20 @@ const styles = {
     fontSize: "12px",
     letterSpacing: "0.08em",
     margin: "0 0 12px",
-    textTransform: "uppercase" as const
+    textTransform: "uppercase" as const,
   },
   heading: {
     color: "#121212",
     fontSize: "28px",
     fontWeight: "800",
     lineHeight: "1.18",
-    margin: "0 0 16px"
+    margin: "0 0 16px",
   },
   paragraph: {
     color: "#434656",
     fontSize: "16px",
     lineHeight: "1.6",
-    margin: "0 0 18px"
+    margin: "0 0 18px",
   },
   ctaWrap: { margin: "28px 0 0", textAlign: "center" as const },
   cta: {
@@ -75,13 +87,13 @@ const styles = {
     fontSize: "15px",
     fontWeight: "700",
     padding: "14px 18px",
-    textDecoration: "none"
+    textDecoration: "none",
   },
   meta: {
     color: "#737688",
     fontSize: "13px",
     lineHeight: "1.5",
-    margin: "8px 0 0"
+    margin: "8px 0 0",
   },
   divider: { borderColor: "#efeded", margin: "28px 0 20px" },
   url: {
@@ -89,56 +101,87 @@ const styles = {
     fontSize: "12px",
     lineHeight: "1.5",
     margin: "0",
-    wordBreak: "break-all" as const
-  }
+    wordBreak: "break-all" as const,
+  },
 };
 
 export function ProjectInvitationEmail({
   acceptUrl,
-  expiresAt,
-  inviterName,
-  projectName,
-  roleName
+  language,
+  strings,
 }: ProjectInvitationEmailProps) {
   return (
-    <Html lang="en">
+    <Html lang={language}>
       <Head />
-      <Preview>
-        {inviterName} invited you to collaborate on {projectName}.
-      </Preview>
+      <Preview>{strings.preview}</Preview>
       <Body style={styles.body}>
         <Container style={styles.page}>
           <Text style={styles.wordmark}>onzait</Text>
           <Section style={styles.card}>
-            <Text style={styles.eyebrow}>Project invitation</Text>
+            <Text style={styles.eyebrow}>{strings.eyebrow}</Text>
             <Heading as="h1" style={styles.heading}>
-              Join {projectName}
+              {strings.heading}
             </Heading>
-            <Text style={styles.paragraph}>
-              {inviterName} invited you to collaborate as {roleName}.
-            </Text>
-            <Text style={styles.meta}>
-              This invitation expires {expiresAt}.
-            </Text>
+            <Text style={styles.paragraph}>{strings.paragraph}</Text>
+            <Text style={styles.meta}>{strings.expires}</Text>
             <Section style={styles.ctaWrap}>
               <Link href={acceptUrl} style={styles.cta}>
-                Review invitation
+                {strings.cta}
               </Link>
             </Section>
             <Hr style={styles.divider} />
             <Text style={styles.meta}>
-              If the button does not work, copy and paste this link:
+              {strings.fallbackLink}
             </Text>
             <Text style={styles.url}>{acceptUrl}</Text>
           </Section>
+          <Text style={{ ...styles.meta, textAlign: "center" }}>
+            {strings.footer}
+          </Text>
         </Container>
       </Body>
     </Html>
   );
 }
 
-export function renderProjectInvitationEmail(
-  input: ProjectInvitationEmailProps
-) {
-  return render(<ProjectInvitationEmail {...input} />);
+export async function buildProjectInvitationEmail(input: {
+  acceptUrl: string;
+  expiresAt: string;
+  inviterName: string;
+  language: unknown;
+  projectName: string;
+  roleCode: string;
+}) {
+  const { language, t } = await createEmailTranslator(input.language);
+  const roleName = t(`invitation.roles.${input.roleCode}`, {
+    defaultValue: input.roleCode,
+  });
+  const values = {
+    inviterName: input.inviterName,
+    projectName: input.projectName,
+    roleName,
+  };
+  const strings = {
+    cta: t("invitation.cta"),
+    eyebrow: t("invitation.eyebrow"),
+    expires: t("invitation.expires", {
+      expiresAt: formatEmailDate(input.expiresAt, language),
+    }),
+    fallbackLink: t("common.fallbackLink"),
+    footer: t("invitation.footer", values),
+    heading: t("invitation.heading", values),
+    paragraph: t("invitation.paragraph", values),
+    preview: t("invitation.preview", values),
+  };
+
+  return {
+    html: await render(
+      <ProjectInvitationEmail
+        acceptUrl={input.acceptUrl}
+        language={language}
+        strings={strings}
+      />,
+    ),
+    subject: t("invitation.subject", values),
+  };
 }

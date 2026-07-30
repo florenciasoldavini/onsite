@@ -1,7 +1,7 @@
 import { ProjectPhotoCard } from "@/features/photos/components/project-photo-card";
 import { ProjectPhotosError } from "@/features/photos/components/project-photos/project-photos-error";
 import {
-  PROJECT_PHOTO_KIND_LABELS,
+  PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE,
   PROJECT_PHOTO_KINDS
 } from "@/features/photos/constants/photo.constants";
 import { useProjectPhotos } from "@/features/photos/hooks/use-project-photos";
@@ -26,7 +26,9 @@ import { atomLayout, atomSpacing } from "@/shared/ui/components/theme";
 import { CameraIcon, CirclePlusIcon, RefreshIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { useMemo, useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   ActivityIndicator,
   FlatList,
@@ -34,24 +36,32 @@ import {
   View
 } from "react-native";
 
-const kindOptions = [
-  { label: "All categories", value: "all" as const },
-  ...PROJECT_PHOTO_KINDS.map((kind) => ({
-    label: PROJECT_PHOTO_KIND_LABELS[kind],
-    value: kind
-  }))
-];
-
 export default function ProjectPhotosScreen({
   projectId
 }: {
   projectId?: string;
 }) {
   const router = useRouter();
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/photos");
+  const { t: tShared } = useTranslation("shared");
   const { width } = useWindowDimensions();
   const [kind, setKind] = useState<ProjectPhotoKind | "all">("all");
   const [marketing, setMarketing] =
     useState<ProjectPhotoFilters["marketing"]>("all");
+  const kindOptions = useMemo(
+    () => [
+      {
+        label: t(($) => $["features/photos"].categories.all),
+        value: "all" as const
+      },
+      ...PROJECT_PHOTO_KINDS.map((photoKind) => ({
+        label: PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE[language][photoKind],
+        value: photoKind
+      }))
+    ],
+    [language, t]
+  );
   const projectQuery = useProject(projectId);
   const writePermission = useProjectPermission(
     projectId,
@@ -82,7 +92,7 @@ export default function ProjectPhotosScreen({
   const cardWidth = (usableWidth - atomSpacing[4] * (columns - 1)) / columns;
   const routeProjectId = projectId ?? "";
   const backToProjects = {
-    label: "Back to projects",
+    label: t(($) => $["features/photos"].actions.backProjects),
     onPress: () => router.replace("/projects" as never)
   };
 
@@ -93,7 +103,7 @@ export default function ProjectPhotosScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void projectQuery.refetch()
           },
           description: getUserFacingErrorMessage(
@@ -122,15 +132,17 @@ export default function ProjectPhotosScreen({
           <Breadcrumb
             items={[
               {
-                label: "Projects",
+                label: t(($) => $["features/photos"].gallery.project),
                 onPress: () => router.replace("/projects" as never)
               },
               {
-                label: projectQuery.data?.name ?? "Project",
+                label:
+                  projectQuery.data?.name ??
+                  t(($) => $["features/photos"].gallery.project),
                 onPress: () =>
                   router.push(`/projects/${routeProjectId}` as never)
               },
-              { label: "Photos" }
+              { label: t(($) => $["features/photos"].gallery.title) }
             ]}
           />
 
@@ -145,10 +157,11 @@ export default function ProjectPhotosScreen({
           >
             <View style={{ flexGrow: 1, gap: atomSpacing[1] }}>
               <AppText tone="accent" variant="eyebrow">
-                PROJECT PHOTOS
+                {t(($) => $["features/photos"].gallery.titleEyebrow)}
               </AppText>
               <AppHeading selectable variant="hero">
-                {projectQuery.data?.name ?? "Photos"}
+                {projectQuery.data?.name ??
+                  t(($) => $["features/photos"].gallery.title)}
               </AppHeading>
             </View>
             {writePermission.allowed ? (
@@ -159,14 +172,14 @@ export default function ProjectPhotosScreen({
                   router.push(`/projects/${routeProjectId}/photos/new` as never)
                 }
               >
-                Add photos
+                {t(($) => $["features/photos"].actions.add)}
               </AppButton>
             ) : null}
           </View>
 
           <View style={{ gap: atomSpacing[4] }}>
             <SelectField
-              label="Category"
+              label={t(($) => $["features/photos"].detail.category)}
               onChange={setKind}
               options={kindOptions}
               value={kind}
@@ -174,8 +187,14 @@ export default function ProjectPhotosScreen({
             <SegmentedTabs
               onChange={setMarketing}
               options={[
-                { label: "All photos", value: "all" },
-                { label: "Marketing", value: "marketing" }
+                {
+                  label: t(($) => $["features/photos"].gallery.allPhotos),
+                  value: "all"
+                },
+                {
+                  label: t(($) => $["features/photos"].gallery.marketing),
+                  value: "marketing"
+                }
               ]}
               value={marketing ?? "all"}
             />
@@ -206,20 +225,20 @@ export default function ProjectPhotosScreen({
             <EmptyState
               action={{
                 icon: CameraIcon,
-                label: "Add project photos",
+                label: t(($) => $["features/photos"].actions.addProject),
                 onPress: () =>
                   router.push(`/projects/${routeProjectId}/photos/new` as never)
               }}
               description={
                 kind !== "all" || marketing === "marketing"
-                  ? "No photos match the selected filters."
-                  : "Capture progress, issues, deliveries, and other project moments."
+                  ? t(($) => $["features/photos"].gallery.filteredDescription)
+                  : t(($) => $["features/photos"].gallery.emptyDescription)
               }
               icon={CameraIcon}
               title={
                 kind !== "all" || marketing === "marketing"
-                  ? "No matching photos"
-                  : "No project photos yet"
+                  ? t(($) => $["features/photos"].gallery.filteredTitle)
+                  : t(($) => $["features/photos"].gallery.emptyTitle)
               }
             />
           ) : (
@@ -257,7 +276,11 @@ export default function ProjectPhotosScreen({
               )}
               ListFooterComponent={
                 photosQuery.isFetchingNextPage ? (
-                  <ActivityIndicator accessibilityLabel="Loading more photos" />
+                  <ActivityIndicator
+                    accessibilityLabel={t(
+                      ($) => $["features/photos"].accessibility.loadingMore
+                    )}
+                  />
                 ) : null
               }
             />

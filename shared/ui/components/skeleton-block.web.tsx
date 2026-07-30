@@ -1,5 +1,6 @@
 import { atomPalette, atomRadii } from "@/shared/ui/components/theme";
 import { useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Animated,
   Easing,
@@ -18,6 +19,7 @@ export function SkeletonBlock({
   style?: ViewStyle;
   width?: ViewStyle["width"];
 }) {
+  const { t } = useTranslation("shared");
   const progress = useRef(new Animated.Value(0)).current;
   const { width: viewportWidth } = useWindowDimensions();
   const numericWidth = typeof width === "number" ? width : viewportWidth;
@@ -39,7 +41,7 @@ export function SkeletonBlock({
 
   return (
     <Animated.View
-      accessibilityLabel="Loading"
+      accessibilityLabel={t(($) => $.shared.accessibility.loading)}
       style={[
         {
           backgroundColor: atomPalette.surfaceStrong,

@@ -10,10 +10,11 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.florenciasoldavini.onzait",
-      "requireFullScreen": false,
       "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
         "NSLocationWhenInUseUsageDescription": "Allow onzait to show your current location on the projects map while you are using the app."
       },
+      "requireFullScreen": false,
       "supportsTablet": true
     },
     "android": {
@@ -32,6 +33,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-localization",
       [
         "@sentry/react-native/expo",
         {
@@ -76,6 +78,10 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "locales": {
+      "en": "./assets/localization/en.json",
+      "es": "./assets/localization/es.json"
     },
     "extra": {
       "router": {},

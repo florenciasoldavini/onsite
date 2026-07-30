@@ -9,6 +9,7 @@ import { atomPalette, atomSpacing } from "@/shared/ui/components/theme";
 import { MailIcon, PhoneIcon } from "@/shared/ui/icons";
 import { useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function ProjectClientCard({
   clientQuery
@@ -16,6 +17,8 @@ export function ProjectClientCard({
   clientQuery: ReturnType<typeof useClient>;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
 
   if (clientQuery.isLoading) {
     return <SkeletonBlock height={126} />;
@@ -25,9 +28,11 @@ export function ProjectClientCard({
     return (
       <AppCard padding="md" tone="muted">
         <View style={{ gap: atomSpacing[3] }}>
-          <AppHeading variant="card">Client unavailable</AppHeading>
+          <AppHeading variant="card">
+            {t(($) => $["features/projects"].detail.clientUnavailable)}
+          </AppHeading>
           <AppText tone="muted">
-            We couldn&apos;t load this client&apos;s contact details.
+            {t(($) => $["features/projects"].detail.clientLoad)}
           </AppText>
           <AppButton
             color="neutral"
@@ -36,7 +41,7 @@ export function ProjectClientCard({
             size="sm"
             variant="bordered"
           >
-            Retry
+            {tShared(($) => $.shared.actions.retry)}
           </AppButton>
         </View>
       </AppCard>
@@ -57,7 +62,7 @@ export function ProjectClientCard({
       <AppCard padding="md">
         <View style={{ gap: atomSpacing[3] }}>
           <AppText tone="accent" variant="eyebrow">
-            CLIENT
+            {t(($) => $["features/projects"].detail.client).toUpperCase()}
           </AppText>
           <AppHeading variant="card">{getClientDisplayName(client)}</AppHeading>
           <View
@@ -69,11 +74,17 @@ export function ProjectClientCard({
           >
             <ProjectClientContact
               icon={PhoneIcon}
-              value={client.phone_number ?? "No phone number"}
+              value={
+                client.phone_number ??
+                t(($) => $["features/projects"].detail.noPhone)
+              }
             />
             <ProjectClientContact
               icon={MailIcon}
-              value={client.email ?? "No email address"}
+              value={
+                client.email ??
+                t(($) => $["features/projects"].detail.noEmail)
+              }
             />
           </View>
         </View>

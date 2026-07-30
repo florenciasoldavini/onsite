@@ -5,7 +5,7 @@ import {
   useUpdateSupplier
 } from "@/features/suppliers/hooks/use-suppliers";
 import {
-  supplierFormSchema,
+  createSupplierFormSchema,
   toSupplierInput
 } from "@/features/suppliers/schemas/supplier.schema";
 import type { SupplierFormValues } from "@/features/suppliers/types/supplier";
@@ -24,8 +24,9 @@ import { RefreshIcon, StoreIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 const defaultValues: SupplierFormValues = {
@@ -46,15 +47,21 @@ export default function SupplierFormScreen({
   supplierId?: string;
 }) {
   const router = useRouter();
+  const { i18n, t } = useTranslation("features/suppliers");
+  const { t: tShared } = useTranslation("shared");
   const toast = useAppToast();
   const supplierQuery = useSupplier(mode === "edit" ? supplierId : undefined);
   const createMutation = useCreateSupplier();
   const updateMutation = useUpdateSupplier(supplierId ?? "");
   const [formError, setFormError] = useState<string | null>(null);
+  const validationSchema = useMemo(
+    () => createSupplierFormSchema(t, tShared),
+    [i18n.resolvedLanguage, t, tShared]
+  );
   const form = useForm<SupplierFormValues>({
     defaultValues,
     mode: "onChange",
-    resolver: zodResolver(supplierFormSchema)
+    resolver: zodResolver(validationSchema)
   });
   const {
     control,
@@ -78,10 +85,18 @@ export default function SupplierFormScreen({
           ? await createMutation.mutateAsync(toSupplierInput(values))
           : await updateMutation.mutateAsync(toSupplierInput(values));
       toast.show({
-        description: `${saved.name} was ${
-          mode === "create" ? "created" : "updated"
-        } successfully.`,
-        title: `Supplier ${mode === "create" ? "created" : "updated"}`,
+        description: t(
+          ($) =>
+            mode === "create"
+              ? $["features/suppliers"].toast.createdDescription
+              : $["features/suppliers"].toast.updatedDescription,
+          { name: saved.name }
+        ),
+        title: t(($) =>
+          mode === "create"
+            ? $["features/suppliers"].toast.createdTitle
+            : $["features/suppliers"].toast.updatedTitle
+        ),
         tone: "success"
       });
       router.replace(`/suppliers/${saved.id}` as never);
@@ -89,14 +104,14 @@ export default function SupplierFormScreen({
       setFormError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't save this supplier. Check your connection and try again."
+          t(($) => $["features/suppliers"].errors.save)
         )
       );
     }
   });
 
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/suppliers"].actions.backToDirectory),
     onPress: () => router.replace("/directory?section=suppliers" as never)
   };
 
@@ -107,12 +122,12 @@ export default function SupplierFormScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void supplierQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             supplierQuery.error,
-            "We couldn't load this supplier. Try again."
+            t(($) => $["features/suppliers"].errors.load)
           ),
           icon: StoreIcon
         },
@@ -146,35 +161,55 @@ export default function SupplierFormScreen({
               mode === "edit" && supplierId
                 ? [
                     {
-                      label: "Suppliers",
+                      label: t(
+                        ($) => $["features/suppliers"].breadcrumbs.suppliers
+                      ),
                       onPress: () =>
                         router.replace("/directory?section=suppliers" as never)
                     },
                     {
-                      label: "Supplier Detail",
+                      label: t(
+                        ($) => $["features/suppliers"].breadcrumbs.detail
+                      ),
                       onPress: () =>
                         router.replace(`/suppliers/${supplierId}` as never)
                     },
-                    { label: "Edit" }
+                    {
+                      label: t(
+                        ($) => $["features/suppliers"].breadcrumbs.edit
+                      )
+                    }
                   ]
                 : [
                     {
-                      label: "Suppliers",
+                      label: t(
+                        ($) => $["features/suppliers"].breadcrumbs.suppliers
+                      ),
                       onPress: () =>
                         router.replace("/directory?section=suppliers" as never)
                     },
-                    { label: "New" }
+                    {
+                      label: t(
+                        ($) => $["features/suppliers"].breadcrumbs.new
+                      )
+                    }
                   ]
             }
           />
           <NavScreenHeader
             description={
               mode === "create"
-                ? "Add a supplier's contact, website, and location details."
-                : "Update the supplier information stored in your directory."
+                ? t(
+                    ($) => $["features/suppliers"].form.createDescription
+                  )
+                : t(($) => $["features/suppliers"].form.editDescription)
             }
             showBreadcrumb={false}
-            title={mode === "create" ? "New supplier" : "Edit supplier"}
+            title={t(($) =>
+              mode === "create"
+                ? $["features/suppliers"].form.createTitle
+                : $["features/suppliers"].form.editTitle
+            )}
           />
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[6] }}>
@@ -201,7 +236,7 @@ export default function SupplierFormScreen({
                   onPress={() => router.back()}
                   variant="bordered"
                 >
-                  Cancel
+                  {tShared(($) => $.shared.actions.cancel)}
                 </AppButton>
                 <AppButton
                   fullWidth={false}
@@ -213,7 +248,11 @@ export default function SupplierFormScreen({
                   loading={isSubmitting}
                   onPress={() => void submit()}
                 >
-                  {mode === "create" ? "Create supplier" : "Save changes"}
+                  {t(($) =>
+                    mode === "create"
+                      ? $["features/suppliers"].actions.create
+                      : $["features/suppliers"].actions.save
+                  )}
                 </AppButton>
               </View>
             </View>

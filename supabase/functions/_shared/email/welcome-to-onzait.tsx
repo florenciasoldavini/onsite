@@ -12,10 +12,21 @@ import {
   Section,
   Text,
 } from "react-email";
+import { createEmailTranslator, type EmailLanguage } from "./localization.ts";
 
 type WelcomeToOnzaitEmailProps = {
   appUrl: string;
-  name: string;
+  language: EmailLanguage;
+  strings: {
+    cta: string;
+    eyebrow: string;
+    fallbackLink: string;
+    footer: string;
+    heading: string;
+    paragraph: string;
+    preview: string;
+    secondParagraph: string;
+  };
 };
 
 const body = {
@@ -119,51 +130,48 @@ const footer = {
 
 export function WelcomeToOnzaitEmail({
   appUrl,
-  name,
+  language,
+  strings,
 }: WelcomeToOnzaitEmailProps) {
   return (
-    <Html lang="en">
+    <Html lang={language}>
       <Head />
-      <Preview>Welcome to onzait. Your workspace is ready.</Preview>
+      <Preview>{strings.preview}</Preview>
       <Body style={body}>
         <Container style={page}>
           <Text style={wordmark}>onzait</Text>
 
           <Section style={card}>
-            <Text style={eyebrow}>Welcome</Text>
+            <Text style={eyebrow}>{strings.eyebrow}</Text>
 
             <Heading as="h1" style={heading}>
-              Welcome to onzait, {name}
+              {strings.heading}
             </Heading>
 
             <Text style={paragraph}>
-              Your workspace is ready. Onzait helps keep projects, job-site
-              updates, and client coordination in one structured place.
+              {strings.paragraph}
             </Text>
 
             <Text style={{ ...paragraph, marginBottom: "24px" }}>
-              Start by checking your project dashboard and adding the details
-              your team needs to move with confidence.
+              {strings.secondParagraph}
             </Text>
 
             <Section style={ctaWrap}>
               <Link href={appUrl} style={cta}>
-                Open onzait
+                {strings.cta}
               </Link>
             </Section>
 
             <Hr style={divider} />
 
             <Text style={fallbackLabel}>
-              If the button does not work, copy and paste this link into your
-              browser:
+              {strings.fallbackLink}
             </Text>
             <Text style={fallbackUrl}>{appUrl}</Text>
           </Section>
 
           <Text style={footer}>
-            You are receiving this because a welcome email was requested for
-            your onzait account.
+            {strings.footer}
           </Text>
         </Container>
       </Body>
@@ -171,6 +179,31 @@ export function WelcomeToOnzaitEmail({
   );
 }
 
-export function renderWelcomeToOnzaitEmail(input: WelcomeToOnzaitEmailProps) {
-  return render(<WelcomeToOnzaitEmail {...input} />);
+export async function buildWelcomeToOnzaitEmail(input: {
+  appUrl: string;
+  language: unknown;
+  name: string;
+}) {
+  const { language, t } = await createEmailTranslator(input.language);
+  const strings = {
+    cta: t("welcome.cta"),
+    eyebrow: t("welcome.eyebrow"),
+    fallbackLink: t("common.fallbackLink"),
+    footer: t("welcome.footer"),
+    heading: t("welcome.heading", { name: input.name }),
+    paragraph: t("welcome.paragraph"),
+    preview: t("welcome.preview"),
+    secondParagraph: t("welcome.secondParagraph"),
+  };
+
+  return {
+    html: await render(
+      <WelcomeToOnzaitEmail
+        appUrl={input.appUrl}
+        language={language}
+        strings={strings}
+      />,
+    ),
+    subject: t("welcome.subject"),
+  };
 }

@@ -51,8 +51,9 @@ Last reviewed: 2026-07-29
 
 ## Internationalization
 
-- The approved Spanish and English localization contract lives in [docs/internationalization.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/internationalization.md:1).
-- The contract is planned under GitHub issue #58 and must not be described as active until the runtime integration and translated application surfaces land.
+- The active Spanish and English app and transactional-email localization contract lives in [docs/internationalization.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/internationalization.md:1).
+- Spanish is the unsupported-locale default, English is the missing-key fallback, and explicit app preference remains device-local.
+- Current welcome, project-invitation, signup-confirmation, and password-recovery emails follow the same validated `es | en` contract at their trusted function boundaries.
 - Persisted catalog values remain language-neutral; localized labels, descriptions, validation, feedback, formatting, and accessibility copy belong in the presentation layer.
 
 ## Auth Architecture

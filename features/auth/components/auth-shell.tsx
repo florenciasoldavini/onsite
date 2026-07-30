@@ -12,9 +12,11 @@ import {
   atomSpacing
 } from "@/shared/ui/components/theme";
 import { HStack } from "@/shared/ui/primitives/hstack";
+import { LanguageSelector } from "@/features/localization/components/language-selector";
 import type { LinkProps } from "expo-router";
 import type { ReactNode } from "react";
 import { Platform, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const palette = {
   background: atomPalette.background,
@@ -140,7 +142,7 @@ export function AuthShell({
   title,
   description,
   hidePanelHeader = false,
-  panelTag = "Access / Crew Portal"
+  panelTag
 }: {
   children: ReactNode;
   description: string;
@@ -149,6 +151,10 @@ export function AuthShell({
   panelTag?: string;
   title: string;
 }) {
+  const { t } = useTranslation("features/auth");
+  const resolvedPanelTag =
+    panelTag ?? t(($) => $["features/auth"].shell.defaultPanelTag);
+
   return (
     <Screen centered keyboardSafe>
       <View
@@ -176,10 +182,8 @@ export function AuthShell({
               }}
             >
               <HStack className="items-center justify-between gap-3">
-                <MonoLabel>{panelTag}</MonoLabel>
-                <AppText tone="subtle" variant="meta">
-                  SYSTEM / ENTRY
-                </AppText>
+                <MonoLabel>{resolvedPanelTag}</MonoLabel>
+                <LanguageSelector compact />
               </HStack>
             </View>
           )}

@@ -4,9 +4,14 @@ import {
   resolveAddress
 } from "@/features/locations/services/locations.service";
 import type { ResolvedAddress } from "@/features/locations/types/location";
+import {
+  LocationRepositoryError,
+  type LocationErrorCode
+} from "@/features/locations/maps/map-errors";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function useLocationAddressField({
   onChange,
@@ -15,6 +20,7 @@ export function useLocationAddressField({
   onChange: (address: ResolvedAddress | null) => void;
   value: ResolvedAddress | null;
 }) {
+  const { t } = useTranslation("features/locations");
   const [query, setQuery] = useState(value?.address ?? "");
   const [isSuggestionsOpen, setIsSuggestionsOpen] = useState(false);
   const [sessionToken, setSessionToken] = useState(createSessionToken);
@@ -70,14 +76,16 @@ export function useLocationAddressField({
 
   return {
     autocompleteError: suggestionsQuery.isError
-      ? getUserFacingErrorMessage(
+      ? getLocationErrorMessage(
           suggestionsQuery.error,
-          "Address suggestions are unavailable right now. Try again shortly."
+          "addressSuggestions",
+          t
         )
       : resolveMutation.isError
-        ? getUserFacingErrorMessage(
+        ? getLocationErrorMessage(
             resolveMutation.error,
-            "We couldn't load that address. Select it again and retry."
+            "addressResolve",
+            t
           )
         : null,
     isBusy:
@@ -111,9 +119,10 @@ export function useLocationAddressField({
     },
     preview: previewQuery.data ?? null,
     previewError: previewQuery.isError
-      ? getUserFacingErrorMessage(
+      ? getLocationErrorMessage(
           previewQuery.error,
-          "Map preview is unavailable right now. Try again shortly."
+          "mapPreview",
+          t
         )
       : null,
     previewLoading: previewQuery.isLoading,
@@ -130,6 +139,19 @@ export function useLocationAddressField({
         : [],
     value
   };
+}
+
+function getLocationErrorMessage(
+  error: unknown,
+  fallbackCode: LocationErrorCode,
+  t: ReturnType<typeof useTranslation<"features/locations">>["t"]
+) {
+  const code =
+    error instanceof LocationRepositoryError
+      ? error.localizationCode
+      : fallbackCode;
+  const fallback = t(($) => $["features/locations"].errors[code]);
+  return getUserFacingErrorMessage(error, fallback);
 }
 
 export function useLocationMapPreview({

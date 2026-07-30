@@ -4,6 +4,7 @@ import { TextField } from "@/shared/ui/components/input";
 import { TextAreaField } from "@/shared/ui/components/textarea";
 import { atomSpacing } from "@/shared/ui/components/theme";
 import { Controller, type Control } from "react-hook-form";
+import { useTranslation } from "react-i18next";
 import { View } from "react-native";
 
 export function SupplierFormFields({
@@ -13,6 +14,7 @@ export function SupplierFormFields({
   control: Control<SupplierFormValues>;
   onChange?: () => void;
 }) {
+  const { t } = useTranslation("features/suppliers");
   return (
     <View style={{ gap: atomSpacing[5] }}>
       <Controller
@@ -22,7 +24,7 @@ export function SupplierFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="Supplier name"
+            label={t(($) => $["features/suppliers"].fields.name)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -41,7 +43,7 @@ export function SupplierFormFields({
           <TextField
             autoCapitalize="words"
             errorText={fieldState.error?.message}
-            label="Contact name"
+            label={t(($) => $["features/suppliers"].fields.contactName)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -59,7 +61,7 @@ export function SupplierFormFields({
           <TextField
             errorText={fieldState.error?.message}
             keyboardType="phone-pad"
-            label="Phone number"
+            label={t(($) => $["features/suppliers"].fields.phone)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -79,7 +81,7 @@ export function SupplierFormFields({
             autoCorrect={false}
             errorText={fieldState.error?.message}
             keyboardType="email-address"
-            label="Email"
+            label={t(($) => $["features/suppliers"].fields.email)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -99,7 +101,7 @@ export function SupplierFormFields({
             autoCorrect={false}
             errorText={fieldState.error?.message}
             keyboardType="url"
-            label="Website"
+            label={t(($) => $["features/suppliers"].fields.website)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
@@ -130,13 +132,15 @@ export function SupplierFormFields({
         render={({ field, fieldState }) => (
           <TextAreaField
             errorText={fieldState.error?.message}
-            label="Notes"
+            label={t(($) => $["features/suppliers"].fields.notes)}
             onBlur={field.onBlur}
             onChangeText={(value) => {
               field.onChange(value);
               onChange?.();
             }}
-            placeholder="Delivery details, preferred products, or other useful context"
+            placeholder={t(
+              ($) => $["features/suppliers"].form.notesPlaceholder
+            )}
             value={field.value}
           />
         )}

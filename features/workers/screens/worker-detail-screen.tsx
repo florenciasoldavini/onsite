@@ -8,6 +8,7 @@ import { RefreshIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export default function WorkerDetailScreen({
   workerId
@@ -15,9 +16,11 @@ export default function WorkerDetailScreen({
   workerId?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/workers");
+  const { t: tShared } = useTranslation("shared");
   const workerQuery = useWorker(workerId);
   const backToDirectory = {
-    label: "Back to directory",
+    label: t(($) => $["features/workers"].accessibility.backToDirectory),
     onPress: () => router.replace("/directory?section=workers" as never)
   };
 
@@ -28,12 +31,12 @@ export default function WorkerDetailScreen({
         loadError: {
           action: {
             icon: RefreshIcon,
-            label: "Retry",
+            label: tShared(($) => $.shared.actions.retry),
             onPress: () => void workerQuery.refetch()
           },
           description: getUserFacingErrorMessage(
             workerQuery.error,
-            "We couldn't load this worker. Try again."
+            t(($) => $["features/workers"].errors.load)
           ),
           icon: UserIcon
         },
@@ -51,7 +54,7 @@ export default function WorkerDetailScreen({
           </View>
         </Screen>
       }
-      resourceName="worker"
+      resourceName={t(($) => $["features/workers"].fields.worker)}
     >
       {workerQuery.data ? (
         <WorkerDetailContent worker={workerQuery.data} />

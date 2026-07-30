@@ -12,48 +12,49 @@ import {
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 const projectActions = [
   {
     accent: false,
     icon: FolderOpenIcon,
     index: "01",
-    label: "DOCUMENTATION",
+    label: "documentation",
     target: null
   },
   {
     accent: false,
     icon: CameraIcon,
     index: "02",
-    label: "PHOTOS",
+    label: "photos",
     target: "photos"
   },
   {
     accent: false,
     icon: UserIcon,
     index: "03",
-    label: "TEAM",
+    label: "team",
     target: "team"
   },
   {
     accent: false,
     icon: AlertIcon,
     index: "04",
-    label: "INCIDENT_LOG",
+    label: "incidentLog",
     target: null
   },
   {
     accent: false,
     icon: ListChecksIcon,
     index: "05",
-    label: "TO_DO_LIST",
+    label: "todoList",
     target: null
   },
   {
     accent: true,
     icon: CirclePlusIcon,
     index: "06",
-    label: "DAILY_REPORT",
+    label: "dailyReport",
     target: null
   }
 ] as const;
@@ -68,6 +69,15 @@ export function ProjectActionGrid({
   projectId: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/projects");
+  const labels = {
+    dailyReport: t(($) => $["features/projects"].detail.dailyReport),
+    documentation: t(($) => $["features/projects"].detail.documentation),
+    incidentLog: t(($) => $["features/projects"].detail.incidentLog),
+    photos: t(($) => $["features/projects"].detail.photos),
+    team: t(($) => $["features/projects"].detail.team),
+    todoList: t(($) => $["features/projects"].detail.todoList)
+  };
 
   return (
     <View
@@ -82,8 +92,10 @@ export function ProjectActionGrid({
 
         return (
           <ProjectActionCard
+            {...action}
             expanded={expanded}
             key={action.index}
+            label={labels[action.label]}
             onPress={
               canOpen
                 ? () =>
@@ -92,7 +104,6 @@ export function ProjectActionGrid({
                     )
                 : undefined
             }
-            {...action}
           />
         );
       })}
@@ -107,10 +118,12 @@ function ProjectActionCard({
   index,
   label,
   onPress
-}: (typeof projectActions)[number] & {
+}: Omit<(typeof projectActions)[number], "label"> & {
   expanded: boolean;
+  label: string;
   onPress?: () => void;
 }) {
+  const { t } = useTranslation("features/projects");
   const [isHovered, setIsHovered] = useState(false);
   const iconColor = accent ? atomPalette.accentText : atomPalette.textMuted;
   const textTone = accent ? "inverse" : "default";
@@ -119,8 +132,8 @@ function ProjectActionCard({
     <Pressable
       accessibilityHint={
         onPress
-          ? "Opens this project feature."
-          : "This action will be available in a future update."
+          ? t(($) => $["features/projects"].detail.openHint)
+          : t(($) => $["features/projects"].detail.futureHint)
       }
       accessibilityLabel={label.replaceAll("_", " ").toLowerCase()}
       accessibilityRole="button"

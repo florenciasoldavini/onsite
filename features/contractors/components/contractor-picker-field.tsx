@@ -6,6 +6,7 @@ import { getContractorDisplayName } from "@/features/contractors/schemas/contrac
 import { CatalogPickerField } from "@/shared/ui/components/catalog-picker-field";
 import { HardHatIcon } from "@/shared/ui/icons";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 
 export function ContractorPickerField({
   onChange,
@@ -16,6 +17,7 @@ export function ContractorPickerField({
   ownerId?: string;
   value: string | null;
 }) {
+  const { t } = useTranslation("features/contractors");
   const [query, setQuery] = useState("");
   const contractorsQuery = useContractors({
     ownerId,
@@ -26,15 +28,17 @@ export function ContractorPickerField({
 
   return (
     <CatalogPickerField
-      entityName="contractor"
-      entityNamePlural="contractors"
+      entityName={t(($) => $["features/contractors"].picker.entity)}
+      entityNamePlural={t(
+        ($) => $["features/contractors"].picker.entities
+      )}
       getDisplayName={getContractorDisplayName}
       hasNextPage={contractorsQuery.hasNextPage}
       icon={HardHatIcon}
       isError={contractorsQuery.isError}
       isFetchingNextPage={contractorsQuery.isFetchingNextPage}
       isLoading={contractorsQuery.isLoading}
-      label="Contractor"
+      label={t(($) => $["features/contractors"].picker.label)}
       onChange={onChange}
       onLoadMore={() => void contractorsQuery.fetchNextPage()}
       onQueryChange={setQuery}

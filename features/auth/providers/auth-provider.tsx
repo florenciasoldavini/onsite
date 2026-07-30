@@ -16,12 +16,15 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import type { User } from "@/features/auth/types/auth.types";
 import type { Session } from "@supabase/supabase-js";
 import { useCallback, useEffect, useRef, useState } from "react";
-
-const defaultAuthError = hasAuthSessionSupport()
-  ? null
-  : "The app is not connected to its data service. Try again later.";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
+import { useTranslation } from "react-i18next";
 
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/auth");
+  const defaultAuthError = hasAuthSessionSupport()
+    ? null
+    : t(($) => $["features/auth"].errors.dataService);
   const [authError, setAuthError] = useState<string | null>(defaultAuthError);
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState<Session | null>(null);
@@ -32,7 +35,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     setUser(nextUser);
     setAuthError(null);
 
-    void deliverWelcomeEmailIfNeeded(nextUser).then((welcomedUser) => {
+    void deliverWelcomeEmailIfNeeded(nextUser, language).then((welcomedUser) => {
       setUser((currentUser) =>
         currentUser?.id === welcomedUser.id &&
         welcomedUser.welcome_email_sent_at
@@ -43,7 +46,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           : currentUser
       );
     });
-  }, []);
+  }, [language]);
 
   const createUser = async (
     nextSession: Session,
@@ -57,7 +60,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't finish setting up your account. Sign out and back in, then try again."
+          t(($) => $["features/auth"].errors.accountSetup)
         )
       );
       return null;
@@ -86,7 +89,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't update your profile. Check your connection and try again."
+          t(($) => $["features/auth"].errors.profileUpdate)
         )
       );
       throw error;
@@ -115,7 +118,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setAuthError(
             getUserFacingErrorMessage(
               error,
-              "We couldn't load your account. Check your connection and try again."
+              t(($) => $["features/auth"].errors.accountLoad)
             )
           );
           setUser(null);
@@ -136,7 +139,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setAuthError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't sign you out. Check your connection and try again."
+          t(($) => $["features/auth"].errors.signOut)
         )
       );
     }
@@ -182,7 +185,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           setAuthError(
             getUserFacingErrorMessage(
               error,
-              "We couldn't restore your session. Sign in and try again."
+              t(($) => $["features/auth"].errors.sessionRestore)
             )
           );
           setSession(null);

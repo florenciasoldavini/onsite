@@ -106,6 +106,7 @@ This is an engineering baseline, not a claim of formal accessibility certificati
 
 ```bash
 npm run env:check
+npm run i18n:check
 npx tsc --noEmit
 npm run lint
 npm test
@@ -116,6 +117,11 @@ npm run functions:verify
 ```
 
 `npm run test:coverage` is diagnostic and does not currently enforce a CI threshold. Test layers, naming, ownership, and change-based expectations are defined in [`docs/testing-strategy.md`](docs/testing-strategy.md).
+
+`npm run i18n:check` verifies hard-coded copy, extraction drift, resource
+completeness, plural variants, and interpolation parity for bundled app
+resources. Use `npm run i18n:extract` after intentionally changing typed
+translation selectors.
 
 `npm test` runs the complete Jest/Expo application suite. Pass a test path to `npm test -- <path>` for a focused local run.
 

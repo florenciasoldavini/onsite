@@ -63,14 +63,19 @@ Setup steps:
    - `EMAIL_FROM`
    - `EMAIL_REPLY_TO` if replies should go somewhere real
    - `SITE_URL`
+   - `SEND_EMAIL_HOOK_SECRET` for the signed Supabase Auth Send Email Hook
 6. Deploy or redeploy email-related Supabase Edge Functions after changing secrets.
-7. Send a test welcome email to confirm the sender, CTA URL, and reply behavior.
+7. Send Spanish and English welcome, invitation, confirmation, and recovery
+   emails to confirm sender, CTA URLs, HTML language, and reply behavior.
 
 Supabase Auth emails and product emails are configured in different places:
 
-- Product emails use the `welcome-to-onzait` Edge Function plus Resend.
-- Supabase Auth emails use Supabase Auth email settings and templates.
-- If Supabase Auth email delivery should also come from the branded sender, configure Supabase Auth SMTP with the chosen provider and sender domain.
+- Product emails use the `welcome-to-onzait` and `project-collaboration` Edge Functions plus Resend.
+- Current signup confirmation/resend and password recovery emails use the signed
+  `auth-send-email` hook plus Resend.
+- Before enabling that hook, disable unused Auth email flows and hosted security
+  notifications, configure the signing secret, and prove signed staging
+  delivery in both languages.
 
 ## DNS Ownership Notes
 

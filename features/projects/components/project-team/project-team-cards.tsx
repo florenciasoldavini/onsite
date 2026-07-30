@@ -29,10 +29,12 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { useAppToast } from "@/shared/ui/components/toast";
 import { MailIcon, TrashIcon, UserIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useMemo, useState } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function InviteMemberCard({
   projectId,
@@ -42,10 +44,12 @@ export function InviteMemberCard({
   roles: ProjectRoleOption[];
 }) {
   const inviteMutation = useInviteProjectMember(projectId);
+  const { language } = useLocalization();
+  const { t } = useTranslation("features/projects");
   const toast = useAppToast();
   const defaultRole = roles[0]?.code ?? "";
   const form = useForm<ProjectInviteInput>({
-    defaultValues: { email: "", roleCode: defaultRole },
+    defaultValues: { email: "", language, roleCode: defaultRole },
     mode: "onChange",
     resolver: zodResolver(projectInviteInputSchema)
   });
@@ -59,17 +63,22 @@ export function InviteMemberCard({
   const submit = form.handleSubmit(async (values) => {
     try {
       await inviteMutation.mutateAsync(values);
-      form.reset({ email: "", roleCode: defaultRole });
+      form.reset({ email: "", language, roleCode: defaultRole });
       toast.show({
-        description: `An invitation was sent to ${values.email}.`,
-        title: "Invitation sent",
+        description: t(
+          ($) => $["features/projects"].invitationForm.sentDescription,
+          { email: values.email }
+        ),
+        title: t(
+          ($) => $["features/projects"].invitationForm.sentTitle
+        ),
         tone: "success"
       });
     } catch (error) {
       form.setError("root", {
         message: getUserFacingErrorMessage(
           error,
-          "We couldn't send this invitation. Try again."
+          t(($) => $["features/projects"].invitationForm.sendError)
         )
       });
     }
@@ -78,7 +87,9 @@ export function InviteMemberCard({
   return (
     <AppCard padding="lg">
       <View style={{ gap: atomSpacing[4] }}>
-        <AppHeading variant="section">Invite a member</AppHeading>
+        <AppHeading variant="section">
+          {t(($) => $["features/projects"].invitationForm.title)}
+        </AppHeading>
         <Controller
           control={form.control}
           name="email"
@@ -87,7 +98,9 @@ export function InviteMemberCard({
               autoCapitalize="none"
               errorText={fieldState.error?.message}
               keyboardType="email-address"
-              label="Email address"
+              label={t(
+                ($) => $["features/projects"].invitationForm.email
+              )}
               onBlur={field.onBlur}
               onChangeText={field.onChange}
               placeholder="person@example.com"
@@ -102,12 +115,43 @@ export function InviteMemberCard({
           render={({ field, fieldState }) => (
             <SelectField
               errorText={fieldState.error?.message}
-              label="Project role"
+              label={t(($) => $["features/projects"].invitationForm.role)}
               onChange={field.onChange}
               options={roles.map((role) => ({
-                label: role.displayName,
+                label: projectRoleLabel(role.code, role.displayName, t),
                 value: role.code
               }))}
+              required
+              value={field.value}
+            />
+          )}
+        />
+        <Controller
+          control={form.control}
+          name="language"
+          render={({ field, fieldState }) => (
+            <SelectField
+              errorText={fieldState.error?.message}
+              label={t(
+                ($) => $["features/projects"].invitationForm.language
+              )}
+              onChange={field.onChange}
+              options={[
+                {
+                  label: t(
+                    ($) =>
+                      $["features/projects"].invitationForm.languageSpanish
+                  ),
+                  value: "es"
+                },
+                {
+                  label: t(
+                    ($) =>
+                      $["features/projects"].invitationForm.languageEnglish
+                  ),
+                  value: "en"
+                }
+              ]}
               required
               value={field.value}
             />
@@ -125,11 +169,32 @@ export function InviteMemberCard({
           loading={inviteMutation.isPending}
           onPress={() => void submit()}
         >
-          Send invitation
+          {t(($) => $["features/projects"].invitationForm.send)}
         </AppButton>
       </View>
     </AppCard>
   );
+}
+
+function projectRoleLabel(
+  code: string,
+  fallback: string,
+  t: ReturnType<typeof useTranslation<"features/projects">>["t"]
+) {
+  switch (code) {
+    case "collaborator":
+      return t(($) => $["features/projects"].roles.collaborator);
+    case "manager":
+      return t(($) => $["features/projects"].roles.manager);
+    case "member":
+      return t(($) => $["features/projects"].roles.member);
+    case "owner":
+      return t(($) => $["features/projects"].roles.owner);
+    case "viewer":
+      return t(($) => $["features/projects"].roles.viewer);
+    default:
+      return fallback || code;
+  }
 }
 
 export function MembersCard({
@@ -145,6 +210,7 @@ export function MembersCard({
   projectId: string;
   roles: ProjectRoleOption[];
 }) {
+  const { t } = useTranslation("features/projects");
   const updateRole = useUpdateProjectMemberRole(projectId);
   const removeMember = useRemoveProjectMember(projectId);
   const confirmation = useDestructiveConfirmation();
@@ -161,7 +227,7 @@ export function MembersCard({
       confirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't remove this project member. Try again."
+          t(($) => $["features/projects"].team.removeError)
         )
       );
     }
@@ -171,7 +237,9 @@ export function MembersCard({
     <>
       <AppCard padding="lg">
         <View style={{ gap: atomSpacing[4] }}>
-          <AppHeading variant="section">Active members</AppHeading>
+          <AppHeading variant="section">
+            {t(($) => $["features/projects"].team.activeMembers)}
+          </AppHeading>
           {members.map((member) => {
             const isOwner = member.userId === ownerUserId;
             return (
@@ -204,7 +272,7 @@ export function MembersCard({
                   >
                     <SelectField
                       disabled={updateRole.isPending}
-                      label="Role"
+                      label={t(($) => $["features/projects"].team.role)}
                       onChange={(roleCode) =>
                         updateRole.mutate({
                           membershipId: member.id,
@@ -212,7 +280,11 @@ export function MembersCard({
                         })
                       }
                       options={roles.map((role) => ({
-                        label: role.displayName,
+                        label: projectRoleLabel(
+                          role.code,
+                          role.displayName,
+                          t
+                        ),
                         value: role.code
                       }))}
                       value={member.roleCode}
@@ -232,7 +304,13 @@ export function MembersCard({
                   </View>
                 ) : (
                   <AppText tone="accent" variant="label">
-                    {isOwner ? "Owner" : roleLabel(member.roleCode, roles)}
+                    {isOwner
+                      ? t(($) => $["features/projects"].roles.owner)
+                      : projectRoleLabel(
+                          member.roleCode,
+                          roleLabel(member.roleCode, roles),
+                          t
+                        )}
                   </AppText>
                 )}
               </View>
@@ -242,20 +320,29 @@ export function MembersCard({
             <AppText selectable tone="danger">
               {getUserFacingErrorMessage(
                 updateRole.error,
-                "We couldn't change this member's role. Try again."
+                t(($) => $["features/projects"].team.changeRoleError)
               )}
             </AppText>
           ) : null}
         </View>
       </AppCard>
       <DestructiveConfirmationDialog
-        accessibilityLabel="Close remove member confirmation"
-        confirmLabel="Remove"
+        accessibilityLabel={t(
+          ($) => $["features/projects"].team.removeMember
+        )}
+        confirmLabel={t(($) => $["features/projects"].team.remove)}
         controller={confirmation}
-        description={`${selected?.firstName ?? "This member"} will immediately lose access to the project.`}
+        description={t(
+          ($) => $["features/projects"].team.removeDescription,
+          {
+            name:
+              selected?.firstName ??
+              t(($) => $["features/projects"].team.memberFallback)
+          }
+        )}
         isPending={removeMember.isPending}
         onConfirm={confirmRemoval}
-        title="Remove project member?"
+        title={t(($) => $["features/projects"].team.removeMember)}
       />
     </>
   );
@@ -270,6 +357,7 @@ export function PendingInvitationsCard({
   projectId: string;
   roles: ProjectRoleOption[];
 }) {
+  const { t } = useTranslation("features/projects");
   const resend = useResendProjectInvitation(projectId);
   const revoke = useRevokeProjectInvitation(projectId);
   const confirmation = useDestructiveConfirmation();
@@ -306,7 +394,7 @@ export function PendingInvitationsCard({
       confirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't revoke this invitation. Try again."
+          t(($) => $["features/projects"].team.revokeError)
         )
       );
     }
@@ -323,7 +411,7 @@ export function PendingInvitationsCard({
       resendConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't resend this invitation. Try again."
+          t(($) => $["features/projects"].team.resendError)
         )
       );
     }
@@ -333,20 +421,26 @@ export function PendingInvitationsCard({
     <>
       <AppCard padding="lg">
         <View style={{ gap: atomSpacing[4] }}>
-          <AppHeading variant="section">Pending invitations</AppHeading>
+          <AppHeading variant="section">
+            {t(($) => $["features/projects"].invitations.pending)}
+          </AppHeading>
           {resend.isError ? (
             <AppText selectable tone="danger">
               {getUserFacingErrorMessage(
                 resend.error,
-                "We couldn't resend this invitation. Try again."
+                t(($) => $["features/projects"].team.resendError)
               )}
             </AppText>
           ) : null}
           {pending.length === 0 ? (
             <EmptyState
-              description="New invitations will appear here until they are accepted or declined."
+              description={t(
+                ($) => $["features/projects"].team.emptyInvitationsDescription
+              )}
               icon={UserIcon}
-              title="No pending invitations"
+              title={t(
+                ($) => $["features/projects"].team.emptyInvitations
+              )}
             />
           ) : (
             pending.map((invitation) => {
@@ -368,10 +462,21 @@ export function PendingInvitationsCard({
                       {invitation.email}
                     </AppText>
                     <AppText tone="muted" variant="bodySm">
-                      {roleLabel(invitation.roleCode, roles)} ·{" "}
+                      {projectRoleLabel(
+                        invitation.roleCode,
+                        roleLabel(invitation.roleCode, roles),
+                        t
+                      )}{" "}
+                      ·{" "}
                       {invitation.deliveryStatus === "failed"
-                        ? "Email failed"
-                        : "Awaiting response"}
+                        ? t(
+                            ($) =>
+                              $["features/projects"].invitations.emailFailed
+                          )
+                        : t(
+                            ($) =>
+                              $["features/projects"].invitations.awaiting
+                          )}
                     </AppText>
                   </View>
                   <View style={{ flexDirection: "row", gap: atomSpacing[2] }}>
@@ -389,7 +494,17 @@ export function PendingInvitationsCard({
                       size="sm"
                       variant="bordered"
                     >
-                      {cooldown > 0 ? `Resend in ${cooldown}s` : "Resend"}
+                      {cooldown > 0
+                        ? t(
+                            ($) =>
+                              $["features/projects"].invitations
+                                .resendCountdown,
+                            { count: cooldown }
+                          )
+                        : t(
+                            ($) =>
+                              $["features/projects"].invitations.resend
+                          )}
                     </AppButton>
                     <AppButton
                       color="danger"
@@ -403,7 +518,7 @@ export function PendingInvitationsCard({
                       size="sm"
                       variant="bordered"
                     >
-                      Revoke
+                      {t(($) => $["features/projects"].invitations.revoke)}
                     </AppButton>
                   </View>
                 </View>
@@ -413,22 +528,36 @@ export function PendingInvitationsCard({
         </View>
       </AppCard>
       <DestructiveConfirmationDialog
-        accessibilityLabel="Close revoke invitation confirmation"
-        confirmLabel="Revoke"
+        accessibilityLabel={t(
+          ($) => $["features/projects"].team.revokeTitle
+        )}
+        confirmLabel={t(
+          ($) => $["features/projects"].invitations.revoke
+        )}
         controller={confirmation}
-        description={`The invitation for ${selected?.email ?? "this person"} will stop working immediately.`}
+        description={t(
+          ($) => $["features/projects"].team.revokeDescription,
+          { email: selected?.email ?? "—" }
+        )}
         isPending={revoke.isPending}
         onConfirm={confirmRevoke}
-        title="Revoke invitation?"
+        title={t(($) => $["features/projects"].team.revokeTitle)}
       />
       <DestructiveConfirmationDialog
-        accessibilityLabel="Close resend invitation confirmation"
-        confirmLabel="Resend"
+        accessibilityLabel={t(
+          ($) => $["features/projects"].team.resendTitle
+        )}
+        confirmLabel={t(
+          ($) => $["features/projects"].invitations.resend
+        )}
         controller={resendConfirmation}
-        description={`A new invitation email will be sent to ${selectedResend?.email ?? "this person"}, and their previous link will stop working.`}
+        description={t(
+          ($) => $["features/projects"].team.resendDescription,
+          { email: selectedResend?.email ?? "—" }
+        )}
         isPending={resend.isPending}
         onConfirm={confirmResend}
-        title="Resend invitation?"
+        title={t(($) => $["features/projects"].team.resendTitle)}
       />
     </>
   );

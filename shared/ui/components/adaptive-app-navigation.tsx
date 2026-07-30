@@ -16,34 +16,38 @@ import {
 import { usePathname, useRouter } from "expo-router";
 import { Pressable, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useTranslation } from "react-i18next";
 
 const sideNavigationBackground = atomPalette.surface;
 const sideNavigationBorder = atomPalette.borderSubtle;
 const sideNavigationMuted = atomPalette.textMuted;
 
 const primaryDestinations = [
-  { href: "/projects", icon: ProjectsIcon, label: "Projects" },
+  { href: "/projects", icon: ProjectsIcon, labelKey: "projects" },
   {
     activePrefixes: ["/clients", "/contractors"],
     href: "/directory",
     icon: UserIcon,
-    label: "Directory"
+    labelKey: "directory"
   },
-  { href: "/tasks", icon: ToDoIcon, label: "Tasks" }
+  { href: "/tasks", icon: ToDoIcon, labelKey: "tasks" }
 ] as const;
 
 const accountDestination = {
   href: "/profile",
   icon: ProfileIcon,
-  label: "Profile"
+  labelKey: "profile"
 } as const;
 
 export function AdaptiveSideNavigation({ expanded }: { expanded: boolean }) {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation("features/localization");
 
   return (
     <View
-      accessibilityLabel="Primary navigation"
+      accessibilityLabel={t(
+        ($) => $["features/localization"].navigation.primaryNavigation
+      )}
       accessibilityRole="tablist"
       style={{
         backgroundColor: sideNavigationBackground,
@@ -113,10 +117,11 @@ function SideNavigationDestination({
     activePrefixes?: readonly string[];
     href: string;
     icon: AppIconComponent;
-    label: string;
+    labelKey: "directory" | "profile" | "projects" | "tasks";
   };
   expanded: boolean;
 }) {
+  const { t } = useTranslation("features/localization");
   const pathname = usePathname();
   const router = useRouter();
   const focused =
@@ -127,10 +132,13 @@ function SideNavigationDestination({
     );
   const color = focused ? atomPalette.accent : sideNavigationMuted;
   const Icon = destination.icon;
+  const label = t(
+    ($) => $["features/localization"].navigation[destination.labelKey]
+  );
 
   return (
     <Pressable
-      accessibilityLabel={destination.label}
+      accessibilityLabel={label}
       accessibilityRole="tab"
       accessibilityState={{ selected: focused }}
       onPress={() => router.navigate(destination.href as never)}
@@ -158,7 +166,7 @@ function SideNavigationDestination({
         }}
         variant={expanded ? "label" : "meta"}
       >
-        {destination.label}
+        {label}
       </AppText>
     </Pressable>
   );

@@ -11,50 +11,46 @@ import { atomSpacing } from "@/shared/ui/components/theme";
 import { PlusIcon } from "@/shared/ui/icons";
 import { useRouter } from "expo-router";
 import { View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 type DirectorySection = "clients" | "contractors" | "suppliers" | "workers";
 
 const directorySections = [
   {
-    createLabel: "New client",
+    createKey: "client",
     createRoute: "/clients/new",
-    label: "Clients",
+    labelKey: "clients",
     Screen: ClientsScreen,
     value: "clients"
   },
   {
-    createLabel: "New contractor",
+    createKey: "contractor",
     createRoute: "/contractors/new",
-    label: "Contractors",
+    labelKey: "contractors",
     Screen: ContractorsScreen,
     value: "contractors"
   },
   {
-    createLabel: "New worker",
+    createKey: "worker",
     createRoute: "/workers/new",
-    label: "Workers",
+    labelKey: "workers",
     Screen: WorkersScreen,
     value: "workers"
   },
   {
-    createLabel: "New supplier",
+    createKey: "supplier",
     createRoute: "/suppliers/new",
-    label: "Suppliers",
+    labelKey: "suppliers",
     Screen: SuppliersScreen,
     value: "suppliers"
   }
 ] satisfies {
-  createLabel: string;
+  createKey: "client" | "contractor" | "supplier" | "worker";
   createRoute: string;
-  label: string;
+  labelKey: DirectorySection;
   Screen: typeof ClientsScreen;
   value: DirectorySection;
 }[];
-
-const directorySectionOptions = directorySections.map(({ label, value }) => ({
-  label,
-  value
-}));
 
 export default function DirectoryScreen({
   requestedSection
@@ -62,12 +58,22 @@ export default function DirectoryScreen({
   requestedSection?: string;
 }) {
   const router = useRouter();
+  const { t } = useTranslation("features/directory");
   const { isCompact, isExpanded } = useLayoutMode();
   const selectedConfig =
     directorySections.find(({ value }) => value === requestedSection) ??
     directorySections[0];
   const section = selectedConfig.value;
   const SectionScreen = selectedConfig.Screen;
+  const directorySectionOptions = directorySections.map(
+    ({ labelKey, value }) => ({
+      label: t(($) => $["features/directory"].sections[labelKey]),
+      value
+    })
+  );
+  const createLabel = t(
+    ($) => $["features/directory"].create[selectedConfig.createKey]
+  );
 
   const directoryHeader = (
     <View style={{ gap: atomSpacing[5] }}>
@@ -81,12 +87,12 @@ export default function DirectoryScreen({
               onPress={() => router.push(selectedConfig.createRoute as never)}
               size="sm"
             >
-              {selectedConfig.createLabel}
+              {createLabel}
             </AppButton>
           ) : null
         }
-        description="Manage the people and businesses connected to your construction work."
-        title="Directory"
+        description={t(($) => $["features/directory"].description)}
+        title={t(($) => $["features/directory"].title)}
       />
       <View
         style={{
@@ -97,8 +103,10 @@ export default function DirectoryScreen({
       >
         {isCompact ? (
           <SelectMenu
-            accessibilityLabel="Choose directory section"
-            labelPrefix="Directory"
+            accessibilityLabel={t(
+              ($) => $["features/directory"].accessibility.chooseSection
+            )}
+            labelPrefix={t(($) => $["features/directory"].title)}
             minWidth={220}
             onChange={(nextSection) =>
               router.setParams({ section: nextSection })

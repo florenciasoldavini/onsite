@@ -41,10 +41,12 @@ import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
 import { Image } from "expo-image";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Linking, Pressable, StyleSheet, View } from "react-native";
 
 export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
   const router = useRouter();
+  const { t } = useTranslation("features/suppliers");
   const toast = useAppToast();
   const { isCompact } = useLayoutMode();
   const deleteMutation = useSoftDeleteSupplier();
@@ -70,8 +72,11 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
       await deleteMutation.mutateAsync(supplier.id);
       deleteConfirmation.close();
       toast.show({
-        description: `${supplier.name} was removed from your supplier catalog.`,
-        title: "Supplier deleted",
+        description: t(
+          ($) => $["features/suppliers"].detail.deletedDescription,
+          { name: supplier.name }
+        ),
+        title: t(($) => $["features/suppliers"].detail.deletedTitle),
         tone: "success"
       });
       router.replace("/directory?section=suppliers" as never);
@@ -79,7 +84,7 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
       deleteConfirmation.setError(
         getUserFacingErrorMessage(
           error,
-          "We couldn't delete this supplier. Try again."
+          t(($) => $["features/suppliers"].errors.delete)
         )
       );
     }
@@ -91,11 +96,13 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
         <Breadcrumb
           items={[
             {
-              label: "Suppliers",
+              label: t(($) => $["features/suppliers"].breadcrumbs.suppliers),
               onPress: () =>
                 router.replace("/directory?section=suppliers" as never)
             },
-            { label: "Supplier Detail" }
+            {
+              label: t(($) => $["features/suppliers"].breadcrumbs.detail)
+            }
           ]}
         />
 
@@ -114,11 +121,14 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
               </View>
               <View style={{ flex: 1, gap: atomSpacing[2] }}>
                 <AppText tone="accent" variant="eyebrow">
-                  SUPPLIER PROFILE
+                  {t(($) => $["features/suppliers"].detail.profile)}
                 </AppText>
                 <AppHeading variant="hero">{supplier.name}</AppHeading>
                 <AppText tone="muted">
-                  Business record in your supplier catalog
+                  {t(
+                    ($) =>
+                      $["features/suppliers"].detail.profileDescription
+                  )}
                 </AppText>
               </View>
             </View>
@@ -136,7 +146,7 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
                 size="sm"
                 variant="bordered"
               >
-                Edit
+                {t(($) => $["features/suppliers"].actions.edit)}
               </AppButton>
               <AppButton
                 color="danger"
@@ -147,7 +157,7 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
                 size="sm"
                 variant="bordered"
               >
-                Delete
+                {t(($) => $["features/suppliers"].actions.deleteShort)}
               </AppButton>
             </View>
           </View>
@@ -155,62 +165,76 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
 
         <AppCard padding="lg">
           <View style={{ gap: atomSpacing[4] }}>
-            <AppHeading variant="section">Contact details</AppHeading>
+            <AppHeading variant="section">
+              {t(($) => $["features/suppliers"].detail.contactDetails)}
+            </AppHeading>
             <DetailRow
               icon={UserIcon}
-              label="Contact"
-              value={supplier.contact_name ?? "Not provided"}
+              label={t(($) => $["features/suppliers"].detail.contact)}
+              value={
+                supplier.contact_name ??
+                t(($) => $["features/suppliers"].detail.notProvided)
+              }
             />
             <DetailRow
               action={
                 supplier.phone_number
                   ? {
-                      label: "Call",
+                      label: t(($) => $["features/suppliers"].actions.call),
                       onPress: () =>
                         void openAction(
                           `tel:${supplier.phone_number}`,
-                          "We couldn't open your phone app. Copy the number and try it there."
+                          t(($) => $["features/suppliers"].errors.phoneApp)
                         )
                     }
                   : undefined
               }
               icon={PhoneIcon}
-              label="Phone"
-              value={supplier.phone_number ?? "Not provided"}
+              label={t(($) => $["features/suppliers"].detail.phone)}
+              value={
+                supplier.phone_number ??
+                t(($) => $["features/suppliers"].detail.notProvided)
+              }
             />
             <DetailRow
               action={
                 supplier.email
                   ? {
-                      label: "Email",
+                      label: t(($) => $["features/suppliers"].actions.email),
                       onPress: () =>
                         void openAction(
                           `mailto:${supplier.email}`,
-                          "We couldn't open your email app. Copy the address and try it there."
+                          t(($) => $["features/suppliers"].errors.emailApp)
                         )
                     }
                   : undefined
               }
               icon={MailIcon}
-              label="Email"
-              value={supplier.email ?? "Not provided"}
+              label={t(($) => $["features/suppliers"].detail.email)}
+              value={
+                supplier.email ??
+                t(($) => $["features/suppliers"].detail.notProvided)
+              }
             />
             <DetailRow
               action={
                 supplier.website_url
                   ? {
-                      label: "Open",
+                      label: t(($) => $["features/suppliers"].actions.open),
                       onPress: () =>
                         void openAction(
                           supplier.website_url!,
-                          "We couldn't open this website. Copy the address and try it in your browser."
+                          t(($) => $["features/suppliers"].errors.website)
                         )
                     }
                   : undefined
               }
               icon={LinkIcon}
-              label="Website"
-              value={supplier.website_url ?? "Not provided"}
+              label={t(($) => $["features/suppliers"].detail.website)}
+              value={
+                supplier.website_url ??
+                t(($) => $["features/suppliers"].detail.notProvided)
+              }
             />
             <DetailRow
               action={
@@ -218,18 +242,23 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
                 supplier.latitude !== null &&
                 supplier.longitude !== null
                   ? {
-                      label: "Open in Maps",
+                      label: t(
+                        ($) => $["features/suppliers"].actions.openMaps
+                      ),
                       onPress: () =>
                         void openAction(
                           getMapsUrl(supplier),
-                          "We couldn't open your maps app. Copy the address and try it there."
+                          t(($) => $["features/suppliers"].errors.mapApp)
                         )
                     }
                   : undefined
               }
               icon={MapPinIcon}
-              label="Address"
-              value={supplier.address ?? "Not provided"}
+              label={t(($) => $["features/suppliers"].detail.address)}
+              value={
+                supplier.address ??
+                t(($) => $["features/suppliers"].detail.notProvided)
+              }
             />
             {actionError ? (
               <AppText selectable tone="danger">
@@ -242,19 +271,24 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
         {supplier.address ? (
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[4] }}>
-              <AppHeading variant="section">Location</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/suppliers"].detail.location)}
+              </AppHeading>
               {mapPreview.isLoading ? <SkeletonBlock height={260} /> : null}
               {mapPreview.isError ? (
                 <FieldMessage tone="error">
                   {getUserFacingErrorMessage(
                     mapPreview.error,
-                    "Map preview is unavailable right now. Try again shortly."
+                    t(($) => $["features/suppliers"].errors.mapPreview)
                   )}
                 </FieldMessage>
               ) : null}
               {mapPreview.data ? (
                 <Image
-                  alt={`Map showing ${supplier.address}`}
+                  alt={t(
+                    ($) => $["features/suppliers"].accessibility.mapShowing,
+                    { address: supplier.address }
+                  )}
                   contentFit="cover"
                   source={{ uri: mapPreview.data.imageDataUrl }}
                   style={styles.map}
@@ -267,7 +301,9 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
         {supplier.notes ? (
           <AppCard padding="lg">
             <View style={{ gap: atomSpacing[3] }}>
-              <AppHeading variant="section">Notes</AppHeading>
+              <AppHeading variant="section">
+                {t(($) => $["features/suppliers"].detail.notes)}
+              </AppHeading>
               <AppText selectable>{supplier.notes}</AppText>
             </View>
           </AppCard>
@@ -275,13 +311,17 @@ export function SupplierDetailContent({ supplier }: { supplier: Supplier }) {
       </View>
 
       <DestructiveConfirmationDialog
-        accessibilityLabel="Cancel deleting supplier"
-        confirmLabel="Delete supplier"
+        accessibilityLabel={t(
+          ($) => $["features/suppliers"].accessibility.cancelDelete
+        )}
+        confirmLabel={t(($) => $["features/suppliers"].actions.delete)}
         controller={deleteConfirmation}
-        description="This removes the supplier from your active catalog. This action cannot be undone."
+        description={t(($) => $["features/suppliers"].delete.description)}
         isPending={deleteMutation.isPending}
         onConfirm={deleteSupplier}
-        title={`Delete ${supplier.name}?`}
+        title={t(($) => $["features/suppliers"].delete.title, {
+          name: supplier.name
+        })}
       />
     </Screen>
   );

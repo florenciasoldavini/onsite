@@ -47,9 +47,9 @@ When a new project rule is added, scan existing code, docs, env config, and test
   - Test-file naming and design rules
   - Change-based coverage expectations and testing gaps
 - `docs/internationalization.md`
-  - Supported application languages and locale-selection policy
+  - Supported app and transactional-email languages and locale-selection policy
   - i18next architecture, translation ownership, authoring, and verification rules
-  - Current versus deferred localization scope
+  - Active versus deferred localization scope
 
 ## Update triggers
 
@@ -77,6 +77,12 @@ Update env documentation when:
 - `env-sync.config.json` changes
 - `.env.example` needs regeneration
 - `.env.local` needs a local placeholder for a newly required value
+
+Update `docs/email-flow.md` when:
+
+- a transactional email type, supported email language, provider, or builder changes
+- Send Email Hook signing, idempotency, timeout, or activation requirements change
+- email deployment order or required server secrets change
 
 Update `supabase/README.md` when:
 

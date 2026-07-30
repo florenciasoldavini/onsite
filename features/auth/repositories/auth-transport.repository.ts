@@ -304,13 +304,16 @@ export async function startOAuthIdentityLink(provider: SupportedOAuthProvider) {
   return completeAuthSessionFromUrl(result.url);
 }
 
-export async function sendPasswordResetEmail(email: string) {
+export async function sendPasswordResetEmail(
+  email: string,
+  language: "es" | "en"
+) {
   if (!supabase) {
     throw new Error(getSupabaseErrorMessage("Supabase is not configured."));
   }
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
-    redirectTo: getAuthRedirectUrl("reset-password")
+    redirectTo: getAuthRedirectUrl("reset-password", { lang: language })
   });
 
   if (error) {
@@ -320,6 +323,7 @@ export async function sendPasswordResetEmail(email: string) {
 
 export async function resendSignUpConfirmationEmail(
   email: string,
+  language: "es" | "en",
   next?: string
 ) {
   if (!supabase) {
@@ -332,7 +336,7 @@ export async function resendSignUpConfirmationEmail(
     options: {
       emailRedirectTo: getAuthRedirectUrl(
         "callback",
-        next ? { next } : undefined
+        next ? { lang: language, next } : { lang: language }
       )
     }
   });

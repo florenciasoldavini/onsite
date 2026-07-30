@@ -5,30 +5,38 @@ import { Screen } from "@/shared/ui/components/screen";
 import { SkeletonBlock } from "@/shared/ui/components/skeleton-block";
 import { AlertIcon } from "@/shared/ui/icons";
 import { getUserFacingErrorMessage } from "@/shared/utils/user-facing-errors";
+import { useTranslation } from "react-i18next";
 
 export function ProjectInvitationAcceptScreen({ token }: { token?: string }) {
+  const { t } = useTranslation("features/projects");
   const preview = useProjectInvitationPreview(token);
 
   return (
     <RouteStateBoundary
       feedback={{
         invalidParams: {
-          description: "Open the complete link from your invitation email.",
+          description: t(
+            ($) => $["features/projects"].invitations.incompleteDescription
+          ),
           icon: AlertIcon,
-          title: "Invitation link incomplete"
+          title: t(
+            ($) => $["features/projects"].invitations.incompleteTitle
+          )
         },
         loadError: {
           description: getUserFacingErrorMessage(
             preview.error,
-            "This invitation is invalid or no longer available."
+            t(($) => $["features/projects"].invitations.invalid)
           ),
           icon: AlertIcon,
-          title: "Invitation unavailable"
+          title: t(($) => $["features/projects"].invitations.unavailable)
         },
         notFound: {
-          description: "This invitation is invalid or no longer available.",
+          description: t(
+            ($) => $["features/projects"].invitations.invalid
+          ),
           icon: AlertIcon,
-          title: "Invitation unavailable"
+          title: t(($) => $["features/projects"].invitations.unavailable)
         }
       }}
       isError={preview.isError}

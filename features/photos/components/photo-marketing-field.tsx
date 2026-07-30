@@ -5,6 +5,7 @@ import {
 } from "@/shared/ui/components/theme";
 import { FormField } from "@/shared/ui/forms";
 import { Switch, View } from "react-native";
+import { useTranslation } from "react-i18next";
 
 export function PhotoMarketingField({
   disabled = false,
@@ -15,10 +16,11 @@ export function PhotoMarketingField({
   onChange: (value: boolean) => void;
   value: boolean;
 }) {
+  const { t } = useTranslation("features/photos");
   return (
     <FormField
-      helperText="Keeps the operational category while making this photo easy to find for future promotional use."
-      label="Marketing"
+      helperText={t(($) => $["features/photos"].marketing.helper)}
+      label={t(($) => $["features/photos"].marketing.label)}
     >
       <View
         style={{
@@ -29,10 +31,12 @@ export function PhotoMarketingField({
         }}
       >
         <AppText tone="muted" variant="bodySm">
-          Mark for marketing
+          {t(($) => $["features/photos"].marketing.mark)}
         </AppText>
         <Switch
-          accessibilityLabel="Mark photo for marketing"
+          accessibilityLabel={t(
+            ($) => $["features/photos"].accessibility.markMarketing
+          )}
           disabled={disabled}
           onValueChange={onChange}
           thumbColor={atomPalette.surface}

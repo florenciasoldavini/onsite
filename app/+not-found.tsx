@@ -1,19 +1,21 @@
 import { RouteFeedback } from "@/shared/ui/components/route-feedback";
 import { useRouter } from "expo-router";
+import { useTranslation } from "react-i18next";
 
 export default function NotFoundRoute() {
   const router = useRouter();
+  const { t } = useTranslation("shared");
 
   return (
     <RouteFeedback
       action={{
-        label: "Go to Onzait",
+        label: t(($) => $.shared.feedback.pageAction),
         onPress: () => router.replace("/")
       }}
-      description="The page you requested does not exist or the link is no longer valid."
+      description={t(($) => $.shared.feedback.pageDescription)}
       kind="not-found"
       resourceName="page"
-      title="Page not found"
+      title={t(($) => $.shared.feedback.pageTitle)}
     />
   );
 }

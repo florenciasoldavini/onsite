@@ -1,6 +1,8 @@
 import { getSupabaseErrorMessage, supabase } from "@/infrastructure/supabase/client";
+import type { SupportedLanguage } from "@/features/localization/types/language";
 
 type SendWelcomeToOnzaitEmailInput = {
+  language: SupportedLanguage;
   name?: string;
 };
 
@@ -12,7 +14,7 @@ type WelcomeToOnzaitResponse = {
 };
 
 export async function invokeWelcomeToOnzaitEmail(
-  input: SendWelcomeToOnzaitEmailInput = {}
+  input: SendWelcomeToOnzaitEmailInput
 ) {
   if (!supabase) {
     throw new Error(getSupabaseErrorMessage("Supabase is not configured."));

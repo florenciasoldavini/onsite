@@ -3,15 +3,13 @@ import { ProjectAddressField } from "@/features/projects/components/project-addr
 import { ProjectCoverPicker } from "@/features/projects/components/project-cover-picker";
 import { ProjectFormCalendarField } from "@/features/projects/components/project-form-calendar-field";
 import {
-  PROJECT_BUILDING_TYPE_LABELS,
   PROJECT_BUILDING_TYPES,
-  PROJECT_PHASE_LABELS,
+  PROJECT_LABELS_BY_LANGUAGE,
   PROJECT_PHASES,
-  PROJECT_STATUS_LABELS,
   PROJECT_STATUSES,
-  PROJECT_TYPE_LABELS,
   PROJECT_TYPES
 } from "@/features/projects/constants/project.constants";
+import { useLocalization } from "@/features/localization/hooks/use-localization";
 import type { ProjectFormValues } from "@/features/projects/types/project.types";
 import { AppButton } from "@/shared/ui/components/button";
 import { NumericField, TextField } from "@/shared/ui/components/input";
@@ -28,23 +26,7 @@ import {
   type UseFormSetValue
 } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
-
-const statusOptions = PROJECT_STATUSES.map((value) => ({
-  label: PROJECT_STATUS_LABELS[value],
-  value
-}));
-const phaseOptions = PROJECT_PHASES.map((value) => ({
-  label: PROJECT_PHASE_LABELS[value],
-  value
-}));
-const projectTypeOptions = PROJECT_TYPES.map((value) => ({
-  label: PROJECT_TYPE_LABELS[value],
-  value
-}));
-const buildingTypeOptions = PROJECT_BUILDING_TYPES.map((value) => ({
-  label: PROJECT_BUILDING_TYPE_LABELS[value],
-  value
-}));
+import { useTranslation } from "react-i18next";
 
 type ProjectFormSectionProps = {
   control: Control<ProjectFormValues>;
@@ -89,6 +71,7 @@ export const ProjectIdentitySection = memo(function ProjectIdentitySection({
   canChangeClient?: boolean;
   ownerId?: string;
 }) {
+  const { t } = useTranslation("features/projects");
   return (
     <>
       <Controller
@@ -97,13 +80,15 @@ export const ProjectIdentitySection = memo(function ProjectIdentitySection({
         render={({ field, fieldState }) => (
           <TextField
             errorText={fieldState.error?.message}
-            label="Project Name"
+            label={t(($) => $["features/projects"].fields.name)}
             onBlur={field.onBlur}
             onChangeText={(text) => {
               field.onChange(text);
               onInteraction();
             }}
-            placeholder="Foundation Package"
+            placeholder={t(
+              ($) => $["features/projects"].form.namePlaceholder
+            )}
             required
             value={field.value}
           />
@@ -116,13 +101,15 @@ export const ProjectIdentitySection = memo(function ProjectIdentitySection({
         render={({ field, fieldState }) => (
           <TextAreaField
             errorText={fieldState.error?.message}
-            label="Description"
+            label={t(($) => $["features/projects"].fields.description)}
             onBlur={field.onBlur}
             onChangeText={(text) => {
               field.onChange(text);
               onInteraction();
             }}
-            placeholder="Scope, crew notes, client context..."
+            placeholder={t(
+              ($) => $["features/projects"].form.descriptionPlaceholder
+            )}
             value={field.value}
           />
         )}
@@ -170,6 +157,25 @@ export const ProjectClassificationSection = memo(
   }: ProjectFormSectionProps & {
     isCompact: boolean;
   }) {
+    const { language } = useLocalization();
+    const { t } = useTranslation("features/projects");
+    const labels = PROJECT_LABELS_BY_LANGUAGE[language];
+    const statusOptions = PROJECT_STATUSES.map((value) => ({
+      label: labels.statuses[value],
+      value
+    }));
+    const phaseOptions = PROJECT_PHASES.map((value) => ({
+      label: labels.phases[value],
+      value
+    }));
+    const projectTypeOptions = PROJECT_TYPES.map((value) => ({
+      label: labels.types[value],
+      value
+    }));
+    const buildingTypeOptions = PROJECT_BUILDING_TYPES.map((value) => ({
+      label: labels.buildingTypes[value],
+      value
+    }));
     return (
       <>
         <View style={[styles.fieldGroup, !isCompact && styles.fieldGroupWide]}>
@@ -179,7 +185,7 @@ export const ProjectClassificationSection = memo(
               name="status"
               render={({ field }) => (
                 <SelectField
-                  label="Status"
+                  label={t(($) => $["features/projects"].fields.status)}
                   onChange={(value) => {
                     field.onChange(value);
                     onInteraction();
@@ -198,7 +204,7 @@ export const ProjectClassificationSection = memo(
               name="phase"
               render={({ field }) => (
                 <SelectField
-                  label="Phase"
+                  label={t(($) => $["features/projects"].fields.phase)}
                   onChange={(value) => {
                     field.onChange(value);
                     onInteraction();
@@ -219,7 +225,7 @@ export const ProjectClassificationSection = memo(
               name="project_type"
               render={({ field }) => (
                 <SelectField
-                  label="Project Type"
+                  label={t(($) => $["features/projects"].fields.projectType)}
                   onChange={(value) => {
                     field.onChange(value);
                     onInteraction();
@@ -238,7 +244,7 @@ export const ProjectClassificationSection = memo(
               name="building_type"
               render={({ field }) => (
                 <SelectField
-                  label="Building Type"
+                  label={t(($) => $["features/projects"].fields.buildingType)}
                   onChange={(value) => {
                     field.onChange(value);
                     onInteraction();
@@ -258,7 +264,7 @@ export const ProjectClassificationSection = memo(
           render={({ field, fieldState }) => (
             <NumericField
               errorText={fieldState.error?.message}
-              label="Progress Percentage"
+              label={t(($) => $["features/projects"].fields.progress)}
               max={100}
               min={0}
               onBlur={field.onBlur}
@@ -284,33 +290,34 @@ export const ProjectScheduleSection = memo(function ProjectScheduleSection({
 }: ProjectFormSectionProps & {
   isCompact: boolean;
 }) {
+  const { t } = useTranslation("features/projects");
   return (
     <View style={[styles.dateGrid, !isCompact && styles.dateGridWide]}>
       <ProjectDateController
         control={control}
         isCompact={isCompact}
-        label="Estimated Start"
+        label={t(($) => $["features/projects"].fields.estimatedStart)}
         name="estimated_start_date"
         onInteraction={onInteraction}
       />
       <ProjectDateController
         control={control}
         isCompact={isCompact}
-        label="Estimated End"
+        label={t(($) => $["features/projects"].fields.estimatedEnd)}
         name="estimated_end_date"
         onInteraction={onInteraction}
       />
       <ProjectDateController
         control={control}
         isCompact={isCompact}
-        label="Actual Start"
+        label={t(($) => $["features/projects"].fields.actualStart)}
         name="start_date"
         onInteraction={onInteraction}
       />
       <ProjectDateController
         control={control}
         isCompact={isCompact}
-        label="Actual End"
+        label={t(($) => $["features/projects"].fields.actualEnd)}
         name="end_date"
         onInteraction={onInteraction}
       />
@@ -335,6 +342,8 @@ export function ProjectFormActions({
   onSubmit: () => Promise<void>;
   onValidate: () => Promise<boolean>;
 }) {
+  const { t } = useTranslation("features/projects");
+  const { t: tShared } = useTranslation("shared");
   const { isDirty, isValid } = useFormState({ control });
   const name = useWatch({ control, name: "name" });
   const address = useWatch({ control, name: "address" });
@@ -368,7 +377,7 @@ export function ProjectFormActions({
           onPress={onCancel}
           variant="bordered"
         >
-          Cancel
+          {tShared(($) => $.shared.actions.cancel)}
         </AppButton>
       </View>
       <View style={styles.formAction}>
@@ -384,7 +393,11 @@ export function ProjectFormActions({
           onDisabledPress={() => void onValidate()}
           onPress={() => void onSubmit()}
         >
-          {mode === "create" ? "Create" : "Save"}
+          {t(($) =>
+            mode === "create"
+              ? $["features/projects"].actions.create
+              : $["features/projects"].actions.save
+          )}
         </AppButton>
       </View>
     </View>

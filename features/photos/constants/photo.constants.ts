@@ -18,6 +18,19 @@ export const PROJECT_PHOTO_KIND_LABELS = {
   safety: "Safety"
 } as const;
 
+export const PROJECT_PHOTO_KIND_LABELS_BY_LANGUAGE = {
+  en: PROJECT_PHOTO_KIND_LABELS,
+  es: {
+    delivery: "Entrega",
+    general: "General",
+    issue: "Problema",
+    milestone: "Hito",
+    progress: "Avance",
+    quality: "Calidad",
+    safety: "Seguridad"
+  }
+} as const;
+
 export const PROJECT_PHOTO_BUCKET = "project-photos";
 export const PROJECT_PHOTO_BATCH_LIMIT = 20;
 export const PROJECT_PHOTO_PAGE_SIZE = 24;

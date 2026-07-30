@@ -3,7 +3,7 @@
 Purpose: tracked Supabase schema, migration, RLS, Edge Function, and auth URL guidance
 Source of truth for: current Supabase bootstrap scope, migration expectations, Edge Function verification, and direct client-access policy
 Update when: migrations, RLS policy, Edge Function runtime or security boundaries, auth redirect configuration, or client data-access rules change
-Last reviewed: 2026-07-27
+Last reviewed: 2026-07-29
 
 This folder is the starting point for tracked Supabase database changes.
 
@@ -25,6 +25,9 @@ This folder is the starting point for tracked Supabase database changes.
   Creates the manager-owned contractor contact catalog with least-privilege grants, normalization, owner/admin RLS, and soft deletion.
 - `20260727213244_create_project_photos_feature.sql`
   Creates project photo metadata, owner/admin RLS, deterministic gallery indexes, and private immutable full/thumbnail Storage policies.
+- `20260729193000_add_project_invitation_language.sql`
+  Persists constrained `es | en` invitation delivery language and extends the
+  creation RPC so resends remain in the recipient's selected language.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.
 
@@ -124,6 +127,12 @@ npm run functions:verify
 ```
 
 The root Expo TypeScript and ESLint configurations intentionally exclude `supabase/functions/`; Deno owns verification for that runtime, and CI enforces the combined verification task.
+
+Current transactional email functions bundle Deno-safe Spanish and English
+resources. `auth-send-email` implements the signed Supabase Auth Send Email Hook
+and intentionally has JWT verification disabled in `supabase/config.toml`;
+Standard Webhooks verification is authoritative. Configure
+`SEND_EMAIL_HOOK_SECRET` before activation.
 
 ## Auth URL configuration
 

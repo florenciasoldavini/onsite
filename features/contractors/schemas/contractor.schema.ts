@@ -3,6 +3,7 @@ import type {
   ContractorSort
 } from "@/features/contractors/types/contractor";
 import {
+  createPersonContactFormSchema,
   personContactFormSchema,
   personContactRecordSchema
 } from "@/shared/schemas/contact";
@@ -15,6 +16,7 @@ import {
 
 export const ContractorSchema = personContactRecordSchema;
 export const contractorFormSchema = personContactFormSchema;
+export const createContractorFormSchema = createPersonContactFormSchema;
 export const toContractorInput = toPersonContactInput;
 export const getContractorDisplayName = getPersonDisplayName;
 export const getContractorInitials = getPersonInitials;
