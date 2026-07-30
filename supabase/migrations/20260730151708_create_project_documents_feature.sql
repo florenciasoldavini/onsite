@@ -244,7 +244,7 @@ using (
         select 1
         from public.project_documents document
         where document.deleted_at is null
-          and document.object_path = name
+          and document.object_path = storage.objects.name
       )
     )
   )
