@@ -22,6 +22,11 @@ describe("RouteFeedback", () => {
     expect(
       screen.getByText("This project link is incomplete or invalid.")
     ).toBeOnTheScreen();
+    expect(screen.getByTestId("route-feedback")).toHaveStyle({
+      alignSelf: "center",
+      maxWidth: 560,
+      width: "100%"
+    });
 
     await fireEvent.press(screen.getByText("Back"));
     expect(onBack).toHaveBeenCalledTimes(1);

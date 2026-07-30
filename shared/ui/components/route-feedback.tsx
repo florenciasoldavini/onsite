@@ -60,10 +60,9 @@ function getDefaultContent(
   switch (kind) {
     case "invalid-params":
       return {
-        description: t(
-          ($) => $.shared.feedback.resourceInvalidDescription,
-          { resource: resourceName }
-        ),
+        description: t(($) => $.shared.feedback.resourceInvalidDescription, {
+          resource: resourceName
+        }),
         title: t(($) => $.shared.feedback.resourceInvalidTitle, {
           resource: untitledResourceName
         })
@@ -115,8 +114,10 @@ export function RouteFeedback({
       <View
         accessibilityRole="alert"
         role="alert"
+        testID="route-feedback"
         style={{
           alignItems: "center",
+          alignSelf: "center",
           gap: atomSpacing[5],
           maxWidth: 560,
           width: "100%"
