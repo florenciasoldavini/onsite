@@ -12,7 +12,7 @@ select is(
 
 select is(
   (select count(*) from public.project_permissions),
-  9::bigint,
+  10::bigint,
   'the project capability catalog is seeded'
 );
 
@@ -26,6 +26,7 @@ select is(
     'project.change_client',
     'project.cover.write',
     'project.delete',
+    'project.documents.write',
     'project.members.manage',
     'project.members.read',
     'project.photos.write',
@@ -44,6 +45,7 @@ select is(
   ),
   array[
     'project.cover.write',
+    'project.documents.write',
     'project.members.read',
     'project.photos.write',
     'project.read',

@@ -46,6 +46,8 @@ supabase/                    Migrations, database tests, and Edge Functions
 
 Feature directories may omit layers they do not need. Do not create empty folders merely to complete the template. Feature roots contain responsibility directories only; implementation modules should not be left loose at the feature root.
 
+File-backed product domains follow the same dependency rule. For example, `features/documents` owns document screens, hooks, workflows, row/Storage repositories, validation, types, and platform-specific open/download adapters; its routes only normalize project IDs and delegate to those screens.
+
 ## Dependency Direction
 
 ```text

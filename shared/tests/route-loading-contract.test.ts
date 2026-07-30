@@ -130,7 +130,9 @@ describe("route loading contract", () => {
       "features/projects/screens/project-team-screen.tsx",
       "features/photos/screens/project-photos-screen.tsx",
       "features/photos/screens/project-photo-upload-screen.tsx",
-      "features/photos/screens/project-photo-detail-screen.tsx"
+      "features/photos/screens/project-photo-detail-screen.tsx",
+      "features/documents/screens/project-documents-screen.tsx",
+      "features/documents/screens/project-document-upload-screen.tsx"
     ];
 
     const violations = recordScreens.filter((file) => {
