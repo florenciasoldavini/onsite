@@ -1,6 +1,6 @@
 ---
 name: onzait-create-pr
-description: Publish or prepare a focused Onzait GitHub pull request safely. Use for Onzait requests to create, open, publish, push, or prepare a branch for review or a PR to development or main; verify branch scope, commits, tests, security, documentation, and the current repository pull request template before pushing and creating the PR.
+description: Publish or prepare a focused Onzait GitHub pull request safely. Use for Onzait requests to create, open, publish, push, or prepare a branch for review or a PR to development or main; verify branch scope, related issues, commits, tests, security, documentation, and the current repository pull request template before pushing and creating the PR.
 ---
 
 # Publish an Onzait pull request
@@ -44,7 +44,21 @@ Never:
 
 Confirm that the current branch is the intended feature branch before publishing.
 
-## 3. Audit scope and commit readiness
+## 3. Resolve and link related issues
+
+Before preparing the PR body, determine whether the work is associated with a known GitHub issue. Check the user's request, supplied issue URLs or numbers, the branch name, commit footers, and the implementation context. Prefer the connected GitHub integration to verify the issue exists, is in the intended repository, and matches the PR scope.
+
+When a corresponding issue is known, the PR body must reference it using GitHub's supported issue syntax:
+
+- Use `Closes #123` when merging the PR fully satisfies the issue and should close it.
+- Use `Refs #123` when the PR is related or partial and must not close the issue.
+- Link every applicable issue separately when the PR intentionally completes or relates to more than one issue.
+
+Place issue references in the Problem or Solution section, or in a concise standalone line before the remaining template sections. Never omit a known corresponding issue, invent an issue number, link an issue from another repository without its `owner/repository#number` qualifier, or use a closing keyword when acceptance criteria remain incomplete. If the relationship or completion status is genuinely ambiguous after inspecting available context, ask before creating the PR.
+
+After creation, verify the final PR body contains the intended issue reference. Treat a missing or incorrect reference as incomplete PR creation and update the body before reporting success.
+
+## 4. Audit scope and commit readiness
 
 Review every commit in `base..HEAD` and every file in the complete base-to-head diff. Identify unrelated commits or files, generated output, temporary files, environment files, secrets, and native build artifacts.
 
@@ -55,7 +69,7 @@ Review every commit in `base..HEAD` and every file in the complete base-to-head 
 
 If intended changes remain uncommitted, use `onzait-create-commit` only when that skill exists and the user has authorized committing. Do not duplicate its commit workflow here. If authorization is unclear, stop and state what must be committed. Never use broad staging such as `git add .` unless every changed file has been proven in scope.
 
-## 4. Review security and configuration
+## 5. Review security and configuration
 
 Inspect the full diff for credentials, private configuration, personal data, and unsafe trust-boundary changes. Never publish `.env.local`, private API keys, service-role keys, database passwords, provider credentials, or secrets in logs and screenshots.
 
@@ -67,7 +81,7 @@ Review carefully when the diff touches:
 
 Ensure server secrets have not moved into Expo public variables. Run the repository's configured secret scanner when available. Stop on a suspected secret and never bypass scanning to publish.
 
-## 5. Verify the affected scope
+## 6. Verify the affected scope
 
 Select checks from repository instructions and the changed files. For normal application work, consider:
 
@@ -91,7 +105,7 @@ Record each check as passed, failed, skipped, or unavailable. Never claim a resu
 
 Do not present the PR as ready when a required check fails.
 
-## 6. Prepare title, body, and visual evidence
+## 7. Prepare title, body, and visual evidence
 
 Create a concise title that represents the complete diff. Prefer an imperative Conventional Commit-style title when appropriate, for example `feat(projects): add map-based workspace` or `ci: run unit tests in pull requests`. Avoid vague or inflated titles.
 
@@ -108,7 +122,7 @@ If the template is missing, use these headings in order: Problem, Solution, User
 
 For meaningful visual changes, search for real evidence produced during implementation. Verify it reflects current behavior and exposes no personal data, credentials, or sensitive project information. Include mobile and web evidence when behavior differs, and a short video or GIF for interaction-heavy work when useful. Never generate a fake screenshot. If required evidence is unavailable, keep the PR in draft and report what is missing.
 
-## 7. Choose draft or ready status
+## 8. Choose draft or ready status
 
 Default to a draft PR unless the user explicitly requests ready-for-review.
 
@@ -116,24 +130,25 @@ Keep it draft when required checks fail or cannot run, screenshots are required 
 
 Create ready-for-review only when the user explicitly requests it or repository instructions clearly require it, and scope, required verification, documentation, limitations, and visual evidence are complete. Never equate PR creation with production readiness.
 
-## 8. Push and create the PR
+## 9. Push and create the PR
 
 Immediately before pushing, reconfirm the feature branch, remote, included commits, complete diff, working tree, and absence of secrets.
 
 1. Push the current branch without force and set its upstream when needed.
 2. Never force-push unless the user explicitly requests it and the consequences have been explained.
 3. If GitHub CLI authentication fails, use a connected GitHub integration when available; do not expose credentials while diagnosing auth.
-4. Create the PR against the verified base with the prepared title, completed current template, and correct draft state.
+4. Create the PR against the verified base with the prepared title, completed current template, correct issue references, and correct draft state.
 5. Preserve repository conventions. Do not add labels, reviewers, or assignees unless requested or clearly required.
 6. Do not merge or enable auto-merge.
 
 Do not report success until the PR actually exists.
 
-## 9. Hand off evidence
+## 10. Hand off evidence
 
 After creation, report:
 
 - PR URL and title;
+- linked issue numbers and whether each uses a closing or non-closing reference;
 - base and head branches;
 - draft or ready status;
 - included commits and changed-file summary;

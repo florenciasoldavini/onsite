@@ -134,6 +134,7 @@ Last reviewed: 2026-07-31
 - [20260727191057_allow_directory_soft_delete_updates.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727191057_allow_directory_soft_delete_updates.sql:1)
 - [20260727213244_create_project_photos_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260727213244_create_project_photos_feature.sql:1)
 - [20260730151708_create_project_documents_feature.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260730151708_create_project_documents_feature.sql:1)
+- [20260731160045_create_notification_inbox_persistence.sql](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/supabase/migrations/20260731160045_create_notification_inbox_persistence.sql:1)
 
 ### RLS Baseline
 
@@ -235,9 +236,12 @@ Last reviewed: 2026-07-31
 - project cover, photo, and document signed URLs expire after five minutes
 - the complete authorization and invitation contract lives in [docs/project-collaboration.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-collaboration.md:1)
 
-### Planned Notifications
+### Notifications
 
-- the approved notification contract is planned behavior; notification persistence, UI, device registration, and delivery are not implemented yet
+- notification persistence, recipient/admin RLS, keyset pagination, read state, and scheduled retention are implemented; producers, UI, preferences, device registration, and delivery remain planned
+- clients receive read-only active-row access and recipient-scoped read RPCs; they cannot create, reassign, archive, or delete notification records
+- global admins may inspect all active notifications for support but cannot change another recipient's read state
+- trusted event persistence is idempotent by source identity and suppresses actor-equals-recipient events without leaving an event row
 - the initial inbox covers selected explicit Project Collaboration events through stable versioned event and category codes; it must never expose raw database events directly
 - in-app notifications are required on web, iOS, and Android, while native push is an optional per-category companion channel and browser push remains deferred
 - push payloads contain only a notification identifier and schema version; protected inbox details are fetched after authenticated open
