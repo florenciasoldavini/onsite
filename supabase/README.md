@@ -3,7 +3,7 @@
 Purpose: tracked Supabase schema, migration, RLS, Edge Function, and auth URL guidance
 Source of truth for: current Supabase bootstrap scope, migration expectations, Edge Function verification, and direct client-access policy
 Update when: migrations, RLS policy, Edge Function runtime or security boundaries, auth redirect configuration, or client data-access rules change
-Last reviewed: 2026-07-29
+Last reviewed: 2026-07-31
 
 This folder is the starting point for tracked Supabase database changes.
 
@@ -28,6 +28,8 @@ This folder is the starting point for tracked Supabase database changes.
 - `20260729193000_add_project_invitation_language.sql`
   Persists constrained `es | en` invitation delivery language and extends the
   creation RPC so resends remain in the recipient's selected language.
+- `20260731160045_create_notification_inbox_persistence.sql`
+  Creates trusted notification events and recipient inbox rows, read-only recipient/admin RLS, keyset inbox RPCs, atomic read-state operations, idempotency constraints, and scheduled 90/120-day retention.
 
 The tracked bootstrap started with only the `users` table. Product tables should continue to be added as feature-specific migrations instead of being front-loaded.
 
@@ -54,8 +56,20 @@ Current policy rules:
 - every get/list repository query must exclude soft-deleted rows with `deleted_at is null`
 - clients may add owner filters for normal users for performance, but RLS remains the real authorization boundary
 - product emails can use `users.welcome_email_sent_at` as a non-sensitive idempotency marker, but Edge Functions should own marker writes so client sessions cannot repeatedly trigger the same email
+- notification recipients may select only their own active rows and linked events; global admins may inspect all active notification rows, while read-state RPCs always mutate only `auth.uid()`
+- notification events and recipients are created only through a private trusted function; authenticated clients receive no direct insert, update, or delete table grants
+
+The read-only notification tables and recipient-scoped notification RPCs are ready for the planned notifications feature, but the current frontend does not consume them yet.
 
 Everything else should be added later with its own schema migration plus its own RLS pass when the app starts reading or writing that table from the client.
+
+## Notification retention
+
+- `notifications-retention-daily` runs through Supabase Cron at 03:15 UTC.
+- The private retention routine processes at most 5,000 rows per archive and purge phase.
+- Inbox rows are archived at `created_at + 90 days`, excluded from normal reads immediately, and permanently purged at 120 days.
+- Orphaned notification events are deleted after their final recipient row is purged; source-domain events remain authoritative history.
+- Users and global admins cannot manually archive or delete notification rows.
 
 The trade-categories catalog is intentionally independent from worker persistence. Add the
 worker-to-trade-category junction in the workers feature migration only after the

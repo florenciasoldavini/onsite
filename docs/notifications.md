@@ -1,10 +1,10 @@
 # Notifications
 
-Purpose: approved product and engineering contract for the planned Onzait notification system
+Purpose: product and engineering contract for the Onzait notification system
 Source of truth for: notification events, recipients, categories, destinations, content safety, preferences, localization, and retention
 Update when: notification producers, categories, recipient rules, destinations, delivery channels, privacy rules, or retention behavior change
 Last reviewed: 2026-07-31
-Status: approved planned contract for [GitHub issue #60](https://github.com/florenciasoldavini/onzait/issues/60); notification persistence, UI, and delivery are not implemented yet
+Status: inbox persistence, RLS, read state, pagination, and retention are implemented; notification producers, UI, preferences, device registration, and delivery remain planned under [GitHub issue #60](https://github.com/florenciasoldavini/onzait/issues/60)
 
 ## Product Direction
 
@@ -13,6 +13,25 @@ Onzait will provide an authenticated in-app notification inbox on web, iOS, and 
 The inbox is the durable user-facing notification channel. Denied, unavailable, or revoked native push permission must never remove inbox access. Notifications communicate selected product events; they are not a copy of raw database changes and are not an audit log.
 
 Initial notification production is limited to the implemented Project Collaboration domain. Task notifications remain deferred until Tasks supports real assignments, comments, and status workflows.
+
+## Implemented Persistence
+
+`public.notification_events` stores immutable semantic event data and the minimum approved snapshots. `public.notifications` stores the recipient relationship, read timestamp, archive timestamp, and stable notification identifier. Neither table stores rendered copy, arbitrary payload JSON, arbitrary URLs, email addresses, invitation tokens, or other operational content.
+
+Stable code constants, application-facing row and normalized inbox types, and Zod parsers live under `features/notifications/constants/`, `features/notifications/types/`, and `features/notifications/schemas/`. They mirror the database event matrix and reject unsupported versions, mismatched category/destination combinations, inconsistent cursors, and unexpected persisted content before it reaches future repositories or UI.
+
+Trusted database workflows will create notifications through `private.persist_notification`. API clients cannot execute that function or insert, update, or delete either table directly. The source pair of `source_kind` and `source_event_id` is unique, and each event-recipient pair is unique. An identical retry returns the existing notification without changing snapshots or read state; conflicting reuse of a source identity fails.
+
+The initial Project Collaboration producer uses `source_kind = project.collaboration` and the stable collaboration event identifier as `source_event_id`. Producer integration remains tracked separately in issue #88.
+
+Authenticated clients have these recipient-scoped operations:
+
+- `list_my_notifications(limit, before_created_at, before_id)` returns a newest-first keyset page ordered by `(created_at, id)`, with a default of 20 and maximum of 50;
+- `get_my_notification_unread_count()` counts active unread rows;
+- `mark_notification_read(notification_id)` idempotently preserves the first read timestamp;
+- `mark_all_my_notifications_read()` atomically marks the recipient's remaining active rows as read.
+
+RLS permits recipients to select only their own active inbox rows and linked events. Global admins may inspect all active notification rows for support, but the read-state operations remain hard-scoped to `auth.uid()` and cannot mutate another recipient's state. Anonymous access is denied.
 
 ## Stable Contract
 
@@ -75,6 +94,8 @@ Inbox copy renders in the current device-local app language using the establishe
 ## Retention
 
 Notifications remain visible for 90 days from creation. At 90 days they are server-archived, excluded from normal inbox reads and unread counts, and no longer actionable. They are permanently purged 30 days later.
+
+The database runs `private.apply_notification_retention` every day at 03:15 UTC through the `notifications-retention-daily` Supabase Cron job. Each pass archives and purges at most 5,000 rows per phase, records the deterministic archive timestamp as `created_at + 90 days`, and deletes notification events after their final recipient row is purged.
 
 Users do not control this lifecycle in the initial release. Read state does not change retention. The originating domain record and `project_collaboration_events` remain authoritative for operational or audit history after notification purge.
 
