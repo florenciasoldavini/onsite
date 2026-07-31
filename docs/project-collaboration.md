@@ -3,7 +3,7 @@
 Purpose: product and engineering contract for project roles, capabilities, memberships, and invitations
 Source of truth for: project-level authorization, collaboration lifecycle, and invitation delivery
 Update when: project capabilities, seeded roles, collaboration workflows, or invitation security changes
-Last reviewed: 2026-07-28
+Last reviewed: 2026-07-31
 
 ## Authorization Model
 
@@ -17,18 +17,18 @@ Role codes are validated stable strings rather than a closed application enum. A
 
 ## Initial Capability Mapping
 
-| Capability               | Owner | Manager | Contributor | Viewer |
-| ------------------------ | ----: | ------: | ----------: | -----: |
-| `project.read`           |   Yes |     Yes |         Yes |    Yes |
-| `project.update`         |   Yes |     Yes |          No |     No |
-| `project.change_client`  |   Yes |      No |          No |     No |
-| `project.delete`         |   Yes |      No |          No |     No |
-| `project.cover.write`    |   Yes |     Yes |          No |     No |
-| `project.tasks.write`    |   Yes |     Yes |         Yes |     No |
-| `project.photos.write`   |   Yes |     Yes |         Yes |     No |
+| Capability                | Owner | Manager | Contributor | Viewer |
+| ------------------------- | ----: | ------: | ----------: | -----: |
+| `project.read`            |   Yes |     Yes |         Yes |    Yes |
+| `project.update`          |   Yes |     Yes |          No |     No |
+| `project.change_client`   |   Yes |      No |          No |     No |
+| `project.delete`          |   Yes |      No |          No |     No |
+| `project.cover.write`     |   Yes |     Yes |          No |     No |
+| `project.tasks.write`     |   Yes |     Yes |         Yes |     No |
+| `project.photos.write`    |   Yes |     Yes |         Yes |     No |
 | `project.documents.write` |   Yes |     Yes |          No |     No |
-| `project.members.read`   |   Yes |     Yes |         Yes |    Yes |
-| `project.members.manage` |   Yes |      No |          No |     No |
+| `project.members.read`    |   Yes |     Yes |         Yes |    Yes |
+| `project.members.manage`  |   Yes |      No |          No |     No |
 
 ## Membership and Invitation Lifecycle
 
@@ -39,6 +39,8 @@ Role codes are validated stable strings rather than a closed application enum. A
 - Archiving a project atomically revokes pending invitations and removes active memberships.
 - Collaboration mutations are atomic database functions that assert capability codes. The Edge Function validates transport/auth concerns and delegates authorization to those functions.
 - Team and invitation inbox reads are bounded to 50 records per page with deterministic ordering.
+
+The collaboration event log is the future trusted source for the selected notification events defined in the [notification contract](notifications.md). That contract is approved but not implemented. Only its explicit initial event matrix may produce notifications; raw table changes and the remaining collaboration event types must not be exposed as notifications automatically.
 
 ## Invitation Security
 
