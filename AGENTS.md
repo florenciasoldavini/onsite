@@ -3,7 +3,7 @@
 Purpose: architecture snapshot, product decisions, and implementation guardrails for contributors and agents
 Source of truth for: current auth architecture, platform decisions, naming rules, and high-level project constraints
 Update when: auth flow, platform ownership, schema strategy, CI expectations, or product naming decisions change
-Last reviewed: 2026-07-29
+Last reviewed: 2026-07-31
 
 ## Project Snapshot
 
@@ -234,6 +234,15 @@ Last reviewed: 2026-07-29
 - invitation tokens are stored only as SHA-256 hashes, expire after seven days, and use URL fragments in email links
 - project cover, photo, and document signed URLs expire after five minutes
 - the complete authorization and invitation contract lives in [docs/project-collaboration.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/project-collaboration.md:1)
+
+### Planned Notifications
+
+- the approved notification contract is planned behavior; notification persistence, UI, device registration, and delivery are not implemented yet
+- the initial inbox covers selected explicit Project Collaboration events through stable versioned event and category codes; it must never expose raw database events directly
+- in-app notifications are required on web, iOS, and Android, while native push is an optional per-category companion channel and browser push remains deferred
+- push payloads contain only a notification identifier and schema version; protected inbox details are fetched after authenticated open
+- notifications remain visible for 90 days, are archived for 30 additional days, and are then permanently purged; source-domain events remain authoritative history
+- the complete planned event, recipient, destination, privacy, preference, localization, and retention contract lives in [docs/notifications.md](/Users/florenciasoldavini/Documents/Projects/OnSite/on-site/docs/notifications.md:1)
 
 ## User Model Decisions
 

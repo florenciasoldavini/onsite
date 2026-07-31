@@ -3,7 +3,7 @@
 Purpose: lightweight rules for keeping project documentation current
 Source of truth for: documentation ownership, update triggers, and doc review workflow
 Update when: doc ownership changes, PR process changes, or new documentation categories are introduced
-Last reviewed: 2026-07-29
+Last reviewed: 2026-07-31
 
 ## Core rule
 
@@ -50,6 +50,10 @@ When a new project rule is added, scan existing code, docs, env config, and test
   - Supported app and transactional-email languages and locale-selection policy
   - i18next architecture, translation ownership, authoring, and verification rules
   - Active versus deferred localization scope
+- `docs/notifications.md`
+  - Approved notification events, recipients, categories, and destinations
+  - Inbox, push, content-safety, preference, localization, and retention rules
+  - Active versus planned notification behavior
 
 ## Update triggers
 
@@ -114,6 +118,13 @@ Update `docs/internationalization.md` when:
 - resource loading, namespace ownership, or translation tooling changes
 - formatting, authoring, security, or localization verification rules change
 - a planned localization capability becomes active or its deferred scope changes
+
+Update `docs/notifications.md` when:
+
+- a notification producer, event, category, recipient rule, or destination changes
+- inbox or delivery-channel behavior changes
+- notification preferences, localization, content-safety, or retention rules change
+- planned notification capabilities become implemented or deferred scope changes
 
 Update `docs/CONTRIBUTING.md` when:
 
